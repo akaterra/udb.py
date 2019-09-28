@@ -1,0 +1,18 @@
+{
+  "indexes": {
+    "a": [
+      [
+        "a"
+      ],
+      null
+    ],
+    "b": [
+      [
+        "b"
+      ],
+      null
+    ]
+  },
+  "revision": 0,
+  "data": []
+}

@@ -1,0 +1,14 @@
+*.pyc
+.DS_Store
+.Python
+.idea
+.pytest*
+.python*
+.vscode
+*.cache*
+*egg-info
+build/*
+dist/*
+ignore*
+!tests/test_storage/ignore*
+virtualenv
