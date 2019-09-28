@@ -1,7 +1,8 @@
-Udb
-===
+Udb.py
+======
 
 .. image:: https://travis-ci.org/akaterra/udb.py.svg?branch=master
+  :target: https://travis-ci.org/akaterra/udb.py
 
 Udb is an in-memory database based on the `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_, the `Rtree <http://toblerity.org/rtree>`_ and on the native python's dict.
 Udb provides indexes support and MongoDB-like queries.
@@ -58,7 +59,7 @@ Installation
 
 .. code:: bash
 
-  pip install udb
+  pip install udb.py
 
 To enable BTree indexes support install `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_ package:
 
