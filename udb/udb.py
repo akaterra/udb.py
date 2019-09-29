@@ -318,7 +318,7 @@ class Udb(object):
                     s_op_fn_q_arranger = c_op_fn_q_arranger
 
         if s_index is not None:
-            if s_index.is_sorted and sort_direction:
+            if s_index.is_sorted_asc and sort_direction:
                 sort = None
 
             if s_op_type == SCAN_OP_CONST:

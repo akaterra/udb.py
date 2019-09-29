@@ -20,7 +20,11 @@ def test_should_insert():
     udb.insert(b)
     udb.insert(c)
 
-    assert list(udb.select()) == [{'a': 1, 'b': 1, '__rev__': 0}, {'a': 2, 'b': 2, '__rev__': 1}, {'a': 3, 'b': 3, '__rev__': 2}]
+    assert list(udb.select()) == [
+        {'a': 1, 'b': 1, '__rev__': 0},
+        {'a': 2, 'b': 2, '__rev__': 1},
+        {'a': 3, 'b': 3, '__rev__': 2},
+    ]
     assert len(udb.indexes['a']) == 3
     assert len(udb.indexes['ab']) == 3
     assert len(udb.indexes['b']) == 3

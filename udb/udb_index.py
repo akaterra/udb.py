@@ -93,7 +93,7 @@ class UdbIndex(object):
     is_multivalued = False
     is_prefixed = False
     is_ranged = False
-    is_sorted = False
+    is_sorted_asc = False
     is_sparsed = False
     is_uniq = False
     name = 'index'

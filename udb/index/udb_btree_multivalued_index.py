@@ -6,7 +6,7 @@ class UdbBtreeMultivaluedIndex(UdbIndex):
     is_ranged = True
     is_multivalued = True
     is_prefixed = True
-    is_sorted = True
+    is_sorted_asc = True
     type = 'btree_multivalued'
 
     def __init__(self, schema, name=None):

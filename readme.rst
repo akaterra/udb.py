@@ -5,7 +5,7 @@ Udb.py
   :target: https://travis-ci.org/akaterra/udb.py
 
 Udb is an in-memory database based on the `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_, the `Rtree <http://toblerity.org/rtree>`_ and on the native python's dict.
-Udb provides indexes support and MongoDB-like queries.
+Udb provides indexes support and limited MongoDB-like queries.
 Udb does not support any type of transactions for now.
 
 Table of contents
@@ -44,6 +44,8 @@ Table of contents
 * `Insert operation <#insert-operation>`_
 
 * `Update operation <#update-operation>`_
+
+* `Limitations <#limitations>`_
 
 * `Running tests <#running-tests-with-pytest>`_
 
@@ -256,7 +258,7 @@ Or using list ot tuples in case of Python2 (to save order of keys):
 
   record = {'a': 'A', 'b': 'B'}  # won't be indexed, raises FieldRequiredError
 
-The default value for missing field can be defined as a primitive value or callable:
+The default value for missing field can be defined as a primitive value or callable (functional index):
 
 .. code:: python
 
@@ -273,7 +275,7 @@ The default value for missing field can be defined as a primitive value or calla
   from udb import Udb, UdbBtreeIndex
 
   db = Udb(indexes={
-      'abc': UdbBtreeIndex({'a': 'a', 'b': lambda values: 'b', 'c': 'c'})
+      'abc': UdbBtreeIndex({'a': 'a', 'b': lambda key, values: 'b', 'c': 'c'})
   })
 
   record = {'a': 'A', 'c': 'C'}  # index key=AbC
@@ -287,7 +289,7 @@ Scan operations
 
 * **range** - an index covers multiple records by the index keys set by the minimum and maximum values
 
-* **prefix** - an index covers range of record by the partial index key
+* **prefix** - an index covers range of records by the partial index key
 
 * **prefix_in** - an index covers multiple records by the list of the partial index keys, each of which covers range of records
 
@@ -511,6 +513,13 @@ Running tests with pytest
 .. code:: bash
 
   pytest . --ignore=virtualenv -v
+
+Limitations
+-----------
+
+* Nested paths for indexing and querying are not supported, only the root level
+
+* Transactions are not supported
 
 Benchmarks
 ----------

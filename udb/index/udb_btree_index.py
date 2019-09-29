@@ -5,7 +5,7 @@ from ..udb_index import UdbIndex, UdbEmbeddedIndex
 class UdbBtreeIndex(UdbIndex):
     is_prefixed = True
     is_ranged = True
-    is_sorted = True
+    is_sorted_asc = True
     type = 'btree'
 
     def __init__(self, schema, name=None):
