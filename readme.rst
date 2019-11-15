@@ -25,9 +25,11 @@ Table of contents
 
   * `Index declaration <#index-declaration>`_
 
-  * `Scan operations <#scan-operations>`_
-
   * `Float precision <#float-precision>`_
+
+* `Getting query plan <#getting-query-plan>`_
+
+* `Scan operations <#scan-operations>`_
 
 * `Querying <#querying>`_
 
@@ -106,15 +108,15 @@ Select records:
 
   a = list(db.select({'a': 1})
 
-  [{'a': 1}]
+  [{'a': 1, 'b': 1, 'c': 3, 'd': 4, 'e': 5}]
 
   b = list(db.select({'b': 0})
 
   []  # no records with b=0
 
-  c = list(db.select({'c': 3, 'd': 4})
+  c = list(db.select({'c': 3, 'd': 4}, limit=2)
 
-  [{'c': 3, 'd': 4, 'e': 5}, {'c': 3, 'd': 4, 'e': 6}, {'c': 3, 'd': 4, 'e': 7}]
+  [{'a': 3, 'b': 3, 'c': 3, 'd': 4, 'e': 5}, {'a': 4, 'b': 4, 'c': 3, 'd': 4, 'e': 6}]
 
 Data schema for default values
 ------------------------------
@@ -162,7 +164,7 @@ Functional fields
   from udb import Udb, fn
 
   db = Udb(schema={
-      'timestamp': fn(lambda key, record: record['a'] + record['b']),
+      'timestamp': fn(lambda record: record['a'] + record['b']),
   })
 
 **optional** - returns "None" value
@@ -234,7 +236,7 @@ In this case of declaration in order that the record to be indexed it must conta
 
   record = {'a': 'A', 'b': 'B'}  # won't be indexed, raises FieldRequiredError
 
-Or using dictionary in case of Python3:
+Using dictionary in case of Python 3:
 
 .. code:: python
 
@@ -246,7 +248,7 @@ Or using dictionary in case of Python3:
 
   record = {'a': 'A', 'b': 'B'}  # won't be indexed, raises FieldRequiredError
 
-Or using list ot tuples in case of Python2 (to save order of keys):
+Using list of tuples in case of Python 2 (to keep key order):
 
 .. code:: python
 
@@ -280,25 +282,6 @@ The default value for missing field can be defined as a primitive value or calla
 
   record = {'a': 'A', 'c': 'C'}  # index key=AbC
 
-Scan operations
-~~~~~~~~~~~~~~~
-
-* **const** - an index covers only one record by the index key
-
-* **in** - an index covers multiple records by the list of the index keys, each of which covers exactly one record
-
-* **range** - an index covers multiple records by the index keys set by the minimum and maximum values
-
-* **prefix** - an index covers range of records by the partial index key
-
-* **prefix_in** - an index covers multiple records by the list of the partial index keys, each of which covers range of records
-
-* **intersection** - an index covers records intersected by the rectangle
-
-* **near** - an index covers records near to the point
-
-* **seq** - scanning that is not covered by any index, all records will be scanned
-
 Float precision
 ~~~~~~~~~~~~~~~
 
@@ -313,6 +296,46 @@ To be able to index float values enable the float mode with necessary precision 
   })
 
   db.insert({'a': 3.1415926525})
+
+Getting query plan
+------------------
+
+To get the query plan use **select** method with **get_plan=True**:
+
+.. code:: python
+
+  from udb import Udb, UdbBtreeIndex
+
+  db = Udb(indexes={
+      'abc': UdbBtreeIndex({'a': 'a', 'b': lambda key, values: 'b', 'c': 'c'})
+  })
+
+  db.select({'a': 3}, sort='-a')  # [(<udb.index.udb_btree_index.UdbBtreeIndex object at 0x104994080>, 'const', 1, 2), (None, 'sort', 0, 0, 'a', False)]
+
+Scan operations
+---------------
+
+BTree index:
+
+* **const** - an index covers only one record by the index key
+
+* **in** - an index covers multiple records by the list of the index keys, each of which covers exactly one record
+
+* **range** - an index covers multiple records by the index keys set by the minimum and maximum values
+
+* **prefix** - an index covers range of records by the partial index key
+
+* **prefix_in** - an index covers multiple records by the list of the partial index keys, each of which covers range of records
+
+RTree index:
+
+* **intersection** - an index covers records intersected by the rectangle
+
+* **near** - an index covers records near to the point
+
+No index:
+
+* **seq** - scanning that is not covered by any index, all records will be scanned (worst case)
 
 Querying
 --------
@@ -335,7 +358,7 @@ Supported query operations:
 
     udb.select({'a': {'$gt': 5}})
 
-* **$gte** - greater or equals to a value
+* **$gte** - greater or equal to a value
 
   .. code:: python
 
