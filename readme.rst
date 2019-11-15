@@ -310,7 +310,7 @@ To get the query plan use **select** method with **get_plan=True**:
       'abc': UdbBtreeIndex({'a': 'a', 'b': lambda key, values: 'b', 'c': 'c'})
   })
 
-  db.select({'a': 3}, sort='-a')  # [(<udb.index.udb_btree_index.UdbBtreeIndex object at 0x104994080>, 'const', 1, 2), (None, 'sort', 0, 0, 'a', False)]
+  db.select({'a': 3}, sort='-a', get_plan=True)  # [(<udb.index.udb_btree_index.UdbBtreeIndex object at 0x104994080>, 'const', 1, 2), (None, 'sort', 0, 0, 'a', False)]
 
 Scan operations
 ---------------
