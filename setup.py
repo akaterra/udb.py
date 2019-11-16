@@ -3,7 +3,7 @@ from setuptools import setup
 
 README = open(os.path.join(os.path.dirname(__file__), 'readme.rst')).read()
 
-setup(name='udb.py',
+setup(name='udb_py',
       version='0.1.0',
       description='Lightweight in-memory database',
       long_description=README,

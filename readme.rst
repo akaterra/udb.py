@@ -441,7 +441,7 @@ To check its validity use **validate_query** method.
 Comparison order
 ~~~~~~~~~~~~~~~~
 
-Due to the fact that the Udb database is not strictly typed for indexed values, there is the following order of ascending comparisons for values ​​of different types:
+Due to the fact that the Udb database is not strictly typed for stored values, there is the following order of ascending comparisons for values ​​of different types:
 
 * None
 
@@ -457,7 +457,7 @@ Also, it means, that the records having indexed field will be fetched in the pro
 Storages
 --------
 
-The storage allows to keep data persistent.
+The storage allows keeping data persistent.
 
 **UdbJsonFileStorage** stores data in the JSON file.
 

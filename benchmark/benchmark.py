@@ -18,8 +18,15 @@ def start():
 def stop(samples=None, title=None, show_mem_usage=None):
     global start_time
 
+    for_start_time = time.time()
+
+    for _ in range(samples):
+        pass
+
+    for_total = time.time() - for_start_time
+
     if start_time:
-        total = time.time() - start_time
+        total = time.time() - start_time - for_total
 
         if samples:
             if title:
