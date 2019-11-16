@@ -167,35 +167,52 @@ def test_should_validate_query_intersection_op():
     assert UdbRtreeIndex.validate_query({'a': {'$intersection': {'xMin': 0, 'yMin': 0, 'xMax': 0, 'yMax': 0}}})
     assert UdbRtreeIndex.validate_query({'a': {'$intersection': {'xMin': 0.5, 'yMin': 0.5, 'xMax': 0.5, 'yMax': 0.5}}})
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$intersection': None}})
+    invalid_values = [None, False, True, 0, 0.5, '0', [], {}, UdbRtreeIndex]
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$intersection': False}})
+    for invalid_value in invalid_values:
+        with pytest.raises(InvalidScanOperationValueError):
+            UdbRtreeIndex.validate_query({'a': {'$intersection': invalid_value}})
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$intersection': True}})
+    invalid_values = [None, False, True, '0', [], {}, UdbRtreeIndex]
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$intersection': 0}})
+    for invalid_value in invalid_values:
+        with pytest.raises(InvalidScanOperationValueError):
+            UdbRtreeIndex.validate_query({'a': {'$intersection': {
+                'xMin': invalid_value,
+                'xMax': 0,
+                'yMin': 0,
+                'yMax': 0,
+            }}})
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$intersection': 0.5}})
+        with pytest.raises(InvalidScanOperationValueError):
+            UdbRtreeIndex.validate_query({'a': {'$intersection': {
+                'xMin': 0,
+                'xMax': invalid_value,
+                'yMin': 0,
+                'yMax': 0,
+            }}})
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$intersection': '0'}})
+        with pytest.raises(InvalidScanOperationValueError):
+            UdbRtreeIndex.validate_query({'a': {'$intersection': {
+                'xMin': 0,
+                'xMax': 0,
+                'yMin': invalid_value,
+                'yMax': 0,
+            }}})
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$intersection': []}})
-
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$intersection': {}}})
-
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$intersection': UdbRtreeIndex}})
+        with pytest.raises(InvalidScanOperationValueError):
+            UdbRtreeIndex.validate_query({'a': {'$intersection': {
+                'xMin': 0,
+                'xMax': 0,
+                'yMin': 0,
+                'yMax': invalid_value,
+            }}})
 
     with pytest.raises(InvalidScanOperationValueError):
         UdbRtreeIndex.validate_query({'a': {'$intersection': {'xMin': 0}}})
+
+    with pytest.raises(InvalidScanOperationValueError):
+        UdbRtreeIndex.validate_query({'a': {'$intersection': {'xMax': 0}}})
 
     with pytest.raises(InvalidScanOperationValueError):
         UdbRtreeIndex.validate_query({'a': {'$intersection': {'yMin': 0}}})
@@ -203,41 +220,26 @@ def test_should_validate_query_intersection_op():
     with pytest.raises(InvalidScanOperationValueError):
         UdbRtreeIndex.validate_query({'a': {'$intersection': {'xMax': 0}}})
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$intersection': {'yMax': 0}}})
-
 
 @pytest.mark.udb_index
 def test_should_validate_query_near_op():
     assert UdbRtreeIndex.validate_query({'a': {'$near': {'x': 0, 'y': 0, 'maxDistance': 0, 'minDistance': 0}}})
     assert UdbRtreeIndex.validate_query({'a': {'$near': {'x': 0.5, 'y': 0.5, 'maxDistance': 0.5, 'minDistance': 0.5}}})
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$near': None}})
+    invalid_values = [None, False, True, 0, 0.5, '0', [], {}, UdbRtreeIndex]
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$near': False}})
+    for invalid_value in invalid_values:
+        with pytest.raises(InvalidScanOperationValueError):
+            UdbRtreeIndex.validate_query({'a': {'$near': invalid_value}})
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$near': True}})
+    invalid_values = [None, False, True, '0', [], {}, UdbRtreeIndex]
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$near': 0}})
+    for invalid_value in invalid_values:
+        with pytest.raises(InvalidScanOperationValueError):
+            UdbRtreeIndex.validate_query({'a': {'$near': {'x': 0, 'y': 0, 'minDistance': invalid_value}}})
 
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$near': 0.5}})
-
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$near': '0'}})
-
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$near': []}})
-
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$near': {}}})
-
-    with pytest.raises(InvalidScanOperationValueError):
-        UdbRtreeIndex.validate_query({'a': {'$near': UdbRtreeIndex}})
+        with pytest.raises(InvalidScanOperationValueError):
+            UdbRtreeIndex.validate_query({'a': {'$near': {'x': 0, 'y': 0, 'maxDistance': invalid_value}}})
 
     with pytest.raises(InvalidScanOperationValueError):
         UdbRtreeIndex.validate_query({'a': {'$near': {'x': 0}}})

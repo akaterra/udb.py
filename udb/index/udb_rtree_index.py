@@ -117,14 +117,14 @@ class UdbRtreeIndex(UdbIndex):
                         if type(val.get('y')) != float and type(val.get('y')) != int:
                             raise InvalidScanOperationValueError('{}.{}.y'.format(key, op_key))
 
-                        if val.get('maxDistance', None) is not None and \
-                                type(val.get('maxDistance')) != float and \
-                                type(val.get('maxDistance')) != int:
+                        max_distance = val.get('maxDistance', EMPTY)
+
+                        if max_distance != EMPTY and type(max_distance) != float and type(max_distance) != int:
                             raise InvalidScanOperationValueError('{}.{}.maxDistance'.format(key, op_key))
 
-                        if val.get('minDistance', None) is not None and \
-                                type(val.get('minDistance')) != float and \
-                                type(val.get('minDistance')) != int:
+                        min_distance = val.get('minDistance', EMPTY)
+
+                        if min_distance != EMPTY and type(min_distance) != float and type(min_distance) != int:
                             raise InvalidScanOperationValueError('{}.{}.minDistance'.format(key, op_key))
 
         return True
@@ -251,8 +251,8 @@ class UdbRtreeIndex(UdbIndex):
             max_distance **= 2
 
         if min_distance or max_distance:
-            # if there is a min distance and no max distance, select unlimited points since it is unknown count of
-            # points have to be skipped which have distance less then min distance
+            # if there is a min distance and no max distance, select unlimited points since it is an unknown count of
+            # points have to be skipped with a distance less then min distance
             iterator = self._rtree.nearest((p_x, p_y), - 1 if min_distance and max_distance is None else limit)
 
             for val in iterator:

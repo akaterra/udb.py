@@ -1,6 +1,7 @@
 *.pyc
 .DS_Store
 .Python
+.coverage
 .idea
 .pytest*
 .python*
@@ -9,6 +10,7 @@
 *egg-info
 build/*
 dist/*
+htmlcov/*
 ignore*
 !tests/test_storage/ignore*
 virtualenv
