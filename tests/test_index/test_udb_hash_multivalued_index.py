@@ -1,7 +1,7 @@
 import pytest
 
-from udb.common import *
-from udb.index.udb_hash_multivalued_index import UdbHashMultivaluedIndex
+from udbpy.common import *
+from udbpy.index.udb_hash_multivalued_index import UdbHashMultivaluedIndex
 
 
 class UdbHashMultivaluedIndexTest(UdbHashMultivaluedIndex):

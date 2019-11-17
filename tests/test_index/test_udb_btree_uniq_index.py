@@ -1,7 +1,7 @@
 import pytest
 
-from udb.common import *
-from udb.index.udb_btree_uniq_index import UdbBtreeUniqIndex, ConstraintError
+from udbpy.common import *
+from udbpy.index.udb_btree_uniq_index import UdbBtreeUniqIndex, ConstraintError
 
 
 class UdbBtreeUniqIndexTest(UdbBtreeUniqIndex):

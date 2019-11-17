@@ -1,6 +1,6 @@
 import pytest
 
-from udb.udb import Udb, UdbIndex
+from udbpy.udb import Udb, UdbIndex
 
 
 class UdbIndexA(UdbIndex):

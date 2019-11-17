@@ -1,4 +1,4 @@
-from udb.udb_index import *
+from udbpy.udb_index import *
 
 
 class UdbIndexTest(UdbIndex):

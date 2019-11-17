@@ -1,7 +1,7 @@
 import pytest
 
-from udb.common import *
-from udb.udb import Udb, UdbBtreeIndex
+from udbpy.common import *
+from udbpy.udb import Udb, UdbBtreeIndex
 
 
 @pytest.mark.udb

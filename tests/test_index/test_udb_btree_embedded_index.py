@@ -1,7 +1,7 @@
 import pytest
 
-from udb.common import *
-from udb.index.udb_btree_index import UdbBtreeEmbeddedIndex
+from udbpy.common import *
+from udbpy.index.udb_btree_index import UdbBtreeEmbeddedIndex
 
 
 class UdbBtreeEmbeddedIndexTest(UdbBtreeEmbeddedIndex):

@@ -2,7 +2,7 @@ import os
 # import psutil
 import time
 
-from udb import *
+from udbpy import *
 
 
 # process = psutil.Process(os.getpid())

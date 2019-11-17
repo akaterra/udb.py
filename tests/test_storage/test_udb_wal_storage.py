@@ -1,8 +1,8 @@
 import os
 import pytest
 
-from udb.udb_index import UdbIndex
-from udb.storage.udb_wal_storage import UdbWalStorage
+from udbpy.udb_index import UdbIndex
+from udbpy.storage.udb_wal_storage import UdbWalStorage
 
 
 def copyfile(inp, out, name, new_name=None):

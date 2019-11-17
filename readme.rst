@@ -63,7 +63,7 @@ Installation
 
 .. code:: bash
 
-  pip install udb.py
+  pip install udbpy
 
 To enable BTree indexes support install `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_ package:
 
@@ -84,7 +84,7 @@ Create the Udb instance with the indexes declaration:
 
 .. code:: python
 
-  from udb import Udb, UdbBtreeIndex
+  from udbpy import Udb, UdbBtreeIndex
 
   db = Udb({
       'a': UdbBtreeIndex(['a']),
@@ -126,7 +126,7 @@ The default value can be defined as a primitive value or callable:
 
 .. code:: python
 
-  from udb import Udb
+  from udbpy import Udb
 
   db = Udb(schema={
       'a': 'a',
@@ -141,7 +141,7 @@ Functional fields
 
 .. code:: python
 
-  from udb import Udb, auto_id
+  from udbpy import Udb, auto_id
 
   db = Udb(schema={
       'id': auto_id(),
@@ -151,7 +151,7 @@ Functional fields
 
 .. code:: python
 
-  from udb import Udb, current_timestamp
+  from udbpy import Udb, current_timestamp
 
   db = Udb(schema={
       'timestamp': current_timestamp(),
@@ -161,7 +161,7 @@ Functional fields
 
 .. code:: python
 
-  from udb import Udb, fn
+  from udbpy import Udb, fn
 
   db = Udb(schema={
       'timestamp': fn(lambda record: record['a'] + record['b']),
@@ -171,7 +171,7 @@ Functional fields
 
 .. code:: python
 
-  from udb import Udb, optional
+  from udbpy import Udb, optional
 
   db = Udb(schema={
       'a': optional,
@@ -216,7 +216,7 @@ By this sequence of fields, the index key will be generated and will be associat
 
 .. code:: python
 
-  from udb import Udb, UdbBtreeIndex
+  from udbpy import Udb, UdbBtreeIndex
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex(['a', 'b', 'c'])  # "a", "b" and "c" fields will be fetched from the indexed record
@@ -228,7 +228,7 @@ In this case of declaration in order that the record to be indexed it must conta
 
 .. code:: python
 
-  from udb import Udb, UdbBtreeIndex
+  from udbpy import Udb, UdbBtreeIndex
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex(['a', 'b', 'c'])  # "a", "b" and "c" fields will be fetched from the indexed record
@@ -240,7 +240,7 @@ Using dictionary in case of Python 3:
 
 .. code:: python
 
-  from udb import Udb, UdbBtreeIndex, required
+  from udbpy import Udb, UdbBtreeIndex, required
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex({'a': required, 'b': required, 'c': required})  # "a", "b" and "c" fields will be fetched from the indexed record
@@ -252,7 +252,7 @@ Using list of tuples in case of Python 2 (to keep key order):
 
 .. code:: python
 
-  from udb import Udb, UdbBtreeIndex, required
+  from udbpy import Udb, UdbBtreeIndex, required
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex([('a', required), ('b', required), ('c', required)])  # "a", "b" and "c" fields will be fetched from the indexed record
@@ -264,7 +264,7 @@ The default value for missing field can be defined as a primitive value or calla
 
 .. code:: python
 
-  from udb import Udb, UdbBtreeIndex
+  from udbpy import Udb, UdbBtreeIndex
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex({'a': 'a', 'b': 'b', 'c': 'c'})
@@ -274,7 +274,7 @@ The default value for missing field can be defined as a primitive value or calla
 
 .. code:: python
 
-  from udb import Udb, UdbBtreeIndex
+  from udbpy import Udb, UdbBtreeIndex
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex({'a': 'a', 'b': lambda key, values: 'b', 'c': 'c'})
@@ -289,7 +289,7 @@ To be able to index float values enable the float mode with necessary precision 
 
 .. code:: python
 
-  from udb import Udb, UdbBtreeIndex
+  from udbpy import Udb, UdbBtreeIndex
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex(['a']).set_float_precision(10)
@@ -421,7 +421,7 @@ To get the query plan use **select** method with **get_plan=True**:
 
 .. code:: python
 
-  from udb import Udb, UdbBtreeIndex
+  from udbpy import Udb, UdbBtreeIndex
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex({'a': 'a', 'b': lambda key, values: 'b', 'c': 'c'})
@@ -463,7 +463,7 @@ The storage allows keeping data persistent.
 
 .. code:: python
 
-  from udb import UdbJsonFileStorage
+  from udbpy import UdbJsonFileStorage
 
   db = Udb(storage=UdbJsonFileStorage('db'))
 
@@ -477,7 +477,7 @@ The storage allows keeping data persistent.
 
 .. code:: python
 
-  from udb import UdbWalStorage
+  from udbpy import UdbWalStorage
 
   db = Udb(storage=UdbWalStorage('db'))
 

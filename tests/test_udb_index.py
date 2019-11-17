@@ -1,7 +1,7 @@
 import pytest
 
-from udb.common import EMPTY, InvalidScanOperationValueError
-from udb.udb_index import UdbIndex
+from udbpy.common import EMPTY, InvalidScanOperationValueError
+from udbpy.udb_index import UdbIndex
 
 
 @pytest.mark.udb_index

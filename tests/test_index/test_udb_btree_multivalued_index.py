@@ -1,7 +1,7 @@
 import pytest
 
-from udb.common import *
-from udb.index.udb_btree_multivalued_index import UdbBtreeMultivaluedIndex
+from udbpy.common import *
+from udbpy.index.udb_btree_multivalued_index import UdbBtreeMultivaluedIndex
 
 
 class UdbBtreeMultivaluedIndexTest(UdbBtreeMultivaluedIndex):

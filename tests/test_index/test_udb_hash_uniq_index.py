@@ -1,7 +1,7 @@
 import pytest
 
-from udb.common import *
-from udb.index.udb_hash_uniq_index import UdbHashUniqIndex, ConstraintError
+from udbpy.common import *
+from udbpy.index.udb_hash_uniq_index import UdbHashUniqIndex, ConstraintError
 
 
 class UdbHashUniqIndexTest(UdbHashUniqIndex):

@@ -1,7 +1,7 @@
 import pytest
 
-from udb.common import *
-from udb.index.udb_hash_index import UdbHashEmbeddedIndex
+from udbpy.common import *
+from udbpy.index.udb_hash_index import UdbHashEmbeddedIndex
 
 
 class UdbHashEmbeddedIndexTest(UdbHashEmbeddedIndex):

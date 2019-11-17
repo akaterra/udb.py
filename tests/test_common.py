@@ -2,7 +2,7 @@
 
 import pytest
 
-from udb.common import *
+from udbpy.common import *
 
 
 @pytest.mark.common
