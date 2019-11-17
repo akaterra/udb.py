@@ -1,7 +1,7 @@
 import pytest
 
-from udbpy.common import InvalidScanOperationValueError
-from udbpy.index.udb_rtree_index import UdbRtreeIndex
+from udb_py.common import InvalidScanOperationValueError
+from udb_py.index.udb_rtree_index import UdbRtreeIndex
 
 
 class UdbRtreeIndexTest(UdbRtreeIndex):

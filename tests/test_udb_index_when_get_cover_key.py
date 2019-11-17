@@ -1,7 +1,7 @@
 import pytest
 
-from udbpy.common import FieldRequiredError, required, type_formatter_iter
-from udbpy.udb_index import UdbIndex
+from udb_py.common import FieldRequiredError, required, type_formatter_iter
+from udb_py.udb_index import UdbIndex
 
 
 def test_should_get_cover_key_on_full_covered_data():

@@ -1,7 +1,7 @@
 import pytest
 
-from udbpy.common import auto_id, current_timestamp, ConstraintError
-from udbpy.udb import Udb, UdbBtreeIndex, UdbBtreeUniqIndex
+from udb_py.common import auto_id, current_timestamp, ConstraintError
+from udb_py.udb import Udb, UdbBtreeIndex, UdbBtreeUniqIndex
 
 
 @pytest.mark.udb

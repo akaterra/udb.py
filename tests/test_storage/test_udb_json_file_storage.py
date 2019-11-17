@@ -1,8 +1,8 @@
 import os
 import pytest
 
-from udbpy.udb_index import UdbIndex
-from udbpy.storage.udb_json_file_storage import UdbJsonFileStorage
+from udb_py.udb_index import UdbIndex
+from udb_py.storage.udb_json_file_storage import UdbJsonFileStorage
 
 
 def copyfile(inp, out, name, new_name=None):
