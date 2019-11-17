@@ -27,15 +27,15 @@ Table of contents
 
   * `Float precision <#float-precision>`_
 
-* `Getting query plan <#getting-query-plan>`_
-
-* `Scan operations <#scan-operations>`_
-
 * `Querying <#querying>`_
 
   * `Query validation <#query-validation>`_
 
   * `Comparison order <#comparison-order>`_
+
+  * `Getting plan <#getting-plan>`_
+
+  * `Scan operations <#scan-operations>`_
 
 * `Storages <#storages>`_
 
@@ -297,46 +297,6 @@ To be able to index float values enable the float mode with necessary precision 
 
   db.insert({'a': 3.1415926525})
 
-Getting query plan
-------------------
-
-To get the query plan use **select** method with **get_plan=True**:
-
-.. code:: python
-
-  from udb import Udb, UdbBtreeIndex
-
-  db = Udb(indexes={
-      'abc': UdbBtreeIndex({'a': 'a', 'b': lambda key, values: 'b', 'c': 'c'})
-  })
-
-  db.select({'a': 3}, sort='-a', get_plan=True)  # [(<udb.index.udb_btree_index.UdbBtreeIndex object at 0x104994080>, 'const', 1, 2), (None, 'sort', 0, 0, 'a', False)]
-
-Scan operations
----------------
-
-BTree index:
-
-* **const** - an index covers only one record by the index key
-
-* **in** - an index covers multiple records by the list of the index keys, each of which covers exactly one record
-
-* **range** - an index covers multiple records by the index keys set by the minimum and maximum values
-
-* **prefix** - an index covers range of records by the partial index key
-
-* **prefix_in** - an index covers multiple records by the list of the partial index keys, each of which covers range of records
-
-RTree index:
-
-* **intersection** - an index covers records intersected by the rectangle
-
-* **near** - an index covers records near to the point
-
-No index:
-
-* **seq** - scanning that is not covered by any index, all records will be scanned (worst case)
-
 Querying
 --------
 
@@ -453,6 +413,46 @@ Due to the fact that the Udb database is not strictly typed for stored values, t
 
 So, for example, the record containing *int* value always greater than the record containing *boolean* value for the same field.
 Also, it means, that the records having indexed field will be fetched in the provided order.
+
+Getting plan
+~~~~~~~~~~~~
+
+To get the query plan use **select** method with **get_plan=True**:
+
+.. code:: python
+
+  from udb import Udb, UdbBtreeIndex
+
+  db = Udb(indexes={
+      'abc': UdbBtreeIndex({'a': 'a', 'b': lambda key, values: 'b', 'c': 'c'})
+  })
+
+  db.select({'a': 3}, sort='-a', get_plan=True)  # [(<udb.index.udb_btree_index.UdbBtreeIndex object at 0x104994080>, 'const', 1, 2), (None, 'sort', 0, 0, 'a', False)]
+
+Scan operations
+~~~~~~~~~~~~~~~
+
+BTree index:
+
+* **const** - an index covers only one record by the index key
+
+* **in** - an index covers multiple records by the list of the index keys, each of which covers exactly one record
+
+* **range** - an index covers multiple records by the index keys set by the minimum and maximum values
+
+* **prefix** - an index covers range of records by the partial index key
+
+* **prefix_in** - an index covers multiple records by the list of the partial index keys, each of which covers range of records
+
+RTree index:
+
+* **intersection** - an index covers records intersected by the rectangle
+
+* **near** - an index covers records near to the point
+
+No index:
+
+* **seq** - scanning that is not covered by any index, all records will be scanned (worst case)
 
 Storages
 --------
