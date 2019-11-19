@@ -1,6 +1,6 @@
 import logging
 
-from .common import Lst, auto_id, current_timestamp, fn, optional, required
+from .common import Lst
 from .index import (
     UdbBtreeIndex,
     UdbBtreeEmbeddedIndex,
@@ -14,13 +14,8 @@ from .index import (
     UdbHashUniqIndex,
     UdbRtreeIndex,
 )
-from .storage import (
-    UdbJsonFileStorage,
-    UdbWalStorage,
-)
 from .udb_index import (
     UdbIndex,
-    EMPTY,
     SCAN_OP_CONST,
     SCAN_OP_SEQ,
     SCAN_OP_SORT,
@@ -148,9 +143,9 @@ class Udb(object):
 
             logging.debug('db indexing')
 
-            for k, v in self._collection.items():
+            for k, record in self._collection.items():
                 for index in self._indexes.values():
-                    index.insert_by_schema(Lst(v) if type(v) == list else v, int(k))
+                    index.insert_by_schema(Lst(record) if type(record) == list else record, int(k))
 
             logging.debug('db indexed')
 
@@ -232,12 +227,12 @@ class Udb(object):
         update_count = 0
         self._revision += 1
 
-        for i, k in enumerate(self.get_q_cursor(
+        for k in self.get_q_cursor(
             q and cpy_dict(q, {'__rev__': {'$lte': self._revision - 1}}),
             limit,
             offset,
             get_keys_only=True
-        )):
+        ):
             before = self._collection.get(k)
             values['__rev__'] = self._revision
 
@@ -291,11 +286,20 @@ class Udb(object):
         plan = [] if get_plan else None
 
         if q:
-            for custom_seq in map(lambda ind: self._indexes[ind], use_indexes) if use_indexes else self._indexes.values():
+            for custom_seq in \
+                    map(lambda ind: self._indexes[ind], use_indexes) \
+                    if use_indexes \
+                    else self._indexes.values():
                 if custom_seq.schema_last_index < s_op_key_sequence_length:
                     continue
 
-                c_s_op_type, c_op_key_sequence_length, c_op_priority, c_op_fn, c_op_fn_q_arranger = custom_seq.get_scan_op(
+                (
+                    c_s_op_type,
+                    c_op_key_sequence_length,
+                    c_op_priority,
+                    c_op_fn,
+                    c_op_fn_q_arranger,
+                ) = custom_seq.get_scan_op(
                     q,
                     limit,
                     offset,

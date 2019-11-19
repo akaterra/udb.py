@@ -17,11 +17,11 @@ class UdbStorage(object):
     def save_meta(self, indexes, revision):
         raise NotImplementedError
 
-    def on_delete(self, id):
+    def on_delete(self, rid):
         return self
 
-    def on_insert(self, id, record):
+    def on_insert(self, rid, record):
         return self
 
-    def on_update(self, id, record, values):
+    def on_update(self, rid, record, values):
         return self

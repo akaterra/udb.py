@@ -70,8 +70,7 @@ class UdbHashMultivaluedIndex(UdbIndex):
         if new_existing == EMPTY:
             self._hash[new] = {uid}
         else:
-            for _ in range(count):
-                new_existing.add(uid)
+            new_existing.add(uid)
 
         return self
 

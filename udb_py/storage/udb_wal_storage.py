@@ -69,7 +69,7 @@ class UdbWalStorage(UdbStorage):
                     with open(self._name + '.wal.data.bak', 'wb') as w:
                         chunk = r.read(1024 * 1024 * 16)
 
-                        while len(chunk):
+                        while chunk:
                             if w.write(chunk) != len(chunk):
                                 if not PYTHON2:
                                     os.remove(self._name + '.wal.data.bak')
@@ -103,6 +103,9 @@ class UdbWalStorage(UdbStorage):
         self._wal_open()
 
         return {'indexes': indexes, 'revision': self._revision + 1, 'data': collection}
+
+    def save(self, indexes, revision, data):
+        return self
 
     def save_meta(self, indexes, revision):
         with open(self._name + '.wal.meta', 'w+') as f:
@@ -161,14 +164,14 @@ class UdbWalStorage(UdbStorage):
 
                 return collection, del_upd_count
 
-            operation, rid, count = struct.unpack('BIB', chunk)
+            operation, rid, _ = struct.unpack('BIB', chunk)
 
             if operation == _DELETE_OP:
                 collection.pop(rid, None)
 
                 del_upd_count += 1
             else:
-                if operation == _INSERT_OP or operation == _UPDATE_OP:
+                if operation in (_INSERT_OP, _UPDATE_OP):
                     chunk = file_descriptor.read(4)
 
                     if len(chunk) < 4:

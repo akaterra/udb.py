@@ -53,8 +53,9 @@ class UdbJsonFileStorage(UdbStorage):
     def save_meta(self, indexes, revision):
         return self
 
-    def _encode(self, o):
-        if type(o) in BUILT_IN_TYPES:
-            return o
 
-        return o.__getstate__()
+def _encode(o):
+    if type(o) in BUILT_IN_TYPES:
+        return o
+
+    return o.__getstate__()

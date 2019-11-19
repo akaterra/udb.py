@@ -147,7 +147,7 @@ class UdbIndex(object):
         for key, val in q.items():
             if type(val) == dict:
                 for op_key, val in val.items():
-                    if op_key == '$in' or op_key == '$nin':
+                    if op_key in ('$in', '$nin'):
                         if type(val) != list:
                             raise InvalidScanOperationValueError('{}.{}'.format(key, op_key))
 
@@ -283,7 +283,7 @@ class UdbIndex(object):
                 if i == 0:
                     return SCAN_OP_SEQ, 0, 0, None, None
 
-                return SCAN_OP_PREFIX, i, 1, lambda k: self.search_by_key_prefix(k), None
+                return SCAN_OP_PREFIX, i, 1, self.search_by_key_prefix, None
 
             if type(c) == dict:
                 c_eq = c.get('$eq', EMPTY)
@@ -363,11 +363,11 @@ class UdbIndex(object):
                         )
 
                 if self.is_prefixed:
-                    return SCAN_OP_PREFIX, i, 1, lambda k: self.search_by_key_prefix(k), None
+                    return SCAN_OP_PREFIX, i, 1, self.search_by_key_prefix, None
 
                 return SCAN_OP_SEQ, 0, 0, None, None
 
-        return SCAN_OP_CONST, i + 1, 2, lambda k: self.search_by_key(k), None
+        return SCAN_OP_CONST, i + 1, 2, self.search_by_key, None
 
     def set_float_precision(self, precision=18):
         self.type_format_mappers = configure_float_precision(precision)
