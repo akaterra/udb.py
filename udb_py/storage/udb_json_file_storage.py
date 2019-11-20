@@ -33,20 +33,20 @@ class UdbJsonFileStorage(UdbStorage):
 
     def load(self):
         if self.is_available():
-            with open(self._name + '.json', 'r') as f:
-                data = json.load(f)
+            with open(self._name + '.json', 'r') as file_r_desc:
+                data = json.load(file_r_desc)
 
             return data
 
         return {'indexes': {}, 'revision': 0, 'data': {}}
 
     def save(self, indexes, revision, data):
-        with open(self._name + '.json', 'w+') as f:
+        with open(self._name + '.json', 'w+') as file_w_desc:
             json.dump({
                 'indexes': {k: [v.schema_keys, v.type] for k, v in indexes.items()},
                 'revision': revision,
                 'data': data,
-            }, f, indent=2)
+            }, file_w_desc, indent=2)
 
         return True
 
@@ -54,8 +54,8 @@ class UdbJsonFileStorage(UdbStorage):
         return self
 
 
-def _encode(o):
-    if type(o) in BUILT_IN_TYPES:
-        return o
+def _encode(value):
+    if type(value) in BUILT_IN_TYPES:
+        return value
 
-    return o.__getstate__()
+    return value.__getstate__()

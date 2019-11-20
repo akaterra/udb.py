@@ -27,9 +27,9 @@ class UdbRtreeIndex(UdbIndex):
 
     @classmethod
     def seq(cls, seq, q, collection):
-        for k, v in q.items():
-            if type(v) == dict:
-                c_near = v.get('$near')
+        for key, condition in q.items():
+            if type(condition) == dict:
+                c_near = condition.get('$near')
 
                 if c_near:
                     c_near_x = c_near['x']
@@ -43,9 +43,9 @@ class UdbRtreeIndex(UdbIndex):
                     if c_near_min_distance is not None:
                         c_near_min_distance **= 2
 
-                    def seq_q(k, v):
-                        for r in seq:
-                            doc = collection[r][k]
+                    def seq_q(seq_key, _):
+                        for rid in seq:
+                            doc = collection[rid][seq_key]
                             c_x = c_near_x - doc[0]
                             c_y = c_near_y - doc[1]
 
@@ -57,17 +57,17 @@ class UdbRtreeIndex(UdbIndex):
                             if c_near_min_distance and c_near_min_distance > distance:
                                 continue
 
-                            yield r
+                            yield rid
 
                     # from nearest to far
-                    def seq_sort(key):
-                        d = collection[key]
+                    def seq_sort(seq_key):
+                        record = collection[seq_key]
 
-                        return (d[k][0] - c_near['x']) ** 2 + (d[k][1] - c_near['y']) ** 2
+                        return (record[seq_key][0] - c_near['x']) ** 2 + (record[seq_key][1] - c_near['y']) ** 2
 
-                    return sorted(seq_q(k, v), key=seq_sort)
+                    return sorted(seq_q(key, condition), key=seq_sort)
 
-                c_intersection = v.get('$intersection')
+                c_intersection = condition.get('$intersection')
 
                 if c_intersection:
                     c_intersection_x_min = c_intersection['xMin']
@@ -75,54 +75,54 @@ class UdbRtreeIndex(UdbIndex):
                     c_intersection_x_max = c_intersection['xMax']
                     c_intersection_y_max = c_intersection['yMax']
 
-                    def seq_q(k, v):
-                        for r in seq:
-                            doc = collection[r][k]
+                    def seq_q(seq_key, _):
+                        for rid in seq:
+                            record = collection[rid][seq_key]
 
-                            if c_intersection_x_min <= doc[0] <= c_intersection_x_max:
-                                if c_intersection_y_min <= doc[1] <= c_intersection_y_max:
-                                    yield r
+                            if c_intersection_x_min <= record[0] <= c_intersection_x_max:
+                                if c_intersection_y_min <= record[1] <= c_intersection_y_max:
+                                    yield rid
 
-                    return seq_q(k, v)
+                    return seq_q(key, condition)
 
         return seq
 
     @classmethod
     def validate_query(cls, q):
-        for key, val in q.items():
-            if type(val) == dict:
-                for op_key, val in val.items():
+        for key, condition in q.items():
+            if type(condition) == dict:
+                for op_key, op_condition in condition.items():
                     if op_key == '$intersection':
-                        if type(val) != dict:
+                        if type(op_condition) != dict:
                             raise InvalidScanOperationValueError('{}.{}'.format(key, op_key))
 
-                        if type(val.get('xMin')) != float and type(val.get('xMin')) != int:
+                        if type(op_condition.get('xMin')) != float and type(op_condition.get('xMin')) != int:
                             raise InvalidScanOperationValueError('{}.{}.xMin'.format(key, op_key))
 
-                        if type(val.get('yMin')) != float and type(val.get('yMin')) != int:
+                        if type(op_condition.get('yMin')) != float and type(op_condition.get('yMin')) != int:
                             raise InvalidScanOperationValueError('{}.{}.yMin'.format(key, op_key))
 
-                        if type(val.get('xMax')) != float and type(val.get('xMax')) != int:
+                        if type(op_condition.get('xMax')) != float and type(op_condition.get('xMax')) != int:
                             raise InvalidScanOperationValueError('{}.{}.xMax'.format(key, op_key))
 
-                        if type(val.get('yMax')) != float and type(val.get('yMax')) != int:
+                        if type(op_condition.get('yMax')) != float and type(op_condition.get('yMax')) != int:
                             raise InvalidScanOperationValueError('{}.{}.yMax'.format(key, op_key))
                     elif op_key == '$near':
-                        if type(val) != dict:
+                        if type(op_condition) != dict:
                             raise InvalidScanOperationValueError('{}.{}'.format(key, op_key))
 
-                        if type(val.get('x')) != float and type(val.get('x')) != int:
+                        if type(op_condition.get('x')) != float and type(op_condition.get('x')) != int:
                             raise InvalidScanOperationValueError('{}.{}.x'.format(key, op_key))
 
-                        if type(val.get('y')) != float and type(val.get('y')) != int:
+                        if type(op_condition.get('y')) != float and type(op_condition.get('y')) != int:
                             raise InvalidScanOperationValueError('{}.{}.y'.format(key, op_key))
 
-                        max_distance = val.get('maxDistance', EMPTY)
+                        max_distance = op_condition.get('maxDistance', EMPTY)
 
                         if max_distance != EMPTY and type(max_distance) != float and type(max_distance) != int:
                             raise InvalidScanOperationValueError('{}.{}.maxDistance'.format(key, op_key))
 
-                        min_distance = val.get('minDistance', EMPTY)
+                        min_distance = op_condition.get('minDistance', EMPTY)
 
                         if min_distance != EMPTY and type(min_distance) != float and type(min_distance) != int:
                             raise InvalidScanOperationValueError('{}.{}.minDistance'.format(key, op_key))
@@ -180,16 +180,18 @@ class UdbRtreeIndex(UdbIndex):
         raise FieldRequiredError('field required: {} on {}'.format(self._key, self.name))
 
     def get_scan_op(self, q, limit=None, offset=None, collection=None):
-        for k, v in q.items():
-            if type(v) == dict:
-                c_near = v.get('$near')
+        for key in self.schema_keys:
+            condition = q.get(key, EMPTY)
+
+            if type(condition) == dict:
+                c_near = condition.get('$near')
 
                 if c_near:
                     return (
                         SCAN_OP_NEAR,
                         1,
                         3,
-                        lambda k: self.search_by_near(
+                        lambda _: self.search_by_near(
                             c_near['x'],
                             c_near['y'],
                             c_near.get('minDistance'),
@@ -200,20 +202,18 @@ class UdbRtreeIndex(UdbIndex):
                         _q_arr_near
                     )
 
-                c_intersection = v.get('$intersection')
+                c_intersection = condition.get('$intersection')
 
                 if c_intersection:
                     return (
                         SCAN_OP_INTERSECTION,
                         1,
                         3,
-                        lambda k: self.search_by_intersection(
+                        lambda _: self.search_by_intersection(
                             c_intersection['minX'],
                             c_intersection['minY'],
                             c_intersection['maxX'],
                             c_intersection['maxY'],
-                            limit,
-                            collection
                         ),
                         _q_arr_intersection
                     )
@@ -221,7 +221,7 @@ class UdbRtreeIndex(UdbIndex):
         return SCAN_OP_SEQ, 0, 0, None, None
 
     def clear(self):
-        self._rtree.clear()
+        # @todo
 
         return self
 
@@ -235,7 +235,7 @@ class UdbRtreeIndex(UdbIndex):
 
         return self
 
-    def search_by_intersection(self, p_x_min, p_y_min, p_x_max, p_y_max, limit=None, collection=None):
+    def search_by_intersection(self, p_x_min, p_y_min, p_x_max, p_y_max):
         return self._rtree.intersection((p_x_min, p_y_min, p_x_max, p_y_max))
 
     def search_by_near(self, p_x, p_y, min_distance=None, max_distance=None, limit=None, collection=None):

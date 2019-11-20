@@ -271,29 +271,29 @@ class UdbIndex(object):
         )
         """
         type_format_mappers = self.type_format_mappers
-        i = - 1
+        ind = - 1
 
-        for i, f in enumerate(self.schema_keys):
-            c = q.get(f, EMPTY)
+        for ind, key in enumerate(self.schema_keys):
+            condition = q.get(key, EMPTY)
 
-            if c == EMPTY:
+            if condition == EMPTY:
                 if not self.is_prefixed:
                     return SCAN_OP_SEQ, 0, 0, None, None
 
-                if i == 0:
+                if ind == 0:
                     return SCAN_OP_SEQ, 0, 0, None, None
 
-                return SCAN_OP_PREFIX, i, 1, self.search_by_key_prefix, None
+                return SCAN_OP_PREFIX, ind, 1, self.search_by_key_prefix, None
 
-            if type(c) == dict:
-                c_eq = c.get('$eq', EMPTY)
+            if type(condition) == dict:
+                c_eq = condition.get('$eq', EMPTY)
 
                 if c_eq != EMPTY:
-                    if i == self.schema_last_index:
+                    if ind == self.schema_last_index:
                         return (
                             SCAN_OP_CONST,
-                            i + 1,
-                            2,
+                            ind + 1,  # cover key length
+                            2,  # priority
                             lambda k: self.search_by_key(k + type_format_mappers[type(c_eq)](c_eq)),
                             _q_arr_eq
                         )
@@ -301,22 +301,22 @@ class UdbIndex(object):
                     if self.is_prefixed:
                         return (
                             SCAN_OP_PREFIX,
-                            i + 1,
-                            1,
+                            ind + 1,  # cover key length
+                            1,  # priority
                             lambda k: self.search_by_key_prefix(k + type_format_mappers[type(c_eq)](c_eq)),
                             _q_arr_eq
                         )
 
                     return SCAN_OP_SEQ, 0, 0, None, None
 
-                c_in = c.get('$in', EMPTY)
+                c_in = condition.get('$in', EMPTY)
 
                 if c_in != EMPTY:
-                    if i == self.schema_last_index:
+                    if ind == self.schema_last_index:
                         return (
                             SCAN_OP_IN,
-                            i + 1,
-                            2,
+                            ind + 1,  # cover key length
+                            2,  # priority
                             lambda k: self.search_by_key_in(
                                 map(lambda x: k + type_format_mappers[type(x)](x), c_in)
                             ),
@@ -326,8 +326,8 @@ class UdbIndex(object):
                     if self.is_prefixed:
                         return (
                             SCAN_OP_PREFIX_IN,
-                            i + 1,
-                            1,
+                            ind + 1,  # cover key length
+                            1,  # priority
                             lambda k: self.search_by_key_prefix_in(
                                 map(lambda x: k + type_format_mappers[type(x)](x), c_in)
                             ),
@@ -337,10 +337,10 @@ class UdbIndex(object):
                     return SCAN_OP_SEQ, 0, 0, None, None
 
                 if self.is_ranged:
-                    c_gt = c.get('$gt', EMPTY)
-                    c_gte = c.get('$gte', c_gt)
-                    c_lt = c.get('$lt', EMPTY)
-                    c_lte = c.get('$lte', c_lt)
+                    c_gt = condition.get('$gt', EMPTY)
+                    c_gte = condition.get('$gte', c_gt)
+                    c_lt = condition.get('$lt', EMPTY)
+                    c_lte = condition.get('$lte', c_lt)
 
                     if c_gt != EMPTY or c_gte != EMPTY or c_lt != EMPTY or c_lte != EMPTY:
                         if c_gte != EMPTY:
@@ -351,8 +351,8 @@ class UdbIndex(object):
 
                         return (
                             SCAN_OP_RANGE,
-                            i + 1,
-                            1,
+                            ind + 1,  # cover key length
+                            1,  # priority
                             lambda k: self.search_by_key_range(
                                 (k + c_gte) if c_gte != EMPTY else k + chr(0),
                                 (k + c_lte) if c_lte != EMPTY else k + CHAR255,
@@ -363,11 +363,11 @@ class UdbIndex(object):
                         )
 
                 if self.is_prefixed:
-                    return SCAN_OP_PREFIX, i, 1, self.search_by_key_prefix, None
+                    return SCAN_OP_PREFIX, ind, 1, self.search_by_key_prefix, None
 
                 return SCAN_OP_SEQ, 0, 0, None, None
 
-        return SCAN_OP_CONST, i + 1, 2, self.search_by_key, None
+        return SCAN_OP_CONST, ind + 1, 2, self.search_by_key, None
 
     def set_float_precision(self, precision=18):
         self.type_format_mappers = configure_float_precision(precision)

@@ -59,33 +59,33 @@ class UdbWalStorage(UdbStorage):
 
         if self.is_available():
             if os.path.isfile(self._name + '.wal.meta'):
-                with open(self._name + '.wal.meta', 'r') as r:
-                    meta = json.load(r)
+                with open(self._name + '.wal.meta', 'r') as file_r_desc:
+                    meta = json.load(file_r_desc)
 
                 indexes = meta['indexes']
 
             if not os.path.isfile(self._name + '.wal.data.bak'):
-                with open(self._name + '.wal.data', 'rb') as r:
-                    with open(self._name + '.wal.data.bak', 'wb') as w:
-                        chunk = r.read(1024 * 1024 * 16)
+                with open(self._name + '.wal.data', 'rb') as file_r_desc:
+                    with open(self._name + '.wal.data.bak', 'wb') as file_w_desc:
+                        chunk = file_r_desc.read(1024 * 1024 * 16)
 
                         while chunk:
-                            if w.write(chunk) != len(chunk):
+                            if file_w_desc.write(chunk) != len(chunk):
                                 if not PYTHON2:
                                     os.remove(self._name + '.wal.data.bak')
 
                                     raise FSWalError(self._name + '.wal.data')
 
-                            chunk = r.read(1024 * 1024 * 16)
+                            chunk = file_r_desc.read(1024 * 1024 * 16)
 
-            logging.debug('{}.wal.data replaying'.format(self._name))
+            logging.debug('%s.wal.data replaying', self._name)
 
             collection, del_upd_count = self._wal_read(open(self._name + '.wal.data.bak', 'rb'))
 
-            logging.debug('{}.wal.data replayed, {} total records'.format(self._name, len(collection)))
+            logging.debug('%s.wal.data replayed, %i total records', self._name, len(collection))
 
             if del_upd_count or not os.path.isfile(self._name + '.wal.data'):
-                logging.debug('{}.wal.data repacking'.format(self._name))
+                logging.debug('%s.wal.data repacking', self._name)
 
                 self._file_wal = open(self._name + '.wal.data', 'wb+')
 
@@ -94,7 +94,7 @@ class UdbWalStorage(UdbStorage):
 
                 self._wal_close()
 
-                logging.debug('{}.wal.data repacked'.format(self._name))
+                logging.debug('%s.wal.data repacked', self._name)
 
             os.remove(self._name + '.wal.data.bak')
         else:
@@ -108,12 +108,12 @@ class UdbWalStorage(UdbStorage):
         return self
 
     def save_meta(self, indexes, revision):
-        with open(self._name + '.wal.meta', 'w+') as f:
+        with open(self._name + '.wal.meta', 'w+') as file_w_desc:
             json.dump({
                 'indexes': {k: [v.schema_keys, v.type] for k, v in indexes.items()},
                 'revision': revision,
                 'data': [],
-            }, f, indent=2)
+            }, file_w_desc, indent=2)
 
         return True
 
@@ -226,10 +226,10 @@ class UdbWalStorage(UdbStorage):
             if not PYTHON2:
                 raise FSWalError()
 
-        for v in values:
-            v = json.dumps(v).encode('utf-8')
+        for val in values:
+            val = json.dumps(val).encode('utf-8')
 
-            packed = struct.pack('I' + str(len(v)) + 's', len(v), v)
+            packed = struct.pack('I' + str(len(val)) + 's', len(val), val)
 
             if self._file_wal.write(packed) != len(packed):
                 if not PYTHON2:
@@ -237,6 +237,6 @@ class UdbWalStorage(UdbStorage):
 
     def _wal_corrupted_warn(self):
         if self._allow_corrupted_wal:
-            logging.warning('{}.wal.data is corrupted'.format(self._name))
+            logging.warning('%s.wal.data is corrupted', self._name)
         else:
             raise CorruptedWalError(self._name)
