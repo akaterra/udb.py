@@ -24,7 +24,7 @@ def _q_arr_range(q):
     q.pop('$gt', q.pop('$gte', q.pop('$lt', q.pop('$lte', EMPTY))))
 
 
-_PRIMITIVE_VALUES = (None, bool, float, int, str)
+_PRIMITIVE_VALS = (None, bool, float, int, str)
 
 
 SCAN_OP_CONST = 'const'
@@ -117,47 +117,47 @@ class UdbIndex(object):
 
     @classmethod
     def seq(cls, seq, q, collection):
-        for r in seq:
-            p = True
-            d = collection[r]
+        for rid in seq:
+            passed = True
+            record = collection[rid]
 
-            for k, v in q.items():
-                _ = d.get(k, None)
+            for key, condition in q.items():
+                _ = record.get(key, None)
 
-                if v and type(v) == dict:
-                    for c, v in v.items():
-                        op = cls._OPS.get(c)
+                if condition and type(condition) == dict:
+                    for op_key, op_condition in condition.items():
+                        op = cls._OPS.get(op_key)
 
                         if op:
-                            p = op(_, v)
+                            passed = op(_, op_condition)
 
-                        if not p:
+                        if not passed:
                             break
                 else:
-                    p = _eq_op(_, v)
+                    passed = _eq_op(_, condition)
 
-                if not p:
+                if not passed:
                     break
 
-            if p:
-                yield r
+            if passed:
+                yield rid
 
     @classmethod
     def validate_query(cls, q):
-        for key, val in q.items():
-            if type(val) == dict:
-                for op_key, val in val.items():
+        for key, condition in q.items():
+            if type(condition) == dict:
+                for op_key, op_condition in condition.items():
                     if op_key in ('$in', '$nin'):
-                        if type(val) != list:
+                        if type(op_condition) != list:
                             raise InvalidScanOperationValueError('{}.{}'.format(key, op_key))
 
-                        for i, val in enumerate(val):
-                            if op_key in cls._OPS and val is not None and type(val) not in _PRIMITIVE_VALUES:
-                                raise InvalidScanOperationValueError('{}.{}[{}]'.format(key, op_key, i))
-                    elif op_key in cls._OPS and val is not None and type(val) not in _PRIMITIVE_VALUES:
+                        for ind, in_value in enumerate(op_condition):
+                            if op_key in cls._OPS and in_value is not None and type(in_value) not in _PRIMITIVE_VALS:
+                                raise InvalidScanOperationValueError('{}.{}[{}]'.format(key, op_key, ind))
+                    elif op_key in cls._OPS and op_condition is not None and type(op_condition) not in _PRIMITIVE_VALS:
                         raise InvalidScanOperationValueError('{}.{}'.format(key, op_key))
             else:
-                if val is not None and type(val) not in _PRIMITIVE_VALUES:
+                if condition is not None and type(condition) not in _PRIMITIVE_VALS:
                     raise InvalidScanOperationValueError(key)
 
         return True
@@ -440,30 +440,30 @@ class UdbEmbeddedIndex(UdbIndex):
 
     @classmethod
     def seq(cls, seq, q, collection):
-        for r in seq:
-            p = True
-            d = collection[r]
+        for rid in seq:
+            passed = True
+            record = collection[rid]
 
-            for k, v in q.items():
-                _ = d.get(k, None)
+            for key, condition in q.items():
+                _ = record.get(key, None)
 
-                if v and type(v) == dict:
-                    for c, v in v.items():
-                        op = cls._OPS.get(c)
+                if condition and type(condition) == dict:
+                    for op_key, op_condition in condition.items():
+                        op = cls._OPS.get(op_key)
 
                         if op:
-                            p = op(_, v)
+                            passed = op(_, op_condition)
 
-                        if not p:
+                        if not passed:
                             break
                 else:
-                    p = _eq_op(_, v)
+                    passed = _eq_op(_, condition)
 
-                if not p:
+                if not passed:
                     break
 
-            if p:
-                yield r
+            if passed:
+                yield rid
 
     def get_cover_key(self, record, second=None):
         key = ''
