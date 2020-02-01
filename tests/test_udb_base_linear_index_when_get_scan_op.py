@@ -1,7 +1,15 @@
-from udb_py.udb_index import *
+from udb_py.index.udb_base_linear_index import (
+    UdbBaseLinearIndex,
+    SCAN_OP_CONST,
+    SCAN_OP_IN,
+    SCAN_OP_PREFIX,
+    SCAN_OP_PREFIX_IN,
+    SCAN_OP_RANGE,
+    SCAN_OP_SEQ,
+)
 
 
-class UdbIndexTest(UdbIndex):
+class UdbBaseLinearTestIndex(UdbBaseLinearIndex):
     is_prefixed = True
     is_ranged = True
 
@@ -25,7 +33,7 @@ class UdbIndexTest(UdbIndex):
 
 
 def test_should_get_const_scan_op():
-    i = UdbIndexTest(['a'])
+    i = UdbBaseLinearTestIndex(['a'])
 
     op, prefix_key_len, priority, fn, fn_q_arranger = i.get_scan_op({'a': None})
 
@@ -38,7 +46,7 @@ def test_should_get_const_scan_op():
 
 
 def test_should_get_in_scan_op():
-    i = UdbIndexTest(['a', 'b'])
+    i = UdbBaseLinearTestIndex(['a', 'b'])
 
     op, prefix_key_len, priority, fn, fn_q_arranger = i.get_scan_op({'a': None, 'b': {'$in': ['000', '111']}})
 
@@ -56,7 +64,7 @@ def test_should_get_in_scan_op():
 
 
 def test_should_get_prefix_scan_op():
-    i = UdbIndexTest(['a', 'b', 'c'])
+    i = UdbBaseLinearTestIndex(['a', 'b', 'c'])
 
     op, prefix_key_len, priority, fn, fn_q_arranger = i.get_scan_op({'a': None, 'b': None})
 
@@ -69,7 +77,7 @@ def test_should_get_prefix_scan_op():
 
 
 def test_should_get_range_scan_op():
-    i = UdbIndexTest(['a', 'b', 'c'])
+    i = UdbBaseLinearTestIndex(['a', 'b', 'c'])
 
     op, prefix_key_len, priority, fn, fn_q_arranger = i.get_scan_op({'a': None, 'b': {'$gte': '000', '$lte': '111'}})
 
@@ -82,7 +90,7 @@ def test_should_get_range_scan_op():
 
 
 def test_should_get_range_excluding_min_scan_op():
-    i = UdbIndexTest(['a', 'b', 'c'])
+    i = UdbBaseLinearTestIndex(['a', 'b', 'c'])
 
     op, prefix_key_len, priority, fn, fn_q_arranger = i.get_scan_op({'a': None, 'b': {'$gt': '000', '$lte': '111'}})
 
@@ -95,7 +103,7 @@ def test_should_get_range_excluding_min_scan_op():
 
 
 def test_should_get_range_excluding_max_scan_op():
-    i = UdbIndexTest(['a', 'b', 'c'])
+    i = UdbBaseLinearTestIndex(['a', 'b', 'c'])
 
     op, prefix_key_len, priority, fn, fn_q_arranger = i.get_scan_op({'a': None, 'b': {'$gte': '000', '$lt': '111'}})
 
@@ -108,7 +116,7 @@ def test_should_get_range_excluding_max_scan_op():
 
 
 def test_should_get_seq_scan_op():
-    i = UdbIndexTest(['a'])
+    i = UdbBaseLinearTestIndex(['a'])
 
     op, prefix_key_len, priority, fn, fn_q_arranger = i.get_scan_op({'x': None})
 
@@ -120,7 +128,7 @@ def test_should_get_seq_scan_op():
 
 
 def test_should_not_get_range_scan_op_on_not_ranged_index():
-    i = UdbIndex(['a', 'b', 'c'])
+    i = UdbBaseLinearIndex(['a', 'b', 'c'])
 
     op, prefix_key_len, priority, fn, fn_q_arranger = i.get_scan_op({'a': None, 'b': {'$gte': '000', '$lte': '111'}})
 

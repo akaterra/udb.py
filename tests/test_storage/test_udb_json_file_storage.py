@@ -18,8 +18,8 @@ def copyfile(inp, out, name, new_name=None):
 
 def test_should_save_db_then_load_db():
     i = {
-        'a': UdbIndex(['a']),
-        'b': UdbIndex(['b']),
+        'a': UdbIndex(),
+        'b': UdbIndex(),
     }
 
     s = UdbJsonFileStorage('ignore.test')
@@ -36,8 +36,8 @@ def test_should_save_db_then_load_db():
             '3': {'a': 2},
         },
         'indexes': {
-            'a': [['a'], None],
-            'b': [['b'], None],
+            'a': [None, {}],
+            'b': [None, {}],
         },
         'revision': 4,
     }

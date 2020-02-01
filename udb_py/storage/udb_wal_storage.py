@@ -110,7 +110,7 @@ class UdbWalStorage(UdbStorage):
     def save_meta(self, indexes, revision):
         with open(self._name + '.wal.meta', 'w+') as file_w_desc:
             json.dump({
-                'indexes': {k: [v.schema_keys, v.type] for k, v in indexes.items()},
+                'indexes': {k: [v.type, v.get_meta()] for k, v in indexes.items()},
                 'revision': revision,
                 'data': [],
             }, file_w_desc, indent=2)

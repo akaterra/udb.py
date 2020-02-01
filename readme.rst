@@ -4,7 +4,7 @@ Udb.py
 .. image:: https://travis-ci.org/akaterra/udb.py.svg?branch=master
   :target: https://travis-ci.org/akaterra/udb.py
 
-Udb is an in-memory database based on the `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_, the `Rtree <http://toblerity.org/rtree>`_ and on the native python's dict.
+Udb is an in-memory database based on the `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_, the `Rtree <https://rtree.readthedocs.io/en/latest>`_ and on the native python's dict.
 Udb provides indexes support and limited MongoDB-like queries.
 Udb does not support any type of transactions for now.
 
@@ -76,6 +76,12 @@ To enable RTree indexes support install `Rtree <http://toblerity.org/rtree>`_ pa
 .. code:: bash
 
   pip install Rtree
+
+  Installing **libspatialindex** on MacOS with Homebrew:
+
+  .. code:: bash
+
+    brew install spatialindex
 
 Quick start
 -----------

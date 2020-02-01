@@ -1,0 +1,4 @@
+
+
+class UdbView(Udb):
+    pass

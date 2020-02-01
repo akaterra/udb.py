@@ -2,6 +2,8 @@ import logging
 
 from .common import Lst
 from .index import (
+    UdbBaseGEOIndex,
+    UdbBaseLinearIndex,
     UdbBtreeIndex,
     UdbBtreeEmbeddedIndex,
     UdbBtreeMultivaluedIndex,
@@ -41,8 +43,8 @@ _INDEXES = (
 class Udb(object):
     _collection = None
     _copy_on_select = False
-    _custom_seq = [UdbIndex.seq, UdbRtreeIndex.seq]
-    _custom_validate_query = [UdbIndex.validate_query, UdbRtreeIndex.validate_query]
+    _custom_seq = [UdbBaseLinearIndex.seq, UdbBaseGEOIndex.seq]
+    _custom_validate_query = [UdbBaseLinearIndex.validate_query, UdbBaseGEOIndex.validate_query]
     _delete_buffer = None
     _indexes = {}
     _indexes_to_check_for_ins_upd_allowance = None
@@ -89,9 +91,9 @@ class Udb(object):
             self._storage = storage
 
             if storage.is_capture_events():
-                self._on_delete = storage.on_delete
-                self._on_insert = storage.on_insert
-                self._on_update = storage.on_update
+                self._on_delete = [storage.on_delete]
+                self._on_insert = [storage.on_insert]
+                self._on_update = [storage.on_update]
 
     def __len__(self):
         return 0
@@ -125,27 +127,27 @@ class Udb(object):
             if not self._indexes:
                 indexes = data['indexes']
 
-                for k, index in indexes.items():
+                for key, index in indexes.items():
                     s_ind = None
 
                     for i in _INDEXES:
-                        if index[1] == i.type:
+                        if index[0] == i.type:
                             s_ind = i
 
                             break
 
                     if s_ind:
-                        indexes[k] = s_ind(index[0], k)
+                        indexes[key] = s_ind(**index[1])
                     else:
-                        raise ValueError('unknown index type: {} on {}'.format(index[1], k))
+                        raise ValueError('unknown index type: {} on {}'.format(index[1], key))
 
                 self._indexes = indexes
 
             logging.debug('db indexing')
 
-            for k, record in self._collection.items():
+            for key, record in self._collection.items():
                 for index in self._indexes.values():
-                    index.insert_by_schema(Lst(record) if type(record) == list else record, int(k))
+                    index.insert_by_schema(Lst(record) if type(record) == list else record, int(key))
 
             logging.debug('db indexed')
 
@@ -172,45 +174,47 @@ class Udb(object):
         delete_count = 0
 
         while True:
-            i = - 1
+            ind = - 1
 
-            for i, k in enumerate(self.get_q_cursor(q and cpy_dict(q), limit, offset, get_keys_only=True)):
-                self._delete_buffer[i] = k
+            for ind, key in enumerate(self.get_q_cursor(q and cpy_dict(q), limit, offset, get_keys_only=True)):
+                self._delete_buffer[ind] = key
 
                 delete_count += 1
 
-                if i == _DELETE_BUFFER_SIZE - 1:
+                if ind == _DELETE_BUFFER_SIZE - 1:
                     break
 
-            if i == - 1:
+            if ind == - 1:
                 return delete_count
 
-            for j in range(i + 1):
-                k = self._delete_buffer[j]
-                record = self._collection.get(k)
+            for j in range(ind + 1):
+                key = self._delete_buffer[j]
+                record = self._collection.get(key)
 
                 if self._on_delete:
-                    self._on_delete(k)
+                    for on_delete in self._on_delete:
+                        on_delete(key)
 
                 for index in self._indexes.values():
-                    index.delete(index.get_cover_key(record), k)
+                    index.delete(index.get_cover_key(record), key)
 
-                self._collection.pop(k)
+                self._collection.pop(key)
 
     def insert(self, values):
         if self._schema:
-            for key, val in self._schema.items():
-                if callable(val):
-                    values[key] = val(key, values)
+            for key, schema_entry in self._schema.items():
+                if callable(schema_entry):
+                    values[key] = schema_entry(key, values)
                 elif key not in values:
-                    values[key] = val
+                    values[key] = schema_entry
 
         if self._indexes_to_check_for_ins_upd_allowance:
             for index in self._indexes_to_check_for_ins_upd_allowance:
                 index.insert_is_allowed(index.get_cover_key(values))
 
         if self._on_insert:
-            self._on_insert(self._revision, values)
+            for on_insert in self._on_insert:
+                on_insert(self._revision, values)
 
         for index in self._indexes.values():
             index.insert_by_schema(values, self._revision)
@@ -227,13 +231,13 @@ class Udb(object):
         update_count = 0
         self._revision += 1
 
-        for k in self.get_q_cursor(
+        for key in self.get_q_cursor(
             q and cpy_dict(q, {'__rev__': {'$lte': self._revision - 1}}),
             limit,
             offset,
             get_keys_only=True
         ):
-            before = self._collection.get(k)
+            before = self._collection.get(key)
             values['__rev__'] = self._revision
 
             if self._indexes_to_check_for_ins_upd_allowance:
@@ -241,12 +245,13 @@ class Udb(object):
                     index.upsert_is_allowed(index.get_cover_key(before), index.get_cover_key(before, values))
 
             if self._on_update:
-                self._on_update(k, before, values)
+                for on_update in self._on_update:
+                    on_update(key, before, values)
 
             for index in self._indexes.values():
-                index.upsert(index.get_cover_key(before), index.get_cover_key(before, values), k)
+                index.upsert(index.get_cover_key(before), index.get_cover_key(before, values), key)
 
-            self._collection[k].update(values)
+            self._collection[key].update(values)
 
             update_count += 1
 

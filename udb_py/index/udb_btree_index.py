@@ -1,8 +1,8 @@
 from ..common import CHAR255, EMPTY
-from ..udb_index import UdbIndex, UdbEmbeddedIndex
+from .udb_base_linear_index import UdbBaseLinearIndex, UdbBaseLinearEmbeddedIndex
 
 
-class UdbBtreeIndex(UdbIndex):
+class UdbBtreeIndex(UdbBaseLinearIndex):
     is_prefixed = True
     is_ranged = True
     is_sorted_asc = True
@@ -11,7 +11,7 @@ class UdbBtreeIndex(UdbIndex):
     def __init__(self, schema, name=None):
         from BTrees.OIBTree import OIBTree
 
-        UdbIndex.__init__(self, schema, name)
+        UdbBaseLinearIndex.__init__(self, schema, name)
 
         self._btree = OIBTree()
 
@@ -68,7 +68,7 @@ class UdbBtreeIndex(UdbIndex):
         return self
 
 
-class UdbBtreeEmbeddedIndex(UdbBtreeIndex, UdbEmbeddedIndex):
+class UdbBtreeEmbeddedIndex(UdbBtreeIndex, UdbBaseLinearEmbeddedIndex):
     type = 'btree_embedded'
 
     def delete(self, key, uid=None):

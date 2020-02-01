@@ -1,12 +1,12 @@
 from ..common import EMPTY
-from ..udb_index import UdbIndex, UdbEmbeddedIndex
+from .udb_base_linear_index import UdbBaseLinearIndex, UdbBaseLinearEmbeddedIndex
 
 
-class UdbHashIndex(UdbIndex):
+class UdbHashIndex(UdbBaseLinearIndex):
     type = 'hash'
 
     def __init__(self, schema, name=None):
-        UdbIndex.__init__(self, schema, name)
+        UdbBaseLinearIndex.__init__(self, schema, name)
 
         self._hash = {}
 
@@ -50,7 +50,7 @@ class UdbHashIndex(UdbIndex):
         return self
 
 
-class UdbHashEmbeddedIndex(UdbHashIndex, UdbEmbeddedIndex):
+class UdbHashEmbeddedIndex(UdbHashIndex, UdbBaseLinearEmbeddedIndex):
     type = 'hash_embedded'
 
     def delete(self, key, uid=None):

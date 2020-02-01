@@ -26,8 +26,8 @@ class UdbIndexB(UdbIndex):
 @pytest.mark.udb
 def test_should_validate_query():
     i = Udb({
-        'a': UdbIndexA(['a']),
-        'b': UdbIndexB(['b']),
+        'a': UdbIndexA(),
+        'b': UdbIndexB(),
     })
 
     assert i.validate_query({'a': None}) is True
