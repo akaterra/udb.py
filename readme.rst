@@ -551,6 +551,7 @@ Instant view
 Instant view allows to get an instant slice of record by condition.
 
 .. code:: python
+
   from udb_py import Udb, UdbView
 
   db = Udb({})
@@ -574,12 +575,14 @@ Instant view allows to get an instant slice of record by condition.
   view.select({'a': 6})  # {'a': 5, 'b': 5, 'c': 3, 'd': 4, 'e': 7}
 
 By default view has the same indexes as the provided Udb instance.
-Use **index** parameter to drop all indexes or to set your own.
+Use **indexes** parameter to drop all indexes or to set your own.
 
 .. code:: python
+
   view = UdbView(db, {'b': {'$gte': 3}}, indexes=None)  # view has no indexes
 
 .. code:: python
+
   view = UdbView(db, {'b': {'$gte': 3}}, indexes={'a': UdbBtreeIndex(['a'])})  # view has custom indexes
 
 Limitations
