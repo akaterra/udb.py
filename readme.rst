@@ -51,9 +51,9 @@ Table of contents
 
 * `Limitations <#limitations>`_
 
-* `Running tests <#running-tests-with-pytest>`_
-
 * `Benchmarks <#benchmarks>`_
+
+* `Running tests <#running-tests-with-pytest>`_
 
 Requirements
 ------------
@@ -538,13 +538,6 @@ Update operation
 
   udb.update({'a': 2}, q={'a': 1}, offset=5)
 
-Running tests with pytest
--------------------------
-
-.. code:: bash
-
-  pytest . --ignore=virtualenv -v
-
 Instant view
 ------------
 
@@ -640,3 +633,10 @@ Benchmarks
   SELECT (RTREE, 1ST INDEX COVERS 1 FIELD, LIMIT = 5)
 
   Total time: 11.716284990310669 sec., per sample: 0.00011716284990310669 sec., samples per second: 8535.128676256994, total samples: 100000
+
+Running tests with pytest
+-------------------------
+
+.. code:: bash
+
+  pytest . --ignore=virtualenv -v
