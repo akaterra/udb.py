@@ -95,7 +95,7 @@ class UdbIndex(object):
     # is_ranged = False
     # is_sorted_asc = False
     # is_sparse = False
-    # is_uniq = False
+    is_uniq = False
     name = 'index'
     schema = {}
     schema_default_values = None
@@ -368,6 +368,9 @@ class UdbIndex(object):
     #             return SCAN_OP_SEQ, 0, 0, None, None
     #
     #     return SCAN_OP_CONST, ind + 1, 2, self.search_by_key, None
+
+    def __init__(self, name=None):
+        self.name = name or type(self).__name__
 
     def get_cover_key(self, record, second=None):
         raise NotImplementedError

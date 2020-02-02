@@ -419,15 +419,21 @@ class Udb(object):
         if offset is None:
             offset = 0
 
-        while offset:
-            next(source)
+        if offset:
+            for k in source:
+                offset -= 1
 
-            offset -= 1
+                if not offset:
+                      break
 
-        while limit:
-            yield next(source)
+        if limit:
+            for k in source:
+                yield k
 
-            limit -= 1
+                limit -= 1
+
+                if not limit:
+                      break
 
 
 def cpy_dict(d, update=None):

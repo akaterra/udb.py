@@ -162,9 +162,10 @@ class UdbBaseLinearIndex(UdbIndex):
         :param name:
         :param sparse:
         """
-        self.is_sparse = sparse
-        self.name = name or type(self).__name__
+        UdbIndex.__init__(self, name)
 
+        self.is_sparse = sparse
+        
         if type(schema) == list or type(schema) == tuple:
             schema = collections.OrderedDict(
                 (v[0], v[1])

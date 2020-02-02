@@ -131,7 +131,7 @@ class UdbBaseGEOIndex(UdbIndex):
     def __init__(self, key, default_value=EMPTY, name=None):
         from rtree import index
 
-        UdbIndex.__init__(self, None, name)
+        UdbIndex.__init__(self, name)
 
         self.schema = {key: default_value}
         self.schema_keys = [key]

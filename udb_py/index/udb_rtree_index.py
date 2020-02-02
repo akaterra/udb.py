@@ -241,7 +241,7 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
 
     def search_by_near(self, p_x, p_y, min_distance=None, max_distance=None, limit=None, collection=None):
         if limit is None:
-            limit = - 1  # - 1 is unlimited for rtree.nearest
+            limit = 99999999  # as unlimited for rtree.nearest
         elif limit < 1:
             return
 
@@ -254,7 +254,7 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
         if min_distance or max_distance:
             # if there is a min distance and no max distance, select unlimited points since it is an unknown count of
             # points have to be skipped with a distance less then min distance
-            iterator = self._rtree.nearest((p_x, p_y), - 1 if min_distance and max_distance is None else limit)
+            iterator = self._rtree.nearest((p_x, p_y), 99999999 if min_distance and max_distance is None else limit)
 
             for val in iterator:
                 doc = collection[val][self._key]
