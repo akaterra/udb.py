@@ -554,8 +554,6 @@ Instant view allows to get an instant slice of record by condition.
 
   from udb_py import Udb, UdbView
 
-  db = Udb({})
-
   db = Udb({
       'a': UdbBtreeIndex(['a']),
       'b': UdbBtreeIndex(['b']),
