@@ -110,30 +110,27 @@ class UdbBaseLinearIndex(UdbIndex):
     }
 
     @classmethod
+    def check_condition(cls, record, q, context=None):
+        for key, condition in q.items():
+            record_value = record.get(key, EMPTY)
+            is_record_acceptable = record_value is not EMPTY
+
+            if condition and type(condition) == dict:
+                for op_key, op_condition in condition.items():
+                    op = cls._OPS.get(op_key)
+
+                    if op and (not is_record_acceptable or not op(record_value, op_condition)):
+                        return False
+            else:
+                if not is_record_acceptable or not _eq_op(record_value, condition):
+                    return False
+
+        return True
+
+    @classmethod
     def seq(cls, seq, q, collection):
         for rid in seq:
-            passed = True
-            record = collection[rid]
-
-            for key, condition in q.items():
-                record_value = record.get(key, EMPTY)
-
-                if condition and type(condition) == dict:
-                    for op_key, op_condition in condition.items():
-                        op = cls._OPS.get(op_key)
-
-                        if op:
-                            passed = op(record_value, op_condition)
-
-                            if not passed:
-                                break
-                else:
-                    passed = _eq_op(record_value, condition)
-
-                if not passed:
-                    break
-
-            if passed:
+            if cls.check_condition(collection[rid], q):
                 yield rid
 
     @classmethod
@@ -156,7 +153,7 @@ class UdbBaseLinearIndex(UdbIndex):
 
         return True
 
-    def __init__(self, schema=None, name=None, sparse=False):
+    def __init__(self, schema, name=None, sparse=False):
         """
         :param schema: Index schema as list of keys or set of keys and accessors.
         :param name:
@@ -173,11 +170,10 @@ class UdbBaseLinearIndex(UdbIndex):
                 else (v, EMPTY) for v in schema
             )
 
-        if schema:
-            self.schema = schema
-            self.schema_default_values = {key: val for key, val in schema.items() if val != EMPTY}
-            self.schema_keys = list(schema.keys())
-            self.schema_last_index = len(schema) - 1
+        self.schema = schema
+        self.schema_default_values = {key: val for key, val in schema.items() if val != EMPTY}
+        self.schema_keys = list(schema.keys())
+        self.schema_last_index = len(schema) - 1
 
     def get_key(self, key, default=None):
         raise NotImplementedError
@@ -358,47 +354,6 @@ class UdbBaseLinearIndex(UdbIndex):
                 return SCAN_OP_SEQ, 0, 0, None, None
 
         return SCAN_OP_CONST, ind + 1, 2, self.search_by_key, None
-
-    # def set_float_precision(self, precision=18):
-    #     self.type_format_mappers = configure_float_precision(precision)
-    #
-    #     return self
-    #
-    # def append_key(self, key, default_value=EMPTY):
-    #     self.schema[key] = default_value
-    #     self.schema_keys.append(key)
-    #     self.schema_last_index += 1
-    #
-    #     return self
-
-    # def clear(self):
-    #     return self
-    #
-    # def delete(self, key, uid):
-    #     raise NotImplementedError
-    #
-    # def insert(self, key, uid):
-    #     raise NotImplementedError
-    #
-    # def insert_by_schema(self, values, uid):
-    #     if self.schema_default_values:
-    #         second = {}
-    #
-    #         for key, val in self.schema_default_values.items():
-    #             if key not in values:
-    #                 if callable(val):
-    #                     second[key] = val(key, values)
-    #                 else:
-    #                     second[key] = val
-    #     else:
-    #         second = None
-    #
-    #     self.insert(self.get_cover_key_or_raise(values, second), uid)
-    #
-    #     return True
-    #
-    # def insert_is_allowed(self, key):
-    #     return True
 
     def search_by_key(self, key):
         raise NotImplementedError

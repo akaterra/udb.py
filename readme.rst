@@ -79,9 +79,9 @@ To enable RTree indexes support install `Rtree <http://toblerity.org/rtree>`_ pa
 
   Installing **libspatialindex** on MacOS with Homebrew:
 
-  .. code:: bash
+.. code:: bash
 
-    brew install spatialindex
+  brew install spatialindex
 
 Quick start
 -----------

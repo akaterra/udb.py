@@ -10,11 +10,21 @@ def _q_arr_near(q):
     q.pop('$near')
 
 
+class UdbBaseGEOIndexCheckConditionContext(object):
+    __slots__ = ('intersection', 'near')
+
+
+class UdbBaseGEOIndexCheckConditionContextIntersection(object):
+    __slots__ = ('x_min', 'x_max', 'y_min', 'y_max')
+
+
+class UdbBaseGEOIndexCheckConditionContextNear(object):
+    __slots__ = ('x', 'y', 'min_distance', 'max_distance')
+
+
 class UdbBaseGEOIndex(UdbIndex):
-    # schema_keys = []
     is_prefixed = False
     is_ranged = False
-    # schema_last_index = 0
 
     _key = None
     _key_default_value = None
@@ -25,66 +35,91 @@ class UdbBaseGEOIndex(UdbIndex):
     }
 
     @classmethod
-    def seq(cls, seq, q, collection):
+    def check_condition(cls, record, q, context):
         for key, condition in q.items():
-            if type(condition) == dict:
-                c_near = condition.get('$near')
+            record_value = record.get(key, None)
+            is_record_acceptable = type(record_value) == list or type(record_value) == tuple
 
-                if c_near:
-                    c_near_x = c_near['x']
-                    c_near_y = c_near['y']
-                    c_near_max_distance = c_near.get('maxDistance', None)
-                    c_near_min_distance = c_near.get('minDistance', None)
-
-                    if c_near_max_distance is not None:
-                        c_near_max_distance **= 2
-
-                    if c_near_min_distance is not None:
-                        c_near_min_distance **= 2
-
-                    def seq_q(seq_key, _):
-                        for rid in seq:
-                            doc = collection[rid][seq_key]
-                            c_x = c_near_x - doc[0]
-                            c_y = c_near_y - doc[1]
-
-                            distance = c_x * c_x + c_y * c_y
-
-                            if c_near_max_distance and c_near_max_distance < distance:
-                                continue
-
-                            if c_near_min_distance and c_near_min_distance > distance:
-                                continue
-
-                            yield rid
-
-                    # from nearest to far
-                    def seq_sort(seq_key):
-                        record = collection[seq_key]
-
-                        return (record[seq_key][0] - c_near['x']) ** 2 + (record[seq_key][1] - c_near['y']) ** 2
-
-                    return sorted(seq_q(key, condition), key=seq_sort)
-
+            if condition and type(condition) == dict:
                 c_intersection = condition.get('$intersection')
 
                 if c_intersection:
-                    c_intersection_x_min = c_intersection['xMin']
-                    c_intersection_y_min = c_intersection['yMin']
-                    c_intersection_x_max = c_intersection['xMax']
-                    c_intersection_y_max = c_intersection['yMax']
+                    if not is_record_acceptable:
+                        return False
 
-                    def seq_q(seq_key, _):
-                        for rid in seq:
-                            record = collection[rid][seq_key]
+                    if not context:
+                        context = UdbBaseGEOIndexCheckConditionContext()
 
-                            if c_intersection_x_min <= record[0] <= c_intersection_x_max:
-                                if c_intersection_y_min <= record[1] <= c_intersection_y_max:
-                                    yield rid
+                        context.intersection = {}
+                    elif not context.intersection:
+                        context.intersection = {}
 
-                    return seq_q(key, condition)
+                    c_intersection_q = context.intersection.get(key)
 
-        return seq
+                    if not c_intersection_q:
+                        c_intersection_q = context.intersection[key] = UdbBaseGEOIndexCheckConditionContextIntersection()
+
+                        c_intersection_q.x_min = c_intersection['xMin']
+                        c_intersection_q.x_max = c_intersection['xMax']
+                        c_intersection_q.y_min = c_intersection['yMin']
+                        c_intersection_q.y_max = c_intersection['yMax']
+
+                    if c_intersection_q.x_min > record_value[0]:
+                        return False
+
+                    if c_intersection_q.x_max < record_value[0]:
+                        return False
+
+                    if c_intersection_q.y_min > record_value[1]:
+                        return False
+
+                    if c_intersection_q.y_max < record_value[1]:
+                        return False
+
+                c_near = condition.get('$near')
+
+                if c_near:
+                    if not is_record_acceptable:
+                        return False
+
+                    if not context:
+                        context = UdbBaseGEOIndexCheckConditionContext()
+
+                        context.near = {}
+                    elif not context.near:
+                        context.near = {}
+
+                    c_near_q = context.near.get(key)
+
+                    if not c_near_q:
+                        c_near_q = context.near[key] = UdbBaseGEOIndexCheckConditionContextNear()
+
+                        c_near_q.x = c_near['x']
+                        c_near_q.y = c_near['y']
+                        c_near_q.min_distance = c_near['minDistance']**2 if 'minDistance' in c_near else None
+                        c_near_q.max_distance = c_near['maxDistance']**2 if 'maxDistance' in c_near else None
+
+                    c_x = c_near_q.x - record_value[0]
+
+                    c_y = c_near_q.y - record_value[1]
+
+                    distance = c_x * c_x + c_y * c_y
+
+                    if c_near_q.min_distance and c_near_q.min_distance > distance:
+                        return False
+
+                    if c_near_q.max_distance and c_near_q.max_distance < distance:
+                        return False
+
+        return True
+
+    @classmethod
+    def seq(cls, seq, q, collection):
+        context = UdbBaseGEOIndexCheckConditionContext()
+
+        for rid in seq:
+            if cls.check_condition(collection[rid], q, context):
+                yield rid
 
     @classmethod
     def validate_query(cls, q):
@@ -185,6 +220,22 @@ class UdbBaseGEOIndex(UdbIndex):
             condition = q.get(key, EMPTY)
 
             if type(condition) == dict:
+                c_intersection = condition.get('$intersection')
+
+                if c_intersection:
+                    return (
+                        SCAN_OP_INTERSECTION,
+                        1,
+                        3,
+                        lambda _: self.search_by_intersection(
+                            c_intersection['minX'],
+                            c_intersection['minY'],
+                            c_intersection['maxX'],
+                            c_intersection['maxY'],
+                        ),
+                        _q_arr_intersection
+                    )
+
                 c_near = condition.get('$near')
 
                 if c_near:
@@ -203,40 +254,22 @@ class UdbBaseGEOIndex(UdbIndex):
                         _q_arr_near
                     )
 
-                c_intersection = condition.get('$intersection')
-
-                if c_intersection:
-                    return (
-                        SCAN_OP_INTERSECTION,
-                        1,
-                        3,
-                        lambda _: self.search_by_intersection(
-                            c_intersection['minX'],
-                            c_intersection['minY'],
-                            c_intersection['maxX'],
-                            c_intersection['maxY'],
-                        ),
-                        _q_arr_intersection
-                    )
-
         return SCAN_OP_SEQ, 0, 0, None, None
 
     def clear(self):
-        # @todo
-
-        return self
+        raise NotImplementedError
 
     def delete(self, key, uid=None):
-        raise NotADirectoryError
+        raise NotImplementedError
 
     def insert(self, key, uid):
-        raise NotADirectoryError
+        raise NotImplementedError
 
     def search_by_intersection(self, p_x_min, p_y_min, p_x_max, p_y_max):
-        raise NotADirectoryError
+        raise NotImplementedError
 
     def search_by_near(self, p_x, p_y, min_distance=None, max_distance=None, limit=None, collection=None):
-        raise NotADirectoryError
+        raise NotImplementedError
 
     def upsert(self, old, new, uid):
-        raise NotADirectoryError
+        raise NotImplementedError
