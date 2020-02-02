@@ -35,7 +35,7 @@ class UdbBaseGEOIndex(UdbIndex):
     }
 
     @classmethod
-    def check_condition(cls, record, q, context):
+    def check_condition(cls, record, q, context=None):
         for key, condition in q.items():
             record_value = record.get(key, None)
             is_record_acceptable = type(record_value) == list or type(record_value) == tuple

@@ -1,70 +1,55 @@
-from .udb_core import UdbCore
+from .udb_core import UdbCore, cpy_dict
 
 
 class UdbView(UdbCore):
     _query = None
 
-    def __init__(self, udb, query, indexes=None):
+    def __init__(self, udb, query, indexes=UdbCore):
         if not indexes:
             indexes = {}
-
-        indexes.update(udb.indexes)
+        elif indexes is UdbCore:
+            indexes = cpy_dict(udb.indexes)
 
         UdbCore.__init__(self, indexes)
 
         self._collection = udb.collection
+        self._query = query
 
         udb\
             .add_on_delete(self._on_delete)\
             .add_on_insert(self._on_insert)\
             .add_on_update(self._on_update)
 
-    def _on_delete(self, key):
-        pass
+        for rid in udb.get_q_cursor(cpy_dict(query), get_keys_only=True):
+            self._on_insert(rid, self._collection[rid])
 
-    def _on_insert(self, revision, values):
-        if self._schema:
-            for key, schema_entry in self._schema.items():
-                if callable(schema_entry):
-                    values[key] = schema_entry(key, values)
-                elif key not in values:
-                    values[key] = schema_entry
+    def _on_delete(self, rid):
+        record = self._collection.get(rid)
+
+        if record:
+            for index in self._indexes.values():
+                index.delete(index.get_cover_key(record), rid)
+
+    def _on_insert(self, rid, values):
+        for custom_check_condition in self._custom_check_condition:
+            if not custom_check_condition(values, self._query):
+                return
 
         if self._indexes_to_check_for_ins_upd_allowance:
             for index in self._indexes_to_check_for_ins_upd_allowance:
                 index.insert_is_allowed(index.get_cover_key(values))
 
-        for index in self._custom_indexes.values():
-            index.insert_by_schema(values, revision)
+        for index in self._indexes.values():
+            index.insert_by_schema(values, rid)
 
-        return values
+    def _on_update(self, rid, before, values):
+        for custom_check_condition in self._custom_check_condition:
+            if not custom_check_condition(values, self._query):
+                return
 
-    def _on_update(self, key, before, values):
-        update_count = 0
-        self._revision += 1
+        if self._indexes_to_check_for_ins_upd_allowance:
+            for index in self._indexes_to_check_for_ins_upd_allowance:
+                index.upsert_is_allowed(index.get_cover_key(before), index.get_cover_key(before, values))
 
-        for key in self.get_q_cursor(
-            q and cpy_dict(q, {'__rev__': {'$lte': self._revision - 1}}),
-            limit,
-            offset,
-            get_keys_only=True
-        ):
-            before = self._collection.get(key)
-            values['__rev__'] = self._revision
-
-            if self._indexes_to_check_for_ins_upd_allowance:
-                for index in self._indexes_to_check_for_ins_upd_allowance:
-                    index.upsert_is_allowed(index.get_cover_key(before), index.get_cover_key(before, values))
-
-            if self._on_update:
-                for on_update in self._on_update:
-                    on_update(key, before, values)
-
-            for index in self._indexes.values():
-                index.upsert(index.get_cover_key(before), index.get_cover_key(before, values), key)
-
-            self._collection[key].update(values)
-
-            update_count += 1
-
-        return update_count
+        for index in self._indexes.values():
+            index.upsert(index.get_cover_key(before), index.get_cover_key(before, values), rid)

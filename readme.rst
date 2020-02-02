@@ -47,6 +47,8 @@ Table of contents
 
 * `Update operation <#update-operation>`_
 
+* `Instant view <#instant-view>`_
+
 * `Limitations <#limitations>`_
 
 * `Running tests <#running-tests-with-pytest>`_
@@ -542,6 +544,43 @@ Running tests with pytest
 .. code:: bash
 
   pytest . --ignore=virtualenv -v
+
+Instant view
+------------
+
+Instant view allows to get an instant slice of record by condition.
+
+.. code:: python
+  from udb_py import Udb, UdbView
+
+  db = Udb({})
+
+  db = Udb({
+      'a': UdbBtreeIndex(['a']),
+      'b': UdbBtreeIndex(['b']),
+      'cde': UdbBtreeIndex(['c', 'd', 'e']),
+  })
+
+  db.insert({'a': 1, 'b': 1, 'c': 3, 'd': 4, 'e': 5})
+  db.insert({'a': 2, 'b': 2, 'c': 3, 'd': 4, 'e': 5})
+  db.insert({'a': 3, 'b': 3, 'c': 3, 'd': 4, 'e': 5})
+  db.insert({'a': 4, 'b': 4, 'c': 3, 'd': 4, 'e': 6})
+  db.insert({'a': 5, 'b': 5, 'c': 3, 'd': 4, 'e': 7})
+
+  view = UdbView(db, {'b': {'$gte': 3}})
+
+  db.insert({'a': 6, 'b': 6, 'c': 3, 'd': 4, 'e': 8})  # updates view immediately
+
+  view.select({'a': 6})  # {'a': 5, 'b': 5, 'c': 3, 'd': 4, 'e': 7}
+
+By default view has the same indexes as the provided Udb instance.
+Use **index** parameter to drop all indexes or to set your own.
+
+.. code:: python
+  view = UdbView(db, {'b': {'$gte': 3}}, indexes=None)  # view has no indexes
+
+.. code:: python
+  view = UdbView(db, {'b': {'$gte': 3}}, indexes={'a': UdbBtreeIndex(['a'])})  # view has custom indexes
 
 Limitations
 -----------

@@ -43,6 +43,7 @@ _INDEXES = (
 class UdbCore(object):
     _collection = None
     _copy_on_select = False
+    _custom_check_condition = [UdbBaseLinearIndex.check_condition, UdbBaseGEOIndex.check_condition]
     _custom_seq = [UdbBaseLinearIndex.seq, UdbBaseGEOIndex.seq]
     _custom_validate_query = [UdbBaseLinearIndex.validate_query, UdbBaseGEOIndex.validate_query]
     _indexes = {}
@@ -69,6 +70,7 @@ class UdbCore(object):
                 ind.name = key
 
         if indexes_with_custom_seq:
+            self._custom_check_condition = [index_with_custom_seq.check_condition for index_with_custom_seq in indexes_with_custom_seq]
             self._custom_seq = [index_with_custom_seq.seq for index_with_custom_seq in indexes_with_custom_seq]
 
     def __len__(self):

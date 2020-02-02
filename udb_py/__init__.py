@@ -24,3 +24,4 @@ from .storage import UdbJsonFileStorage, UdbWalStorage
 from .udb import Udb
 from .udb_index import UdbIndex
 from .udb_storage import UdbStorage
+from .udb_view import UdbView
