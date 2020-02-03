@@ -29,6 +29,7 @@ SCAN_OP_SUB = 'sub'
 
 
 class UdbIndex(object):
+    is_sorted_asc = False
     is_uniq = False
     name = 'index'
     schema = {}

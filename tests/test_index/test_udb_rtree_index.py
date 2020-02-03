@@ -3,7 +3,6 @@ import pytest
 from udb_py.common import InvalidScanOperationValueError
 from udb_py.index.udb_rtree_index import UdbRtreeIndex
 
-
 class UdbRtreeIndexTest(UdbRtreeIndex):
     @property
     def index(self):

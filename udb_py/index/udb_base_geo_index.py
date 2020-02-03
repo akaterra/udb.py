@@ -15,10 +15,10 @@ SCAN_OP_NEAR = 'near'
 
 
 class UdbBaseGEOIndexCheckConditionContext(object):
-    __slots__ = ('is_empty', 'intersection', 'near', 'near_last', 'near_last_key')
+    __slots__ = ('intersection', 'near', 'near_last', 'near_last_key')
 
     def __init__(self):
-        self.is_empty = self.intersection = self.near = self.near_last = self.near_last_key = None
+        self.intersection = self.near = self.near_last = self.near_last_key = None
 
 
 class UdbBaseGEOIndexCheckConditionContextIntersection(object):
@@ -41,6 +41,7 @@ EMPTY_DICT = {}
 class UdbBaseGEOIndex(UdbIndex):
     is_prefixed = False
     is_ranged = False
+    schema_last_index = 0
 
     _key = None
     _key_default_value = None
@@ -54,9 +55,6 @@ class UdbBaseGEOIndex(UdbIndex):
     def check_condition(cls, record, q, context=None):
         if not context:
             context = cls._create_context(q)
-
-        if context and context.is_empty:
-            return True
 
         if context.intersection:
             for key, c_intersection_q in context.intersection.items():
@@ -137,7 +135,6 @@ class UdbBaseGEOIndex(UdbIndex):
                     
                     if not context.intersection:
                         context.intersection = {}
-                        context.is_empty = False
 
                     c_intersection_q = context.intersection[key] = UdbBaseGEOIndexCheckConditionContextIntersection()
 
@@ -154,7 +151,6 @@ class UdbBaseGEOIndex(UdbIndex):
 
                     if not context.near:
                         context.near = {}
-                        context.is_empty = False
                     
                     c_near_q = context.near_last = context.near[key] = UdbBaseGEOIndexCheckConditionContextNear()
 
@@ -166,16 +162,7 @@ class UdbBaseGEOIndex(UdbIndex):
                 if c_near:
                     context.near_last_key = key
 
-        if context.is_empty is None:
-            context.is_empty = True
-
         return context
-
-    @classmethod
-    def _seq(cls, seq, q, collection, context):
-        for rid in seq:
-            if cls.check_condition(collection[rid], q, context):
-                yield rid
 
     @classmethod
     def validate_query(cls, q):
