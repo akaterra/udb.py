@@ -1,7 +1,9 @@
 import pytest
 
-from udb_py.udb_index import SCAN_OP_IN, SCAN_OP_PREFIX, SCAN_OP_PREFIX_IN, SCAN_OP_RANGE, SCAN_OP_SORT
+from udb_py.udb_index import SCAN_OP_SORT
 from udb_py.udb import *
+from udb_py.index.udb_base_linear_index import SCAN_OP_IN, SCAN_OP_PREFIX, SCAN_OP_PREFIX_IN, SCAN_OP_RANGE
+from udb_py.index.udb_base_geo_index import SCAN_OP_INTERSECTION, SCAN_OP_NEAR
 
 
 @pytest.mark.udb

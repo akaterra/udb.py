@@ -175,6 +175,190 @@ def test_should_select_using_seq_scan_by_lte_operator():
 
 
 @pytest.mark.udb
+def test_should_select_using_seq_scan_by_eq_operator():
+    udb = Udb()
+
+    a = {'a': None, '__rev__': 0}
+    b = {'a': False, '__rev__': 1}
+    c = {'a': True, '__rev__': 2}
+    d = {'a': -1, '__rev__': 3}
+    e = {'a': 1, '__rev__': 4}
+    f = {'a': '1', '__rev__': 5}
+
+    udb.insert(a)
+    udb.insert(b)
+    udb.insert(c)
+    udb.insert(d)
+    udb.insert(e)
+    udb.insert(f)
+
+    records = list(udb.select({'a': {'$eq': 1}}))
+
+    assert records == [e]
+
+
+@pytest.mark.udb
+def test_should_select_using_seq_scan_by_ne_operator():
+    udb = Udb()
+
+    a = {'a': None, '__rev__': 0}
+    b = {'a': False, '__rev__': 1}
+    c = {'a': True, '__rev__': 2}
+    d = {'a': -1, '__rev__': 3}
+    e = {'a': 1, '__rev__': 4}
+    f = {'a': '1', '__rev__': 5}
+
+    udb.insert(a)
+    udb.insert(b)
+    udb.insert(c)
+    udb.insert(d)
+    udb.insert(e)
+    udb.insert(f)
+
+    records = list(udb.select({'a': {'$ne': 1}}))
+
+    assert records == [a, b, c, d, f]
+
+
+@pytest.mark.udb
+def test_should_select_using_seq_scan_by_in_operator():
+    udb = Udb()
+
+    a = {'a': None, '__rev__': 0}
+    b = {'a': False, '__rev__': 1}
+    c = {'a': True, '__rev__': 2}
+    d = {'a': -1, '__rev__': 3}
+    e = {'a': 1, '__rev__': 4}
+    f = {'a': '1', '__rev__': 5}
+
+    udb.insert(a)
+    udb.insert(b)
+    udb.insert(c)
+    udb.insert(d)
+    udb.insert(e)
+    udb.insert(f)
+
+    records = list(udb.select({'a': {'$in': [False, 1]}}))
+
+    assert records == [b, e]
+
+
+@pytest.mark.udb
+def test_should_select_using_seq_scan_by_nin_operator():
+    udb = Udb()
+
+    a = {'a': None, '__rev__': 0}
+    b = {'a': False, '__rev__': 1}
+    c = {'a': True, '__rev__': 2}
+    d = {'a': -1, '__rev__': 3}
+    e = {'a': 1, '__rev__': 4}
+    f = {'a': '1', '__rev__': 5}
+
+    udb.insert(a)
+    udb.insert(b)
+    udb.insert(c)
+    udb.insert(d)
+    udb.insert(e)
+    udb.insert(f)
+
+    records = list(udb.select({'a': {'$nin': [False, 1]}}))
+
+    assert records == [a, c ,d, f]
+
+
+@pytest.mark.udb
+def test_should_select_using_seq_scan_by_intersection_operator():
+    udb = Udb()
+
+    a = {'a': None, '__rev__': 0}
+    b = {'a': (1, 1), '__rev__': 1}
+    c = {'a': (1, 3), '__rev__': 2}
+    d = {'a': (3, 1), '__rev__': 3}
+    e = {'a': (3, 3), '__rev__': 4}
+    f = {'a': (2, 2), '__rev__': 5}
+
+    udb.insert(a)
+    udb.insert(b)
+    udb.insert(c)
+    udb.insert(d)
+    udb.insert(e)
+    udb.insert(f)
+
+    records = list(udb.select({'a': {'$intersection': {'xMin': 2, 'xMax': 4, 'yMin': 0, 'yMax': 2}}}))
+
+    assert records == [d, f]
+
+
+@pytest.mark.udb
+def test_should_select_using_seq_scan_by_near_operator():
+    udb = Udb()
+
+    a = {'a': None, '__rev__': 0}
+    b = {'a': (1, 1), '__rev__': 1}
+    c = {'a': (1, 3), '__rev__': 2}
+    d = {'a': (3, 1), '__rev__': 3}
+    e = {'a': (3, 3), '__rev__': 4}
+    f = {'a': (2, 2), '__rev__': 5}
+
+    udb.insert(a)
+    udb.insert(b)
+    udb.insert(c)
+    udb.insert(d)
+    udb.insert(e)
+    udb.insert(f)
+
+    records = list(udb.select({'a': {'$near': {'x': 3, 'y': 3}}}))
+
+    assert records == [e, f, c, d, b]
+
+
+@pytest.mark.udb
+def test_should_select_using_seq_scan_by_near_operator_with_min_distance():
+    udb = Udb()
+
+    a = {'a': None, '__rev__': 0}
+    b = {'a': (1, 1), '__rev__': 1}
+    c = {'a': (1, 3), '__rev__': 2}
+    d = {'a': (3, 1), '__rev__': 3}
+    e = {'a': (3, 3), '__rev__': 4}
+    f = {'a': (2, 2), '__rev__': 5}
+
+    udb.insert(a)
+    udb.insert(b)
+    udb.insert(c)
+    udb.insert(d)
+    udb.insert(e)
+    udb.insert(f)
+
+    records = list(udb.select({'a': {'$near': {'x': 3, 'y': 3, 'minDistance': 1}}}))
+
+    assert records == [f, c, d, b]
+
+
+@pytest.mark.udb
+def test_should_select_using_seq_scan_by_near_operator_with_max_distance():
+    udb = Udb()
+
+    a = {'a': None, '__rev__': 0}
+    b = {'a': (1, 1), '__rev__': 1}
+    c = {'a': (1, 3), '__rev__': 2}
+    d = {'a': (3, 1), '__rev__': 3}
+    e = {'a': (3, 3), '__rev__': 4}
+    f = {'a': (2, 2), '__rev__': 5}
+
+    udb.insert(a)
+    udb.insert(b)
+    udb.insert(c)
+    udb.insert(d)
+    udb.insert(e)
+    udb.insert(f)
+
+    records = list(udb.select({'a': {'$near': {'x': 3, 'y': 3, 'maxDistance': 2}}}))
+
+    assert records == [e, f, c, d]
+
+
+@pytest.mark.udb
 def test_should_select_by_range():
     udb = Udb()
 

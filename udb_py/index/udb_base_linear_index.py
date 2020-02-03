@@ -10,7 +10,7 @@ from ..common import (
     TYPE_FORMAT_MAPPERS,
     configure_float_precision,
 )
-from ..udb_index import UdbIndex
+from ..udb_index import UdbIndex, SCAN_OP_CONST, SCAN_OP_SEQ, SCAN_OP_SORT, SCAN_OP_SUB
 
 
 def _q_arr_eq(q):
@@ -28,23 +28,17 @@ def _q_arr_range(q):
 _PRIMITIVE_VALS = (None, bool, float, int, str)
 
 
-SCAN_OP_CONST = 'const'
 SCAN_OP_EMPTY = 'empty'
 SCAN_OP_IN = 'in'
-SCAN_OP_INTERSECTION = 'intersection'
-SCAN_OP_NEAR = 'near'
 SCAN_OP_PREFIX = 'prefix'
 SCAN_OP_PREFIX_IN = 'prefix_in'
 SCAN_OP_RANGE = 'range'
-SCAN_OP_SEQ = 'seq'
-SCAN_OP_SORT = 'sort'
-SCAN_OP_SUB = 'sub'
 
 
 def _eq_op(a, b):
     # can_be_compared = TYPE_COMPARERS[type(a)][type(b)]
 
-    return a == b
+    return a is b
 
 
 def _gt_op(a, b):
@@ -60,9 +54,11 @@ def _gte_op(a, b):
 
 
 def _in_op(a, b):
-    # can_be_compared = TYPE_COMPARERS[type(a)][type(b)]
-
-    return a in b
+    for v in b:
+        if a is v:
+            return True
+    
+    return False  # return a in b
 
 
 def _lt_op(a, b):
@@ -80,13 +76,15 @@ def _lte_op(a, b):
 def _ne_op(a, b):
     # can_be_compared = TYPE_COMPARERS[type(a)][type(b)]
 
-    return a != b
+    return a is not b
 
 
 def _nin_op(a, b):
-    # can_be_compared = TYPE_COMPARERS[type(a)][type(b)]
-
-    return a not in b
+    for v in b:
+        if a is v:
+            return False
+    
+    return True  # return a not in b
 
 
 class UdbBaseLinearIndex(UdbIndex):
@@ -372,12 +370,6 @@ class UdbBaseLinearIndex(UdbIndex):
 
     def search_by_key_seq(self, q, source):
         raise NotImplementedError
-
-    # def upsert(self, old, new, uid):
-    #     raise NotImplementedError
-    #
-    # def upsert_is_allowed(self, old, new):
-    #     return True
 
 
 class UdbBaseLinearEmbeddedIndex(UdbBaseLinearIndex):

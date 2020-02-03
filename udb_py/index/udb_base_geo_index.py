@@ -1,5 +1,5 @@
 from ..common import EMPTY
-from ..udb_index import UdbIndex, SCAN_OP_INTERSECTION, SCAN_OP_NEAR, SCAN_OP_SEQ, FieldRequiredError, InvalidScanOperationValueError
+from ..udb_index import UdbIndex, SCAN_OP_SEQ, FieldRequiredError, InvalidScanOperationValueError
 
 
 def _q_arr_intersection(q):
@@ -10,16 +10,32 @@ def _q_arr_near(q):
     q.pop('$near')
 
 
+SCAN_OP_INTERSECTION = 'intersection'
+SCAN_OP_NEAR = 'near'
+
+
 class UdbBaseGEOIndexCheckConditionContext(object):
-    __slots__ = ('intersection', 'near')
+    __slots__ = ('is_empty', 'intersection', 'near', 'near_last', 'near_last_key')
+
+    def __init__(self):
+        self.is_empty = self.intersection = self.near = self.near_last = self.near_last_key = None
 
 
 class UdbBaseGEOIndexCheckConditionContextIntersection(object):
     __slots__ = ('x_min', 'x_max', 'y_min', 'y_max')
 
+    def __init__(self):
+        self.x_min = self.x_max = self.y_min = self.y_max = None
+
 
 class UdbBaseGEOIndexCheckConditionContextNear(object):
     __slots__ = ('x', 'y', 'min_distance', 'max_distance')
+
+    def __init__(self):
+        self.x = self.y = self.min_distance = self.max_distance = None
+
+
+EMPTY_DICT = {}
 
 
 class UdbBaseGEOIndex(UdbIndex):
@@ -36,87 +52,127 @@ class UdbBaseGEOIndex(UdbIndex):
 
     @classmethod
     def check_condition(cls, record, q, context=None):
-        for key, condition in q.items():
-            record_value = record.get(key, None)
-            is_record_acceptable = type(record_value) == list or type(record_value) == tuple
+        if not context:
+            context = cls._create_context(q)
 
-            if condition and type(condition) == dict:
-                c_intersection = condition.get('$intersection')
+        if context and context.is_empty:
+            return True
 
-                if c_intersection:
-                    if not is_record_acceptable:
-                        return False
+        if context.intersection:
+            for key, c_intersection_q in context.intersection.items():
+                record_value = record.get(key, None)
+                is_record_acceptable = type(record_value) == list or type(record_value) == tuple
 
-                    if not context:
-                        context = UdbBaseGEOIndexCheckConditionContext()
+                if not is_record_acceptable:
+                    return False
 
-                        context.intersection = {}
-                    elif not context.intersection:
-                        context.intersection = {}
+                if c_intersection_q.x_min > record_value[0]:
+                    return False
 
-                    c_intersection_q = context.intersection.get(key)
+                if c_intersection_q.x_max < record_value[0]:
+                    return False
 
-                    if not c_intersection_q:
-                        c_intersection_q = context.intersection[key] = UdbBaseGEOIndexCheckConditionContextIntersection()
+                if c_intersection_q.y_min > record_value[1]:
+                    return False
 
-                        c_intersection_q.x_min = c_intersection['xMin']
-                        c_intersection_q.x_max = c_intersection['xMax']
-                        c_intersection_q.y_min = c_intersection['yMin']
-                        c_intersection_q.y_max = c_intersection['yMax']
+                if c_intersection_q.y_max < record_value[1]:
+                    return False
 
-                    if c_intersection_q.x_min > record_value[0]:
-                        return False
+        if context.near:
+            for key, c_near_q in context.near.items():
+                record_value = record.get(key, None)
+                is_record_acceptable = type(record_value) == list or type(record_value) == tuple
 
-                    if c_intersection_q.x_max < record_value[0]:
-                        return False
+                if not is_record_acceptable:
+                    return False
 
-                    if c_intersection_q.y_min > record_value[1]:
-                        return False
+                c_x = c_near_q.x - record_value[0]
 
-                    if c_intersection_q.y_max < record_value[1]:
-                        return False
+                c_y = c_near_q.y - record_value[1]
 
-                c_near = condition.get('$near')
+                distance = c_x * c_x + c_y * c_y
 
-                if c_near:
-                    if not is_record_acceptable:
-                        return False
+                if c_near_q.min_distance and c_near_q.min_distance > distance:
+                    return False
 
-                    if not context:
-                        context = UdbBaseGEOIndexCheckConditionContext()
-
-                        context.near = {}
-                    elif not context.near:
-                        context.near = {}
-
-                    c_near_q = context.near.get(key)
-
-                    if not c_near_q:
-                        c_near_q = context.near[key] = UdbBaseGEOIndexCheckConditionContextNear()
-
-                        c_near_q.x = c_near['x']
-                        c_near_q.y = c_near['y']
-                        c_near_q.min_distance = c_near['minDistance']**2 if 'minDistance' in c_near else None
-                        c_near_q.max_distance = c_near['maxDistance']**2 if 'maxDistance' in c_near else None
-
-                    c_x = c_near_q.x - record_value[0]
-
-                    c_y = c_near_q.y - record_value[1]
-
-                    distance = c_x * c_x + c_y * c_y
-
-                    if c_near_q.min_distance and c_near_q.min_distance > distance:
-                        return False
-
-                    if c_near_q.max_distance and c_near_q.max_distance < distance:
-                        return False
+                if c_near_q.max_distance and c_near_q.max_distance < distance:
+                    return False
 
         return True
 
     @classmethod
     def seq(cls, seq, q, collection):
+        context = cls._create_context(q)
+
+        if context.near_last:
+            def seq_q():
+                for rid in seq:
+                    if cls.check_condition(collection[rid], q, context):
+                        yield rid
+
+            # from nearest to far
+            def seq_sort(rid):
+                record = collection[rid]
+
+                return (record[context.near_last_key][0] - context.near_last.x) ** 2 + (record[context.near_last_key][1] - context.near_last.y) ** 2
+
+            for rid in sorted(seq_q(), key=seq_sort):
+                yield rid
+        else:
+            for rid in seq:
+                if cls.check_condition(collection[rid], q, context):
+                    yield rid
+
+    @classmethod
+    def _create_context(cls, q):
         context = UdbBaseGEOIndexCheckConditionContext()
 
+        for key, condition in q.items():
+            if condition and type(condition) == dict:
+                c_intersection = condition.get('$intersection')
+
+                if c_intersection:
+                    if not context:
+                        context = UdbBaseGEOIndexCheckConditionContext()
+                    
+                    if not context.intersection:
+                        context.intersection = {}
+                        context.is_empty = False
+
+                    c_intersection_q = context.intersection[key] = UdbBaseGEOIndexCheckConditionContextIntersection()
+
+                    c_intersection_q.x_min = c_intersection['xMin']
+                    c_intersection_q.x_max = c_intersection['xMax']
+                    c_intersection_q.y_min = c_intersection['yMin']
+                    c_intersection_q.y_max = c_intersection['yMax']
+
+                c_near = condition.get('$near')
+
+                if c_near:
+                    if not context:
+                        context = UdbBaseGEOIndexCheckConditionContext()
+
+                    if not context.near:
+                        context.near = {}
+                        context.is_empty = False
+                    
+                    c_near_q = context.near_last = context.near[key] = UdbBaseGEOIndexCheckConditionContextNear()
+
+                    c_near_q.x = c_near['x']
+                    c_near_q.y = c_near['y']
+                    c_near_q.min_distance = c_near['minDistance'] ** 2 if 'minDistance' in c_near else None
+                    c_near_q.max_distance = c_near['maxDistance'] ** 2 if 'maxDistance' in c_near else None
+
+                if c_near:
+                    context.near_last_key = key
+
+        if context.is_empty is None:
+            context.is_empty = True
+
+        return context
+
+    @classmethod
+    def _seq(cls, seq, q, collection, context):
         for rid in seq:
             if cls.check_condition(collection[rid], q, context):
                 yield rid
