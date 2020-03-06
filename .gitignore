@@ -1,3 +1,4 @@
+*.prof
 *.pyc
 .DS_Store
 .Python

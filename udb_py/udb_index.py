@@ -1,12 +1,5 @@
-import collections
-
 from .common import (
-    FieldRequiredError,
-    InvalidScanOperationValueError,
-    UnknownSeqScanOperationError,
-    CHAR255,
     EMPTY,
-    TYPE_COMPARERS,
     TYPE_FORMAT_MAPPERS,
     configure_float_precision,
 )
@@ -16,13 +9,6 @@ _PRIMITIVE_VALS = (None, bool, float, int, str)
 
 
 SCAN_OP_CONST = 'const'
-# SCAN_OP_EMPTY = 'empty'
-# SCAN_OP_IN = 'in'
-# SCAN_OP_INTERSECTION = 'intersection'
-# SCAN_OP_NEAR = 'near'
-# SCAN_OP_PREFIX = 'prefix'
-# SCAN_OP_PREFIX_IN = 'prefix_in'
-# SCAN_OP_RANGE = 'range'
 SCAN_OP_SEQ = 'seq'
 SCAN_OP_SORT = 'sort'
 SCAN_OP_SUB = 'sub'
@@ -109,63 +95,3 @@ class UdbIndex(object):
 
     def upsert_is_allowed(self, old, new):
         return True
-
-
-class UdbEmbeddedIndex(UdbIndex):
-    is_embedded = True
-
-    @classmethod
-    def seq(cls, seq, q, collection):
-        for rid in seq:
-            passed = True
-            record = collection[rid]
-
-            for key, condition in q.items():
-                _ = record.get(key, None)
-
-                if condition and type(condition) == dict:
-                    for op_key, op_condition in condition.items():
-                        op = cls._OPS.get(op_key)
-
-                        if op:
-                            passed = op(_, op_condition)
-
-                        if not passed:
-                            break
-                else:
-                    passed = _eq_op(_, condition)
-
-                if not passed:
-                    break
-
-            if passed:
-                yield rid
-
-    def get_cover_key(self, record, second=None):
-        key = ''
-        type_format_mappers = self.type_format_mappers
-
-        for i, k in enumerate(self.schema_keys):
-            get = self.schema[k]
-
-            if callable(get):
-                val = get(k, record)
-            elif second:
-                val = second.get(k, get)
-
-                if val == EMPTY:
-                    val = record.get(k, get)
-            else:
-                val = record.get(k, get)
-
-            if val != EMPTY:
-                if i == self.schema_last_index:
-                    if type(val) in self.type_format_mappers:
-                        yield key + type_format_mappers[type(val)](val)
-                    else:
-                        for val in val:
-                            yield key + type_format_mappers[type(val)](val)
-                else:
-                    key += type_format_mappers[type(val)](val)
-            else:
-                break

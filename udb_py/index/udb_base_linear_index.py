@@ -3,14 +3,11 @@ import collections
 from ..common import (
     FieldRequiredError,
     InvalidScanOperationValueError,
-    UnknownSeqScanOperationError,
     CHAR255,
     EMPTY,
     TYPE_COMPARERS,
-    TYPE_FORMAT_MAPPERS,
-    configure_float_precision,
 )
-from ..udb_index import UdbIndex, SCAN_OP_CONST, SCAN_OP_SEQ, SCAN_OP_SORT, SCAN_OP_SUB
+from ..udb_index import UdbIndex, SCAN_OP_CONST, SCAN_OP_SEQ
 
 
 def _q_arr_eq(q):
@@ -57,7 +54,7 @@ def _in_op(a, b):
     for v in b:
         if a is v:
             return True
-    
+
     return False  # return a in b
 
 
@@ -83,7 +80,7 @@ def _nin_op(a, b):
     for v in b:
         if a is v:
             return False
-    
+
     return True  # return a not in b
 
 
@@ -108,19 +105,23 @@ class UdbBaseLinearIndex(UdbIndex):
     }
 
     @classmethod
-    def check_condition(cls, record, q, context=None):
+    def check_condition(cls, values, q, context=None, extend=None):
         for key, condition in q.items():
-            record_value = record.get(key, EMPTY)
-            is_record_acceptable = record_value is not EMPTY
+            val = values.get(key, EMPTY)
+
+            if val is EMPTY and extend:
+                val = extend.get(key, EMPTY)
+
+            is_acceptable = val is not EMPTY
 
             if condition and type(condition) == dict:
                 for op_key, op_condition in condition.items():
                     op = cls._OPS.get(op_key)
 
-                    if op and (not is_record_acceptable or not op(record_value, op_condition)):
+                    if op and (not is_acceptable or not op(val, op_condition)):
                         return False
             else:
-                if not is_record_acceptable or not _eq_op(record_value, condition):
+                if not is_acceptable or not _eq_op(val, condition):
                     return False
 
         return True
@@ -160,7 +161,7 @@ class UdbBaseLinearIndex(UdbIndex):
         UdbIndex.__init__(self, name)
 
         self.is_sparse = sparse
-        
+
         if type(schema) == list or type(schema) == tuple:
             schema = collections.OrderedDict(
                 (v[0], v[1])

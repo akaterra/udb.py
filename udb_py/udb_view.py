@@ -44,8 +44,8 @@ class UdbView(UdbCore):
 
     def _on_update(self, rid, before, values):
         for custom_check_condition in self._custom_check_condition:
-            if not custom_check_condition(values, self._query):
-                return
+            if not custom_check_condition(before, self._query, None, values):
+                return self._on_delete(rid)
 
         if self._indexes_to_check_for_ins_upd_allowance:
             for index in self._indexes_to_check_for_ins_upd_allowance:

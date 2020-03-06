@@ -1,6 +1,5 @@
 from ..common import EMPTY
-from ..udb_index import SCAN_OP_SEQ, FieldRequiredError, InvalidScanOperationValueError
-from .udb_base_geo_index import UdbBaseGEOIndex, SCAN_OP_INTERSECTION, SCAN_OP_NEAR
+from .udb_base_geo_index import UdbBaseGEOIndex
 
 
 class UdbRtreeIndex(UdbBaseGEOIndex):

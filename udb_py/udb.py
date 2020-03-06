@@ -2,8 +2,6 @@ import logging
 
 from .common import Lst
 from .index import (
-    UdbBaseGEOIndex,
-    UdbBaseLinearIndex,
     UdbBtreeIndex,
     UdbBtreeEmbeddedIndex,
     UdbBtreeMultivaluedIndex,
@@ -17,13 +15,7 @@ from .index import (
     UdbRtreeIndex,
 )
 from .udb_core import UdbCore
-from .udb_index import (
-    UdbIndex,
-    SCAN_OP_CONST,
-    SCAN_OP_SEQ,
-    SCAN_OP_SORT,
-    SCAN_OP_SUB,
-)
+
 
 _DELETE_BUFFER_SIZE = 5000
 _INDEXES = (

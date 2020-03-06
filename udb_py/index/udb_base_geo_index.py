@@ -1,5 +1,5 @@
-from ..common import EMPTY
-from ..udb_index import UdbIndex, SCAN_OP_SEQ, FieldRequiredError, InvalidScanOperationValueError
+from ..common import EMPTY, FieldRequiredError, InvalidScanOperationValueError
+from ..udb_index import UdbIndex, SCAN_OP_SEQ
 
 
 def _q_arr_intersection(q):
@@ -52,41 +52,45 @@ class UdbBaseGEOIndex(UdbIndex):
     }
 
     @classmethod
-    def check_condition(cls, record, q, context=None):
+    def check_condition(cls, values, q, context=None, extend=None):
         if not context:
             context = cls._create_context(q)
 
         if context.intersection:
             for key, c_intersection_q in context.intersection.items():
-                record_value = record.get(key, None)
-                is_record_acceptable = type(record_value) == list or type(record_value) == tuple
+                val = values.get(key, EMPTY)
 
-                if not is_record_acceptable:
+                if val is EMPTY and extend:
+                    val = extend.get(key, EMPTY)
+
+                is_acceptable = type(val) == list or type(val) == tuple
+
+                if not is_acceptable:
                     return False
 
-                if c_intersection_q.x_min > record_value[0]:
+                if c_intersection_q.x_min > val[0]:
                     return False
 
-                if c_intersection_q.x_max < record_value[0]:
+                if c_intersection_q.x_max < val[0]:
                     return False
 
-                if c_intersection_q.y_min > record_value[1]:
+                if c_intersection_q.y_min > val[1]:
                     return False
 
-                if c_intersection_q.y_max < record_value[1]:
+                if c_intersection_q.y_max < val[1]:
                     return False
 
         if context.near:
             for key, c_near_q in context.near.items():
-                record_value = record.get(key, None)
-                is_record_acceptable = type(record_value) == list or type(record_value) == tuple
+                val = values.get(key, None)
+                is_acceptable = type(val) == list or type(val) == tuple
 
-                if not is_record_acceptable:
+                if not is_acceptable:
                     return False
 
-                c_x = c_near_q.x - record_value[0]
+                c_x = c_near_q.x - val[0]
 
-                c_y = c_near_q.y - record_value[1]
+                c_y = c_near_q.y - val[1]
 
                 distance = c_x * c_x + c_y * c_y
 
@@ -110,9 +114,9 @@ class UdbBaseGEOIndex(UdbIndex):
 
             # from nearest to far
             def seq_sort(rid):
-                record = collection[rid]
+                c_near = collection[rid][context.near_last_key]
 
-                return (record[context.near_last_key][0] - context.near_last.x) ** 2 + (record[context.near_last_key][1] - context.near_last.y) ** 2
+                return (c_near[0] - context.near_last.x) ** 2 + (c_near[1] - context.near_last.y) ** 2
 
             for rid in sorted(seq_q(), key=seq_sort):
                 yield rid
@@ -132,7 +136,7 @@ class UdbBaseGEOIndex(UdbIndex):
                 if c_intersection:
                     if not context:
                         context = UdbBaseGEOIndexCheckConditionContext()
-                    
+
                     if not context.intersection:
                         context.intersection = {}
 
@@ -151,7 +155,7 @@ class UdbBaseGEOIndex(UdbIndex):
 
                     if not context.near:
                         context.near = {}
-                    
+
                     c_near_q = context.near_last = context.near[key] = UdbBaseGEOIndexCheckConditionContextNear()
 
                     c_near_q.x = c_near['x']
@@ -207,8 +211,6 @@ class UdbBaseGEOIndex(UdbIndex):
         return True
 
     def __init__(self, key, default_value=EMPTY, name=None):
-        from rtree import index
-
         UdbIndex.__init__(self, name)
 
         self.schema = {key: default_value}

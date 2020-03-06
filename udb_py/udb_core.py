@@ -1,6 +1,3 @@
-import logging
-
-from .common import Lst
 from .index import (
     UdbBaseGEOIndex,
     UdbBaseLinearIndex,
@@ -17,7 +14,6 @@ from .index import (
     UdbRtreeIndex,
 )
 from .udb_index import (
-    UdbIndex,
     SCAN_OP_CONST,
     SCAN_OP_SEQ,
     SCAN_OP_SORT,
@@ -70,8 +66,12 @@ class UdbCore(object):
                 ind.name = key
 
         if indexes_with_custom_seq:
-            self._custom_check_condition = [index_with_custom_seq.check_condition for index_with_custom_seq in indexes_with_custom_seq]
-            self._custom_seq = [index_with_custom_seq.seq for index_with_custom_seq in indexes_with_custom_seq]
+            self._custom_check_condition = [
+                index_with_custom_seq.check_condition for index_with_custom_seq in indexes_with_custom_seq
+            ]
+            self._custom_seq = [
+                index_with_custom_seq.seq for index_with_custom_seq in indexes_with_custom_seq
+            ]
 
     def __len__(self):
         return 0
@@ -249,7 +249,7 @@ class UdbCore(object):
                 offset -= 1
 
                 if not offset:
-                      break
+                    break
 
         if limit:
             for k in source:
@@ -258,7 +258,8 @@ class UdbCore(object):
                 limit -= 1
 
                 if not limit:
-                      break
+                    break
+
 
 def cpy_dict(d, update=None):
     d = dict(d)
