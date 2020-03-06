@@ -41,8 +41,8 @@ def current_timestamp(formatter=int):
     return lambda key, record: formatter(time.mktime(_now().timetuple()) if PYTHON2 else _now().timestamp())
 
 
-def fn(fn):
-    return lambda key, record: fn(record)
+def fn(func):
+    return lambda key, record: func(record)
 
 
 def _now():
@@ -109,8 +109,8 @@ TYPE_FORMAT_MAPPERS = {
 
 
 def type_formatter_iter(iterable):
-    for v in iterable:
-        yield TYPE_FORMAT_MAPPERS[type(v)](v)
+    for val in iterable:
+        yield TYPE_FORMAT_MAPPERS[type(val)](val)
 
 
 def configure_float_precision(precision=18):

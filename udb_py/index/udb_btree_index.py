@@ -71,14 +71,14 @@ class UdbBtreeIndex(UdbBaseLinearIndex):
 class UdbBtreeEmbeddedIndex(UdbBtreeIndex, UdbBaseLinearEmbeddedIndex):
     type = 'btree_embedded'
 
-    def delete(self, key, uid=None):
-        for key in key:
+    def delete(self, keys, uid=None):
+        for key in keys:
             self._btree.pop(key, EMPTY)
 
         return self
 
-    def insert(self, key, uid):
-        for key in key:
+    def insert(self, keys, uid):
+        for key in keys:
             self._btree.insert(key, uid)
 
         return self

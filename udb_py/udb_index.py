@@ -47,7 +47,7 @@ class UdbIndex(object):
         raise NotImplementedError
 
     def get_meta(self):
-        return {}
+        raise NotImplementedError
 
     def set_float_precision(self, precision=18):
         self.type_format_mappers = configure_float_precision(precision)

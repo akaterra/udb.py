@@ -90,58 +90,58 @@ class Udb(UdbCore):
         return self
 
     def load_db(self, mapper=None):
-        if self._storage:
-            logging.debug('db loading')
-
-            data = self._storage.load()
-
-            logging.debug('db loaded')
-
-            if not isinstance(data, dict) or 'indexes' not in data or 'data' not in data:
-                raise ValueError('invalid db format')
-
-            if mapper:
-                self._collection = {int(k): mapper(v) for k, v in data['data'].items()}
-            else:
-                self._collection = {int(k): v for k, v in data['data'].items()}
-
-            self._revision = data.get('revision', 0)
-
-            if not self._indexes:
-                indexes = data['indexes']
-
-                for key, index in indexes.items():
-                    s_ind = None
-
-                    for i in _INDEXES:
-                        if index[0] == i.type:
-                            s_ind = i
-
-                            break
-
-                    if s_ind:
-                        indexes[key] = s_ind(**index[1])
-                    else:
-                        raise ValueError('unknown index type: {} on {}'.format(index[1], key))
-
-                self._indexes = indexes
-
-            logging.debug('db indexing')
-
-            for key, record in self._collection.items():
-                for index in self._indexes.values():
-                    index.insert_by_schema(Lst(record) if type(record) == list else record, int(key))
-
-            logging.debug('db indexed')
-
-            self._storage.save_meta(self._indexes, self._revision)
-
-            return True
-        else:
+        if not self._storage:
             self._collection = {}
             self._revision = 0
 
-        return False
+            return False
+
+        logging.debug('db loading')
+
+        data = self._storage.load()
+
+        logging.debug('db loaded')
+
+        if not isinstance(data, dict) or 'indexes' not in data or 'data' not in data:
+            raise ValueError('invalid db format')
+
+        if mapper:
+            self._collection = {int(k): mapper(v) for k, v in data['data'].items()}
+        else:
+            self._collection = {int(k): v for k, v in data['data'].items()}
+
+        self._revision = data.get('revision', 0)
+
+        if not self._indexes:
+            indexes = data['indexes']
+
+            for key, index in indexes.items():
+                s_ind = None
+
+                for i in _INDEXES:
+                    if index[0] == i.type:
+                        s_ind = i
+
+                        break
+
+                if s_ind:
+                    indexes[key] = s_ind(**index[1])
+                else:
+                    raise ValueError('unknown index type: {} on {}'.format(index[1], key))
+
+            self._indexes = indexes
+
+        logging.debug('db indexing')
+
+        for key, record in self._collection.items():
+            for index in self._indexes.values():
+                index.insert_by_schema(Lst(record) if type(record) == list else record, int(key))
+
+        logging.debug('db indexed')
+
+        self._storage.save_meta(self._indexes, self._revision)
+
+        return True
 
     def save_db(self, mapper=None):
         if self._storage:
@@ -212,11 +212,11 @@ class Udb(UdbCore):
         self._revision += 1
 
         for key in self.get_q_cursor(
-            q and cpy_dict(q, {'__rev__': {'$lte': self._revision - 1}}),
-            limit,
-            offset,
-            get_keys_only=True
-        ):
+                q and cpy_dict(q, {'__rev__': {'$lte': self._revision - 1}}),
+                limit,
+                offset,
+                get_keys_only=True
+            ):
             before = self._collection.get(key)
             values['__rev__'] = self._revision
 

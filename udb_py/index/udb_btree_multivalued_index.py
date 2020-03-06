@@ -99,8 +99,8 @@ class UdbBtreeMultivaluedIndex(UdbBaseLinearIndex):
 class UdbBtreeMultivaluedEmbeddedIndex(UdbBtreeMultivaluedIndex, UdbBaseLinearEmbeddedIndex):
     type = 'btree_multivalued_embedded'
 
-    def delete(self, key, uid=None):
-        for key in key:
+    def delete(self, keys, uid=None):
+        for key in keys:
             old_existing = self._btree.get(key, EMPTY)
 
             if old_existing != EMPTY and uid in old_existing:
@@ -111,8 +111,8 @@ class UdbBtreeMultivaluedEmbeddedIndex(UdbBtreeMultivaluedIndex, UdbBaseLinearEm
 
         return self
 
-    def insert(self, key, uid):
-        for key in key:
+    def insert(self, keys, uid):
+        for key in keys:
             old_existing = self._btree.get(key, EMPTY)
 
             if old_existing == EMPTY:

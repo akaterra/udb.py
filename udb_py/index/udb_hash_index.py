@@ -53,14 +53,14 @@ class UdbHashIndex(UdbBaseLinearIndex):
 class UdbHashEmbeddedIndex(UdbHashIndex, UdbBaseLinearEmbeddedIndex):
     type = 'hash_embedded'
 
-    def delete(self, key, uid=None):
-        for key in key:
+    def delete(self, keys, uid=None):
+        for key in keys:
             self._hash.pop(key)
 
         return self
 
-    def insert(self, key, uid):
-        for key in key:
+    def insert(self, keys, uid):
+        for key in keys:
             self._hash[key] = uid
 
         return self

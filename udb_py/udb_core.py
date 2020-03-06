@@ -111,7 +111,7 @@ class UdbCore(object):
         s_op_fn_q_arranger = None
 
         sort_is_fn = sort and callable(sort)
-        sort_direction = None if sort is None or sort_is_fn else False if sort[0] == '-' else True
+        sort_direction = None if sort is None or sort_is_fn else sort[0] != '-'
 
         plan = [] if get_plan else None
 
@@ -261,13 +261,13 @@ class UdbCore(object):
                     break
 
 
-def cpy_dict(d, update=None):
-    d = dict(d)
+def cpy_dict(dct, update=None):
+    dct = dict(dct)
 
-    return upd_dict(d, update) if update else d
+    return upd_dict(dct, update) if update else dct
 
 
-def upd_dict(d, update):
-    d.update(update)
+def upd_dict(dct, update):
+    dct.update(update)
 
-    return d
+    return dct
