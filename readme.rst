@@ -79,7 +79,7 @@ To enable RTree indexes support install `Rtree <http://toblerity.org/rtree>`_ pa
 
   pip install Rtree
 
-  Installing **libspatialindex** on MacOS with Homebrew:
+Installing **libspatialindex** on MacOS with Homebrew:
 
 .. code:: bash
 

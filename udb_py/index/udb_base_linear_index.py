@@ -116,12 +116,19 @@ class UdbBaseLinearIndex(UdbIndex):
 
             if condition and type(condition) == dict:
                 for op_key, op_condition in condition.items():
-                    op = cls._OPS.get(op_key)
+                    if op_key == '$fn':
+                        if not op(values):
+                            return False
+                    else:
+                        op = cls._OPS.get(op_key)
 
-                    if op and (not is_acceptable or not op(val, op_condition)):
-                        return False
+                        if op and (not is_acceptable or not op(val, op_condition)):
+                            return False
             else:
-                if not is_acceptable or not _eq_op(val, condition):
+                if callable(condition):
+                    if not condition(values):
+                        return False
+                elif not is_acceptable or not _eq_op(val, condition):
                     return False
 
         return True
@@ -271,6 +278,14 @@ class UdbBaseLinearIndex(UdbIndex):
                 return SCAN_OP_PREFIX, ind, 1, self.search_by_key_prefix, None
 
             if type(condition) == dict:
+                c_fn = condition.get('$fn', EMPTY)
+
+                if c_fn != EMPTY:
+                    if ind != 0 and self.is_prefixed:
+                        return SCAN_OP_PREFIX, ind, 1, self.search_by_key_prefix, None
+
+                    return SCAN_OP_SEQ, 0, 0, None, None
+
                 c_eq = condition.get('$eq', EMPTY)
 
                 if c_eq != EMPTY:
@@ -348,6 +363,11 @@ class UdbBaseLinearIndex(UdbIndex):
                         )
 
                 if self.is_prefixed:
+                    return SCAN_OP_PREFIX, ind, 1, self.search_by_key_prefix, None
+
+                return SCAN_OP_SEQ, 0, 0, None, None
+            elif callable(condition):
+                if ind != 0 and self.is_prefixed:
                     return SCAN_OP_PREFIX, ind, 1, self.search_by_key_prefix, None
 
                 return SCAN_OP_SEQ, 0, 0, None, None
