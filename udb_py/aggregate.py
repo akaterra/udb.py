@@ -27,6 +27,14 @@ def _group(seq, args):
                     current_acc[key] = record.get(key, None)
             elif op_key == '$mul':
                 current_acc[op_val[1]] = current_acc.get(op_val[1], 1) * record.get(op_val[0], 0)
+            elif op_key == '$push':
+                val = record.get(op_val[0], EMPTY)
+
+                if val != EMPTY:
+                    if op_val[1] not in current_acc:
+                        current_acc[op_val[1]] = [val]
+                    else:
+                        current_acc[op_val[1]].append(val)
             elif op_key == '$sum':
                 current_acc[op_val[1]] = current_acc.get(op_val[1], 0) + record.get(op_val[0], 0)
 
