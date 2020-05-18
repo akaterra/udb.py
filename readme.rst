@@ -47,6 +47,8 @@ Table of contents
 
 * `Update operation <#update-operation>`_
 
+* `Aggregations <#aggregations>`_
+
 * `Instant view <#instant-view>`_
 
 * `Limitations <#limitations>`_
@@ -73,7 +75,7 @@ To enable BTree indexes support install `Zope Foundation BTrees <https://github.
 
   pip install BTrees
 
-To enable RTree indexes support install `Rtree <http://toblerity.org/rtree>`_ package (requires `libspatialindex <https://libspatialindex.org>`_):
+To enable RTree indexes support install `Rtree <http://toblerity.org/rtree>`_ package (requires `libspatialindex <https://libspatialindex.org>`_, install it before):
 
 .. code:: bash
 
@@ -537,6 +539,33 @@ Update operation
 .. code:: python
 
   udb.update({'a': 2}, q={'a': 1}, offset=5)
+
+Aggregations
+------------
+
+.. code:: python
+
+  from udb_py import Udb, aggregate
+
+  db = Udb()
+
+  # ...
+  # ... some insertions
+  # ...
+
+  related_db = Udb()
+
+  aggregate(
+    db.select(),
+    ('$o2o', (related_db, 'x', 'a', 'rel1')),  # pipe 1
+    ('$unwind', 'a'),  # pipe 2
+  )
+
+Pipes:
+
+* **$o2o** - one to one relation - `('$o2o', (related_db, related_field, field, relation_name))`
+
+* **$o2m** - one to many relation - `('$o2m', (related_db, related_field, field, relation_name))`
 
 Instant view
 ------------

@@ -52,6 +52,41 @@ class UdbCore(object):
     def indexes(self):
         return self._indexes
 
+    @classmethod
+    def aggregate(cls, seq, *pipes):
+        for pipe, args in pipes:
+            if pipe == '$o2o':
+                def stage(args, seq):
+                    for record in seq:
+                        record[args[3]] = args[0].select_one({args[1]: record[args[2]]})
+
+                        yield record
+                
+                seq = stage(args, seq)
+            elif pipe == '$o2m':
+                def stage(args, seq):
+                    for record in seq:
+                        record[args[3]] = list(args[0].select({args[1]: record[args[2]]}))
+
+                        yield record
+                
+                seq = stage(args, seq)
+            elif pipe == '$unwind':
+                def stage(args, seq):
+                    for record in seq:
+                        if isinstance(record[args], list):
+                            for subrec in record[args]:
+                                unwind = dict(record)
+                                unwind[args] = subrec
+                            
+                                yield unwind
+                        else:
+                            yield record
+                
+                seq = stage(args, seq)
+
+        return seq
+
     def __init__(self, indexes=None, indexes_with_custom_seq=None):
         self._collection = {}
 
@@ -81,6 +116,12 @@ class UdbCore(object):
 
     def select(self, q=None, limit=None, offset=None, sort=None, use_indexes=None, get_plan=False):
         return self.get_q_cursor(q, limit, offset, sort, use_indexes=use_indexes, get_plan=get_plan)
+
+    def select_one(self, q=None, offset=None, use_indexes=None):
+        for record in self.get_q_cursor(q, 1, offset, None, use_indexes=use_indexes):
+            return record
+        
+        return None
 
     def get_q_cursor(
         self,
@@ -133,7 +174,7 @@ class UdbCore(object):
                     q,
                     limit,
                     offset,
-                    self._collection
+                    self._collection,
                 )
 
                 if s_op_key_sequence_length < c_op_key_sequence_length:
@@ -152,9 +193,6 @@ class UdbCore(object):
                     s_op_fn_q_arranger = c_op_fn_q_arranger
 
         if s_index is not None:
-            if s_index.is_sorted_asc and sort_direction:
-                sort = None
-
             if s_op_type == SCAN_OP_CONST:
                 if not s_index.is_multivalued:
                     if offset:
@@ -182,6 +220,9 @@ class UdbCore(object):
                 plan.append((s_index, s_op_type, s_op_key_sequence_length, s_op_priority))
             else:
                 seq = s_op_fn(key)
+
+            if not sort_is_fn and s_index.is_sorted_asc and sort_direction and s_index.has_key(sort):
+                sort = None
         else:
             if get_keys_only or q:
                 seq = self._collection.keys()
@@ -228,6 +269,16 @@ class UdbCore(object):
                 custom_validate_query(q)
 
         return True
+
+    def _get_aggregation_cursor(self, source, aggregations):
+        for record in source:
+            for op, args in aggregations:
+                if op == 'o2o':
+                    record[args[3]] = args[0].select_one({args[1]: record[args[2]]})
+                elif op == 'o2m':
+                    record[args[3]] = list(args[0].select({args[1]: record[args[2]]}))
+
+            yield record                
 
     def _get_collection_fetch_cursor(self, source):
         if self._copy_on_select:

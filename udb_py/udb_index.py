@@ -53,6 +53,9 @@ class UdbIndex(object):
         self.type_format_mappers = configure_float_precision(precision)
 
         return self
+    
+    def has_key(self, key):
+        return key in self.schema
 
     def append_key(self, key, default_value=EMPTY):
         self.schema[key] = default_value

@@ -301,6 +301,9 @@ class UdbBaseGEOIndex(UdbIndex):
 
         return SCAN_OP_SEQ, 0, 0, None, None
 
+    def has_key(self, key):
+        return self._key == key
+
     def clear(self):
         raise NotImplementedError
 

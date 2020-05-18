@@ -117,7 +117,7 @@ class UdbBaseLinearIndex(UdbIndex):
             if condition and type(condition) == dict:
                 for op_key, op_condition in condition.items():
                     if op_key == '$fn':
-                        if not op(values):
+                        if not op_condition(values):
                             return False
                     else:
                         op = cls._OPS.get(op_key)
