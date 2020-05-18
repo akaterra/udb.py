@@ -103,6 +103,10 @@ class UdbBaseGEOIndex(UdbIndex):
         return True
 
     @classmethod
+    def merge_condition(cls, q1, q2, context=None, extend=None):
+        raise NotImplementedError
+
+    @classmethod
     def seq(cls, seq, q, collection):
         context = cls._create_context(q)
 

@@ -238,13 +238,13 @@ class Udb(UdbCore):
         return update_count
 
 
-def cpy_dict(d, update=None):
-    d = dict(d)
+def cpy_dict(dct, update=None):
+    dct = dict(dct)
 
-    return upd_dict(d, update) if update else d
+    return upd_dict(dct, update) if update else dct
 
 
-def upd_dict(d, update):
-    d.update(update)
+def upd_dict(dct, update):
+    dct.update(update)
 
-    return d
+    return dct

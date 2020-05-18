@@ -26,7 +26,11 @@ class UnknownSeqScanOperationError(Exception):
     pass
 
 
-class Empty:
+class ViewScanFieldOverriddenError(Exception):
+    pass
+
+
+class Empty(object):
     pass
 
 
@@ -49,8 +53,8 @@ def _now():
     return datetime.datetime.now()
 
 
-optional = None
-required = EMPTY
+OPTIONAL = None
+REQUIRED = EMPTY
 
 
 class Lst(list):

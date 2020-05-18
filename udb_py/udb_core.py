@@ -1,17 +1,17 @@
 from .index import (
     UdbBaseGEOIndex,
     UdbBaseLinearIndex,
-    UdbBtreeIndex,
-    UdbBtreeEmbeddedIndex,
-    UdbBtreeMultivaluedIndex,
-    UdbBtreeMultivaluedEmbeddedIndex,
-    UdbBtreeUniqIndex,
-    UdbHashIndex,
-    UdbHashEmbeddedIndex,
-    UdbHashMultivaluedIndex,
-    UdbHashMultivaluedEmbeddedIndex,
-    UdbHashUniqIndex,
-    UdbRtreeIndex,
+    # UdbBtreeIndex,
+    # UdbBtreeEmbeddedIndex,
+    # UdbBtreeMultivaluedIndex,
+    # UdbBtreeMultivaluedEmbeddedIndex,
+    # UdbBtreeUniqIndex,
+    # UdbHashIndex,
+    # UdbHashEmbeddedIndex,
+    # UdbHashMultivaluedIndex,
+    # UdbHashMultivaluedEmbeddedIndex,
+    # UdbHashUniqIndex,
+    # UdbRtreeIndex,
 )
 from .udb_index import (
     SCAN_OP_CONST,
@@ -20,26 +20,12 @@ from .udb_index import (
     SCAN_OP_SUB,
 )
 
-_DELETE_BUFFER_SIZE = 5000
-_INDEXES = (
-    UdbBtreeIndex,
-    UdbBtreeEmbeddedIndex,
-    UdbBtreeMultivaluedIndex,
-    UdbBtreeMultivaluedEmbeddedIndex,
-    UdbBtreeUniqIndex,
-    UdbHashIndex,
-    UdbHashEmbeddedIndex,
-    UdbHashMultivaluedIndex,
-    UdbHashMultivaluedEmbeddedIndex,
-    UdbHashUniqIndex,
-    UdbRtreeIndex,
-)
-
 
 class UdbCore(object):
     _collection = None
     _copy_on_select = False
     _custom_check_condition = [UdbBaseLinearIndex.check_condition, UdbBaseGEOIndex.check_condition]
+    _custom_merge_condition = [UdbBaseLinearIndex.merge_condition, UdbBaseGEOIndex.merge_condition]
     _custom_seq = [UdbBaseLinearIndex.seq, UdbBaseGEOIndex.seq]
     _custom_validate_query = [UdbBaseLinearIndex.validate_query, UdbBaseGEOIndex.validate_query]
     _indexes = {}
@@ -51,41 +37,6 @@ class UdbCore(object):
     @property
     def indexes(self):
         return self._indexes
-
-    @classmethod
-    def aggregate(cls, seq, *pipes):
-        for pipe, args in pipes:
-            if pipe == '$o2o':
-                def stage(args, seq):
-                    for record in seq:
-                        record[args[3]] = args[0].select_one({args[1]: record[args[2]]})
-
-                        yield record
-                
-                seq = stage(args, seq)
-            elif pipe == '$o2m':
-                def stage(args, seq):
-                    for record in seq:
-                        record[args[3]] = list(args[0].select({args[1]: record[args[2]]}))
-
-                        yield record
-                
-                seq = stage(args, seq)
-            elif pipe == '$unwind':
-                def stage(args, seq):
-                    for record in seq:
-                        if isinstance(record[args], list):
-                            for subrec in record[args]:
-                                unwind = dict(record)
-                                unwind[args] = subrec
-                            
-                                yield unwind
-                        else:
-                            yield record
-                
-                seq = stage(args, seq)
-
-        return seq
 
     def __init__(self, indexes=None, indexes_with_custom_seq=None):
         self._collection = {}
@@ -213,7 +164,7 @@ class UdbCore(object):
             if s_op_fn_q_arranger:
                 s_op_fn_q_arranger(q[s_index.schema_keys[s_op_key_sequence_length - 1]])
 
-                if not len(q[s_index.schema_keys[s_op_key_sequence_length - 1]]):
+                if not q[s_index.schema_keys[s_op_key_sequence_length - 1]]:
                     q.pop(s_index.schema_keys[s_op_key_sequence_length - 1])
 
             if get_plan:
@@ -230,7 +181,7 @@ class UdbCore(object):
                 seq = self._collection.values()
 
         if get_plan:
-            if len(q):
+            if q:
                 plan.append((None, SCAN_OP_SEQ, 0, 0, q))
 
             if limit or offset:

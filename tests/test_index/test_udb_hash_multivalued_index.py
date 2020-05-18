@@ -35,7 +35,7 @@ def test_should_insert_by_schema():
 
 
 def test_should_insert_by_schema_with_default_value():
-    i = UdbHashMultivaluedIndexTest((('a', required), ('b', 1), ('c', required)))
+    i = UdbHashMultivaluedIndexTest((('a', REQUIRED), ('b', 1), ('c', REQUIRED)))
 
     i.insert_by_schema({'a': 1, 'c': 3}, 123)
 
@@ -43,7 +43,7 @@ def test_should_insert_by_schema_with_default_value():
 
 
 def test_should_insert_by_schema_with_default_value_as_callable():
-    i = UdbHashMultivaluedIndexTest((('a', required), ('b', lambda key, values: 1), ('c', required)))
+    i = UdbHashMultivaluedIndexTest((('a', REQUIRED), ('b', lambda key, values: 1), ('c', REQUIRED)))
 
     i.insert_by_schema({'a': 1, 'c': 3}, 123)
 

@@ -24,22 +24,22 @@ class UdbBtreeMultivaluedIndex(UdbBaseLinearIndex):
 
         return self
 
-    def delete(self, key, uid):
-        old_existing = self._btree.get(key, EMPTY)
+    def delete(self, key_or_keys, uid):
+        old_existing = self._btree.get(key_or_keys, EMPTY)
 
         if old_existing != EMPTY and uid in old_existing:
             if len(old_existing) == 1:
-                self._btree.pop(key)
+                self._btree.pop(key_or_keys)
             else:
                 old_existing.remove(uid)
 
         return self
 
-    def insert(self, key, uid):
-        old_existing = self._btree.get(key, EMPTY)
+    def insert(self, key_or_keys, uid):
+        old_existing = self._btree.get(key_or_keys, EMPTY)
 
         if old_existing == EMPTY:
-            self._btree.insert(key, {uid})
+            self._btree.insert(key_or_keys, {uid})
         else:
             old_existing.add(uid)
 
@@ -99,8 +99,8 @@ class UdbBtreeMultivaluedIndex(UdbBaseLinearIndex):
 class UdbBtreeMultivaluedEmbeddedIndex(UdbBtreeMultivaluedIndex, UdbBaseLinearEmbeddedIndex):
     type = 'btree_multivalued_embedded'
 
-    def delete(self, keys, uid=None):
-        for key in keys:
+    def delete(self, key_or_keys, uid=None):
+        for key in key_or_keys:
             old_existing = self._btree.get(key, EMPTY)
 
             if old_existing != EMPTY and uid in old_existing:
@@ -111,8 +111,8 @@ class UdbBtreeMultivaluedEmbeddedIndex(UdbBtreeMultivaluedIndex, UdbBaseLinearEm
 
         return self
 
-    def insert(self, keys, uid):
-        for key in keys:
+    def insert(self, key_or_keys, uid):
+        for key in key_or_keys:
             old_existing = self._btree.get(key, EMPTY)
 
             if old_existing == EMPTY:

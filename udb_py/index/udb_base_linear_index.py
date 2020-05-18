@@ -50,9 +50,9 @@ def _gte_op(a, b):
     return a >= b if can_be_compared is None else can_be_compared
 
 
-def _in_op(a, b):
-    for v in b:
-        if a is v:
+def _in_op(a, values):
+    for value in values:
+        if a is value:
             return True
 
     return False  # return a in b
@@ -76,9 +76,9 @@ def _ne_op(a, b):
     return a is not b
 
 
-def _nin_op(a, b):
-    for v in b:
-        if a is v:
+def _nin_op(a, values):
+    for value in values:
+        if a is value:
             return False
 
     return True  # return a not in b
@@ -132,6 +132,33 @@ class UdbBaseLinearIndex(UdbIndex):
                     return False
 
         return True
+
+    @classmethod
+    def merge_condition(cls, q1, q2, context=None, extend=None):
+        for key, val in q2.items():
+            if key in q1:
+                is_q1_val_dict = type(q1[key]) == dict
+                is_q2_val_dict = type(val) == dict
+
+                if not is_q1_val_dict and not is_q2_val_dict:
+                    q1[key] = q2[key]
+                else:
+                    if not is_q1_val_dict:
+                        q1[key] = {'$eq': q1[key]}
+
+                    if not is_q2_val_dict:
+                        val = q2[key] = {'$eq': q2[key]}
+
+                    for k_2, v_2 in val.items():
+                        if k_2 in q1[key]:
+                            op = cls._OPS.get(k_2, None)
+
+                            if op and op(q1[key][k_2], v_2):
+                                q1[key][k_2] = v_2
+            else:
+                q1[key] = val
+
+        return q1
 
     @classmethod
     def seq(cls, seq, q, collection):

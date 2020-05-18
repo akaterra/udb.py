@@ -26,7 +26,11 @@ class UdbIndex(object):
     type_format_mappers = TYPE_FORMAT_MAPPERS
 
     @classmethod
-    def check_condition(cls, values, q, context=None):
+    def check_condition(cls, values, q, context=None, extend=None):
+        raise NotImplementedError
+
+    @classmethod
+    def merge_condition(cls, q1, q2, context=None, extend=None):
         raise NotImplementedError
 
     @classmethod

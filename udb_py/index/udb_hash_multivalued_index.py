@@ -78,8 +78,8 @@ class UdbHashMultivaluedIndex(UdbBaseLinearIndex):
 class UdbHashMultivaluedEmbeddedIndex(UdbHashMultivaluedIndex, UdbBaseLinearEmbeddedIndex):
     type = 'hash_multivalued_embedded'
 
-    def delete(self, key, uid=None):
-        for key in key:
+    def delete(self, key_or_keys, uid=None):
+        for key in key_or_keys:
             old_existing = self._hash.get(key, EMPTY)
 
             if old_existing != EMPTY and uid in old_existing:
@@ -90,8 +90,8 @@ class UdbHashMultivaluedEmbeddedIndex(UdbHashMultivaluedIndex, UdbBaseLinearEmbe
 
         return self
 
-    def insert(self, key, uid):
-        for key in key:
+    def insert(self, key_or_keys, uid):
+        for key in key_or_keys:
             old_existing = self._hash.get(key, EMPTY)
 
             if old_existing == EMPTY:
