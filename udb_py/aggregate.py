@@ -8,7 +8,7 @@ def _group(seq, args):
     for record in seq:
         acc_key = ''
 
-        for ind in range(0, len(args) - 2):
+        for ind in range(0, len(args) - 1):
             val = record.get(args[ind], EMPTY)
 
             if val != EMPTY:
@@ -96,16 +96,19 @@ def _unwind(seq, key):
         val = record.get(key, EMPTY)
 
         if val != EMPTY:
-            if isinstance(record[key], list):
-                for subrec in record[key]:
-                    unwind = dict(record)
-                    unwind[key] = subrec
-                
-                    yield unwind
-            else:
-                yield record
-        else:
-            yield record
+            if isinstance(val, list):
+                if len(val):
+                    for subrec in record[key]:
+                        unwind = dict(record)
+                        unwind[key] = subrec
+                    
+                        yield unwind
+                    
+                    continue
+                else:
+                    del record[key]
+
+        yield record
 
 
 _AGGREGATORS = {
