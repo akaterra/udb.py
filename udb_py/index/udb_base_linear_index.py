@@ -153,7 +153,7 @@ class UdbBaseLinearIndex(UdbIndex):
                         if k_2 in q1[key]:
                             op = cls._OPS.get(k_2, None)
 
-                            if op and op(q1[key][k_2], v_2):
+                            if op and not op(q1[key][k_2], v_2):
                                 q1[key][k_2] = v_2
             else:
                 q1[key] = val
@@ -229,14 +229,10 @@ class UdbBaseLinearIndex(UdbIndex):
 
             if val != EMPTY:
                 cover_key += self.type_format_mappers[type(val)](val)
+            elif ind > 0:
+                cover_key += self.type_format_mappers[type(None)](None)
             else:
-                if self.is_sparse:
-                    if ind > 0:
-                        cover_key += self.type_format_mappers[type(None)](None)
-                    else:
-                        return None
-                else:
-                    return None
+                return None
 
         return cover_key
 
@@ -258,14 +254,10 @@ class UdbBaseLinearIndex(UdbIndex):
 
             if val != EMPTY:
                 cover_key += self.type_format_mappers[type(val)](val)
+            elif ind > 0:
+                raise FieldRequiredError('field required: {} on {}'.format(key, self.name))
             else:
-                if self.is_sparse:
-                    if ind > 0:
-                        cover_key += self.type_format_mappers[type(None)](None)
-                    else:
-                        return None
-                else:
-                    raise FieldRequiredError('field required: {} on {}'.format(key, self.name))
+                return None
 
         return cover_key
 
