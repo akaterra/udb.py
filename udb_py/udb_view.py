@@ -1,4 +1,5 @@
-from .udb_core import UdbCore, cpy_dict
+from .common import cpy_dict
+from .udb_core import UdbCore
 
 
 class UdbView(UdbCore):

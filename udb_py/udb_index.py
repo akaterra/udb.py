@@ -30,6 +30,10 @@ class UdbIndex(object):
         raise NotImplementedError
 
     @classmethod
+    def create_condition_context(cls, q):
+        return None
+
+    @classmethod
     def merge_condition(cls, q1, q2, context=None, extend=None):
         raise NotImplementedError
 

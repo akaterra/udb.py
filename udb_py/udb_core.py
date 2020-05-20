@@ -1,3 +1,4 @@
+from .aggregate import aggregate, register_aggregation_pipe
 from .index import (
     UdbBaseGEOIndex,
     UdbBaseLinearIndex,
@@ -24,10 +25,7 @@ from .udb_index import (
 class UdbCore(object):
     _collection = None
     _copy_on_select = False
-    _custom_check_condition = [UdbBaseLinearIndex.check_condition, UdbBaseGEOIndex.check_condition]
-    _custom_merge_condition = [UdbBaseLinearIndex.merge_condition, UdbBaseGEOIndex.merge_condition]
-    _custom_seq = [UdbBaseLinearIndex.seq, UdbBaseGEOIndex.seq]
-    _custom_validate_query = [UdbBaseLinearIndex.validate_query, UdbBaseGEOIndex.validate_query]
+    _indexes_with_custom_ops = {UdbBaseLinearIndex, UdbBaseGEOIndex}
     _indexes = {}
 
     @property
@@ -38,32 +36,42 @@ class UdbCore(object):
     def indexes(self):
         return self._indexes
 
-    def __init__(self, indexes=None, indexes_with_custom_seq=None):
+    @classmethod
+    def register_aggregation_pipe(cls, pipe, fn):
+        register_aggregation_pipe(pipe, fn)
+        
+        return cls
+
+    @classmethod
+    def register_index(cls, index_class):
+        cls._indexes_with_custom_ops.add(index_class)
+        
+        return cls
+
+    def __init__(self, indexes=None, indexes_with_custom_ops=None):
         self._collection = {}
+
+        if indexes_with_custom_ops:
+            self._indexes_with_custom_ops = set(indexes_with_custom_seq)
 
         if indexes:
             self._indexes = indexes
             self._indexes_to_check_for_ins_upd_allowance = [index for index in indexes.values() if index.is_uniq]
 
             for key, ind in indexes.items():
-                if ind.seq not in self._custom_validate_query:
-                    self._custom_validate_query.append(ind.validate_query)
+                if type(ind) not in self._indexes_with_custom_ops:
+                    self._indexes_with_custom_ops.add(type(ind))
 
                 ind.name = key
-
-        if indexes_with_custom_seq:
-            self._custom_check_condition = [
-                index_with_custom_seq.check_condition for index_with_custom_seq in indexes_with_custom_seq
-            ]
-            self._custom_seq = [
-                index_with_custom_seq.seq for index_with_custom_seq in indexes_with_custom_seq
-            ]
 
     def __len__(self):
         return 0
 
     def get_index(self, key):
         return self._indexes[key]
+
+    def aggregate(self, *pipes, q=None, limit=None, offset=None, sort=None, use_indexes=None):
+        return aggregate(self.get_q_cursor(q, limit, offset, sort, use_indexes=use_indexes), *pipes)
 
     def select(self, q=None, limit=None, offset=None, sort=None, use_indexes=None, get_plan=False):
         return self.get_q_cursor(q, limit, offset, sort, use_indexes=use_indexes, get_plan=get_plan)
@@ -192,9 +200,9 @@ class UdbCore(object):
 
             return plan
 
-        if q and self._custom_seq:
-            for custom_seq in self._custom_seq:
-                seq = custom_seq(seq, q, self._collection)
+        if q and self._indexes_with_custom_ops:
+            for index in self._indexes_with_custom_ops:
+                seq = index.seq(seq, q, self._collection)
 
         if limit or offset:
             seq = self._get_subset_cursor(seq, limit, offset)
@@ -215,9 +223,9 @@ class UdbCore(object):
         return seq
 
     def validate_query(self, q):
-        if self._custom_validate_query:
-            for custom_validate_query in self._custom_validate_query:
-                custom_validate_query(q)
+        if self._indexes_with_custom_ops:
+            for index in self._indexes_with_custom_ops:
+                index.validate_query(q)
 
         return True
 
@@ -263,13 +271,20 @@ class UdbCore(object):
                     break
 
 
-def cpy_dict(dct, update=None):
-    dct = dict(dct)
+def _match_aggregation_pipe(seq, q):
+    index_context = [(index, index.create_condition_context(q)) for index in UdbCore._indexes_with_custom_ops]
 
-    return upd_dict(dct, update) if update else dct
+    for record in seq:
+        passed = True
+
+        for index, context in index_context:
+            passed = index.check_condition(record, q, context)
+
+            if  not passed:
+                break
+
+        if passed:
+            yield record
 
 
-def upd_dict(dct, update):
-    dct.update(update)
-
-    return dct
+UdbCore.register_aggregation_pipe('$match', _match_aggregation_pipe)

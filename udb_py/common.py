@@ -133,3 +133,15 @@ def configure_float_precision(precision=18):
 
 
 TYPE_FORMAT_MAPPER_INT_AS_FLOAT = configure_float_precision()
+
+
+def cpy_dict(dct, update=None):
+    dct = dict(dct)
+
+    return upd_dict(dct, update) if update else dct
+
+
+def upd_dict(dct, update):
+    dct.update(update)
+
+    return dct

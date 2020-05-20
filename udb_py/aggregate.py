@@ -1,5 +1,4 @@
-from .common import EMPTY, TYPE_FORMAT_MAPPERS
-from .udb import cpy_dict
+from .common import cpy_dict, EMPTY, TYPE_FORMAT_MAPPERS
 
 
 def _count_group_op(acc, key, record):
@@ -113,13 +112,13 @@ def _o2m(seq, args):
 
 
 def _o2o(seq, args):
-    key_from, key_to, key_as, db = args
+    key_from, key_to, db, key_as = args
 
     for record in seq:
         val_from = record.get(key_from, EMPTY)
 
         if val_from != EMPTY:
-            record[key_as] = db.select_one({key_to: record.get})
+            record[key_as] = db.select_one({key_to: val_from})
 
         yield record
 
@@ -198,7 +197,7 @@ def _unwind(seq, key):
         yield record
 
 
-_AGGREGATORS = {
+_PIPES = {
     '$group': _group,
     '$limit': _limit,
     '$o2o': _o2o,
@@ -213,9 +212,13 @@ _AGGREGATORS = {
 def aggregate(seq, *pipes):
     for pipe, args in pipes:
         if not callable(pipe):
-            pipe = _AGGREGATORS.get(pipe, None)
+            pipe = _PIPES.get(pipe, None)
 
         if pipe:
             seq = pipe(seq, args)
 
     return seq
+
+
+def register_aggregation_pipe(pipe, fn):
+    _PIPES[pipe] = fn

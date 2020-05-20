@@ -54,7 +54,7 @@ class UdbBaseGEOIndex(UdbIndex):
     @classmethod
     def check_condition(cls, values, q, context=None, extend=None):
         if not context:
-            context = cls._create_context(q)
+            context = cls.create_condition_context(q)
 
         if context.intersection:
             for key, c_intersection_q in context.intersection.items():
@@ -103,34 +103,7 @@ class UdbBaseGEOIndex(UdbIndex):
         return True
 
     @classmethod
-    def merge_condition(cls, q1, q2, context=None, extend=None):
-        raise NotImplementedError
-
-    @classmethod
-    def seq(cls, seq, q, collection):
-        context = cls._create_context(q)
-
-        if context.near_last:
-            def seq_q():
-                for rid in seq:
-                    if cls.check_condition(collection[rid], q, context):
-                        yield rid
-
-            # from nearest to far
-            def seq_sort(rid):
-                c_near = collection[rid][context.near_last_key]
-
-                return (c_near[0] - context.near_last.x) ** 2 + (c_near[1] - context.near_last.y) ** 2
-
-            for rid in sorted(seq_q(), key=seq_sort):
-                yield rid
-        else:
-            for rid in seq:
-                if cls.check_condition(collection[rid], q, context):
-                    yield rid
-
-    @classmethod
-    def _create_context(cls, q):
+    def create_condition_context(cls, q):
         context = UdbBaseGEOIndexCheckConditionContext()
 
         for key, condition in q.items():
@@ -171,6 +144,33 @@ class UdbBaseGEOIndex(UdbIndex):
                     context.near_last_key = key
 
         return context
+
+    @classmethod
+    def merge_condition(cls, q1, q2, context=None, extend=None):
+        raise NotImplementedError
+
+    @classmethod
+    def seq(cls, seq, q, collection):
+        context = cls.create_condition_context(q)
+
+        if context.near_last:
+            def seq_q():
+                for rid in seq:
+                    if cls.check_condition(collection[rid], q, context):
+                        yield rid
+
+            # from nearest to far
+            def seq_sort(rid):
+                c_near = collection[rid][context.near_last_key]
+
+                return (c_near[0] - context.near_last.x) ** 2 + (c_near[1] - context.near_last.y) ** 2
+
+            for rid in sorted(seq_q(), key=seq_sort):
+                yield rid
+        else:
+            for rid in seq:
+                if cls.check_condition(collection[rid], q, context):
+                    yield rid
 
     @classmethod
     def validate_query(cls, q):

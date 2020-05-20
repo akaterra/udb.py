@@ -46,7 +46,7 @@ Table of contents
 
 * `Update operation <#update-operation>`_
 
-* `Aggregations <#aggregations>`_
+* `Aggregation <#aggregation>`_
 
 * `Instant view <#instant-view>`_
 
@@ -551,51 +551,69 @@ Aggregation accepts an interable with the pipelines to be applied over it.
 
   db = Udb()
 
-  # ...
-  # ... some insertions
-  # ...
+  db.insert({'a': [1, 2, 3]})
+  db.insert({'a': 2})
+  db.insert({'a': 3})
 
   related_db = Udb()
 
-  aggregate(
+  related_db.insert({'x': 1})
+  related_db.insert({'x': 2})
+  related_db.insert({'x': 3})
+
+  results = list(aggregate(
     db.select(),
-    ('$o2o', (related_db, 'x', 'a', 'rel1')),  # pipe 1
-    ('$unwind', 'a'),  # pipe 2
-  )
+    ('$unwind', 'a'),  # pipe 1
+    ('$o2o', ('a', 'x', related_db, 'rel1')),  # pipe 2
+  ))
+
+  [{
+    'a': 1, '__rev__': 0, 'rel1': {'x': 1, '__rev__': 0}
+  }, {
+    'a': 2, '__rev__': 0, 'rel1': {'x': 2, '__rev__': 1}
+  }, {
+    'a': 3, '__rev__': 0, 'rel1': {'x': 3, '__rev__': 2}
+  }, {
+    'a': 2, '__rev__': 1, 'rel1': {'x': 2, '__rev__': 1}
+  }, {
+    'a': 3, '__rev__': 2, 'rel1': {'x': 3, '__rev__': 2}
+  }]
 
 Pipes:
 
-* **$group** - group by keys with group operations - `('$group', (key1, key2, ..., { group_op: (arg1, arg2, ... ), ... })`
+* **$group** - group by keys with group operations - `('$group', ('key1', 'key2', ..., { '$operation': (arg1, arg2, ... ), ... })`
 
   Operations:
 
-  * **$count** - count records - `{ '$count': save_to_key }`
+  * **$count** - counts records - `{ '$count': 'save_to_key' }`
 
-  * **$last** - get last record value by key - `{ '$last': key }`
+  * **$last** - gets last record value by key - `{ '$last': 'key' }`
 
-  * **$max** - max value by key - `{ '$max': (key, save_to_key) }`
+  * **$max** - gets max value by key - `{ '$max': ('key', 'save_to_key') }`
 
-  * **$min** - min value by key - `{ '$min': (key, save_to_key) }`
+  * **$min** - gets min value by key - `{ '$min': ('key', 'save_to_key') }`
 
-  * **$mul** - multiply values by key - `{ '$mul': (key, save_to_key) }`
+  * **$mul** - multiplies values by key - `{ '$mul': ('key', 'save_to_key') }`
 
-  * **$push* - push value by key into list - `{ '$push': (key, save_to_key) }`, skips records with missing key
+  * **$push* - pushes value by key into list - `{ '$push': ('key', 'save_to_key') }`, skips records with missing key
 
-  * **$sum** - sum values by key - `{ '$sum': (key, save_to_key) }`
+  * **$sum** - sums values by key - `{ '$sum': ('key', 'save_to_key') }`
 
-* **$limit** - `('$limit', count)`
+* **$limit** - `('$limit', limit)`
 
-* **$o2o** - one to one relation - `('$o2o', (related_db, related_field, field, relation_name))`
+* **$match** - matches to query - `('$match', { ... })`
 
-* **$o2m** - one to many relation - `('$o2m', (related_db, related_field, field, relation_name))`
+* **$o2o** - one to one relation - `('$o2o', ('field_from', 'field_to', related_db, 'save_to_key'))`, result is None or record
+
+* **$o2m** - one to many relation - `('$o2m', ('field_from', 'field_to', related_db, 'save_to_key'))`, result is list of records
 
 * **$offset** - `('$offset', offset)`
 
-* **$project** - rename keys - `('$project', ((key_from, key_to), ... ))`
+* **$project** - renames keys - `('$project', { 'key1_from': 'key1_to', 'key2_from': 'key2_to', ... })`
 
-* **$rebase** - rebase dict by key onto record values - `('$rebase', key, skip_existing)`
+* **$rebase** - rebases dict by key onto record values - `('$rebase', 'key', skip_existing)`
 
-* **$unwind** - unwind list by key into single records - `('$unwind', key)`, each list entry will be merged with the copy of record
+* **$unwind** - unwinds list by key into single records - `('$unwind', 'key')`, each list entry will be merged with the copy of record
 
 Instant view
 ------------
