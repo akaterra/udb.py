@@ -539,8 +539,11 @@ Update operation
 
   udb.update({'a': 2}, q={'a': 1}, offset=5)
 
-Aggregations
-------------
+Aggregation
+-----------
+
+Aggregation mechanics allows to build aggregation pipeline over any iterable, particulary over the cursor.
+Aggregation accepts an interable with the pipelines to be applied over it.
 
 .. code:: python
 
@@ -562,9 +565,37 @@ Aggregations
 
 Pipes:
 
+* **$group** - group by keys with group operations - `('$group', (key1, key2, ..., { group_op: (arg1, arg2, ... ), ... })`
+
+  Operations:
+
+  * **$count** - count records - `{ '$count': save_to_key }`
+
+  * **$last** - get last record value by key - `{ '$last': key }`
+
+  * **$max** - max value by key - `{ '$max': (key, save_to_key) }`
+
+  * **$min** - min value by key - `{ '$min': (key, save_to_key) }`
+
+  * **$mul** - multiply values by key - `{ '$mul': (key, save_to_key) }`
+
+  * **$push* - push value by key into list - `{ '$push': (key, save_to_key) }`, skips records with missing key
+
+  * **$sum** - sum values by key - `{ '$sum': (key, save_to_key) }`
+
+* **$limit** - `('$limit', count)`
+
 * **$o2o** - one to one relation - `('$o2o', (related_db, related_field, field, relation_name))`
 
 * **$o2m** - one to many relation - `('$o2m', (related_db, related_field, field, relation_name))`
+
+* **$offset** - `('$offset', offset)`
+
+* **$project** - rename keys - `('$project', ((key_from, key_to), ... ))`
+
+* **$rebase** - rebase dict by key onto record values - `('$rebase', key, skip_existing)`
+
+* **$unwind** - unwind list by key into single records - `('$unwind', key)`, each list entry will be merged with the copy of record
 
 Instant view
 ------------

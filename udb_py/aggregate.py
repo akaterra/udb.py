@@ -1,4 +1,63 @@
 from .common import EMPTY, TYPE_FORMAT_MAPPERS
+from .udb import cpy_dict
+
+
+def _count_group_op(acc, key, record):
+    acc[key] = acc.get(key, 0) + 1
+
+
+def _last_group_op(acc, keys, record):
+    for key in keys:
+        acc[key] = record.get(key, None)
+
+
+def _max_group_op(acc, args, record):
+    if args[1] not in acc:
+        acc[args[1]] = None
+
+    val = record.get(args[0], EMPTY)
+
+    if val != EMPTY:
+        acc[args[1]] = max(val, acc[args[1]]) if acc[args[1]] is not None else val
+
+
+def _min_group_op(acc, args, record):
+    if args[1] not in acc:
+        acc[args[1]] = None
+
+    val = record.get(args[0], EMPTY)
+
+    if val != EMPTY:
+        acc[args[1]] = min(val, acc[args[1]]) if acc[args[1]] is not None else val
+
+
+def _mul_group_op(acc, args, record):
+    acc[args[1]] = acc.get(args[1], 1) * record.get(args[0], 0)
+
+
+def _push_group_op(acc, args, record):
+    if args[1] not in current_acc:
+        acc[args[1]] = []
+
+    val = record.get(args[0], EMPTY)
+
+    if val != EMPTY:
+        acc[args[1]].append(val)
+
+
+def _sum_group_op(acc, args, record):
+    acc[args[1]] = acc.get(args[1], 0) + record.get(args[0], 0)
+
+
+_GROUP_OPS = {
+    '$count': _count_group_op,
+    '$last': _last_group_op,
+    '$max': _max_group_op,
+    '$min': _min_group_op,
+    '$mul': _mul_group_op,
+    '$push': _push_group_op,
+    '$sum': _sum_group_op,
+}
 
 
 def _group(seq, args):
@@ -13,6 +72,8 @@ def _group(seq, args):
 
             if val != EMPTY:
                 acc_key += TYPE_FORMAT_MAPPERS[type(val)](val)
+            else:
+                acc_key += TYPE_FORMAT_MAPPERS[type(None)](None)
 
         if acc_key not in acc:
             acc[acc_key] = dict(record)
@@ -20,26 +81,23 @@ def _group(seq, args):
         current_acc = acc[acc_key]
 
         for op_key, op_val in ops.items():
-            if op_key == '$count':
-                current_acc[op_val] = current_acc.get(op_val, 0) + 1
-            elif op_key == '$last':
-                for key in op_val:
-                    current_acc[key] = record.get(key, None)
-            elif op_key == '$mul':
-                current_acc[op_val[1]] = current_acc.get(op_val[1], 1) * record.get(op_val[0], 0)
-            elif op_key == '$push':
-                val = record.get(op_val[0], EMPTY)
+            op = _GROUP_OPS.get(op_key, None)
 
-                if val != EMPTY:
-                    if op_val[1] not in current_acc:
-                        current_acc[op_val[1]] = [val]
-                    else:
-                        current_acc[op_val[1]].append(val)
-            elif op_key == '$sum':
-                current_acc[op_val[1]] = current_acc.get(op_val[1], 0) + record.get(op_val[0], 0)
+            if op:
+                op(current_acc, op_val, record)
 
     for rec in acc.values():
         yield rec
+
+
+def _limit(seq, count):
+    for val in seq:
+        if count == 0:
+            break
+        
+        count -= 1
+        
+        yield val
 
 
 def _o2m(seq, args):
@@ -66,16 +124,14 @@ def _o2o(seq, args):
         yield record
 
 
-def _override(seq, key):
-    for record in seq:
-        val = record.get(key, EMPTY)
+def _offset(seq, count):
+    for val in seq:
+        if count > 0:
+            count -= 1
 
-        if val != EMPTY and isinstance(val, dict):
-            del record[key]
-
-            record.update(val)
-
-        yield record
+            continue
+        
+        yield val
 
 
 def _project(seq, keys):
@@ -87,6 +143,37 @@ def _project(seq, keys):
                 del record[key_from]
 
                 record[key_to] = val
+
+            yield record
+
+
+def _rebase(seq, args):
+    key = None
+    skip_exising = False
+
+    if len(args) > 1:
+        key, skip_exising = args[0], args[1]
+    else:
+        key = args
+
+    if skip_exising:  # @todo
+        for record in seq:
+            val = record.get(key, EMPTY)
+
+            if val != EMPTY and isinstance(val, dict):
+                del record[key]
+
+                record.update(val)
+
+            yield record
+    else:
+        for record in seq:
+            val = record.get(key, EMPTY)
+
+            if val != EMPTY and isinstance(val, dict):
+                del record[key]
+
+                record.update(val)
 
             yield record
 
@@ -113,10 +200,12 @@ def _unwind(seq, key):
 
 _AGGREGATORS = {
     '$group': _group,
+    '$limit': _limit,
     '$o2o': _o2o,
     '$o2m': _o2m,
-    '$override': _override,
+    '$offset': _offset,
     '$project': _project,
+    '$rebase': _rebase,
     '$unwind': _unwind,
 }
 
