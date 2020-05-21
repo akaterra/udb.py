@@ -595,7 +595,7 @@ Pipes:
 
   * **$mul** - multiplies values by key - `{ '$mul': ('key', 'save_to_key') }`
 
-  * **$push* - pushes value by key into list - `{ '$push': ('key', 'save_to_key') }`, skips records with missing key
+  * **$push** - pushes value by key into list - `{ '$push': ('key', 'save_to_key') }`, skips records with missing key
 
   * **$sum** - sums values by key - `{ '$sum': ('key', 'save_to_key') }`
 
@@ -609,7 +609,7 @@ Pipes:
 
 * **$offset** - `('$offset', offset)`
 
-* **$project** - renames keys - `('$project', { 'key1_from': 'key1_to', 'key2_from': 'key2_to', ... })`
+* **$project** - renames keys - `('$project', { 'key1_from': 'key1_to', 'key2_from': 'key2_to', ... })`, None as "key_to" unsets the key
 
 * **$rebase** - rebases dict by key onto record values - `('$rebase', 'key', skip_existing)`
 

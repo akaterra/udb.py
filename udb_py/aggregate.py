@@ -31,11 +31,14 @@ def _min_group_op(acc, args, record):
 
 
 def _mul_group_op(acc, args, record):
-    acc[args[1]] = acc.get(args[1], 1) * record.get(args[0], 0)
+    if args[1] not in acc:
+        acc[args[1]] = None
+
+    acc[args[1]] = acc.get(args[1], 1) * record.get(args[0], 1) if acc[args[1]] is not None else record.get(args[0], None)
 
 
 def _push_group_op(acc, args, record):
-    if args[1] not in current_acc:
+    if args[1] not in acc:
         acc[args[1]] = []
 
     val = record.get(args[0], EMPTY)
@@ -45,7 +48,10 @@ def _push_group_op(acc, args, record):
 
 
 def _sum_group_op(acc, args, record):
-    acc[args[1]] = acc.get(args[1], 0) + record.get(args[0], 0)
+    if args[1] not in acc:
+        acc[args[1]] = None
+
+    acc[args[1]] = acc.get(args[1], 0) + record.get(args[0], 0) if acc[args[1]] is not None else record.get(args[0], None)
 
 
 _GROUP_OPS = {
@@ -100,7 +106,7 @@ def _limit(seq, count):
 
 
 def _o2m(seq, args):
-    key_from, key_to, key_as, db = args
+    key_from, key_to, db, key_as = args
 
     for record in seq:
         val_from = record.get(key_from, EMPTY)
@@ -141,9 +147,10 @@ def _project(seq, keys):
             if val != EMPTY:
                 del record[key_from]
 
-                record[key_to] = val
+                if key_to is not None:
+                    record[key_to] = val
 
-            yield record
+        yield record
 
 
 def _rebase(seq, args):
@@ -200,8 +207,8 @@ def _unwind(seq, key):
 _PIPES = {
     '$group': _group,
     '$limit': _limit,
-    '$o2o': _o2o,
     '$o2m': _o2m,
+    '$o2o': _o2o,
     '$offset': _offset,
     '$project': _project,
     '$rebase': _rebase,
@@ -210,12 +217,17 @@ _PIPES = {
 
 
 def aggregate(seq, *pipes):
-    for pipe, args in pipes:
+    for args in pipes:
+        pipe = args[0]
+
         if not callable(pipe):
             pipe = _PIPES.get(pipe, None)
 
         if pipe:
-            seq = pipe(seq, args)
+            if len(args) > 1:
+                seq = pipe(seq, args[1])
+            else:
+                seq = pipe(seq)
 
     return seq
 
