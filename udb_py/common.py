@@ -67,7 +67,16 @@ class Lst(list):
 
 
 TYPE_COMPARERS = {
+    Empty: {
+        Empty: False,
+        bool: False,
+        int: False,
+        float: False,
+        type(None): False,
+        str: False,
+    },
     bool: {
+        Empty: False,
         bool: None,
         int: False,
         float: False,
@@ -75,6 +84,7 @@ TYPE_COMPARERS = {
         str: False,
     },
     int: {
+        Empty: False,
         bool: True,
         int: None,
         float: None,
@@ -82,6 +92,7 @@ TYPE_COMPARERS = {
         str: False,
     },
     float: {
+        Empty: False,
         bool: True,
         int: None,
         float: None,
@@ -89,6 +100,7 @@ TYPE_COMPARERS = {
         str: False,
     },
     type(None): {
+        Empty: False,
         bool: False,
         int: False,
         float: False,
@@ -96,6 +108,7 @@ TYPE_COMPARERS = {
         str: False,
     },
     str: {
+        Empty: False,
         bool: True,
         int: True,
         float: True,
@@ -104,11 +117,12 @@ TYPE_COMPARERS = {
     },
 }
 TYPE_FORMAT_MAPPERS = {
-    bool: lambda x: '\x01\x01' if x else '\x01\x00',
-    int: lambda x: ('\x02\x00' if x < 0 else '\x02\x01') + pack('>q', x).decode('latin'),
+    Empty: lambda x: chr(0),
+    bool: lambda x: '\x02\x01' if x else '\x02\x00',
+    int: lambda x: ('\x03\x00' if x < 0 else '\x03\x01') + pack('>q', x).decode('latin'),
     float: None,
-    type(None): lambda x: chr(0),
-    str: lambda x: chr(3) + x,
+    type(None): lambda x: chr(1),
+    str: lambda x: chr(4) + x,
 }
 
 

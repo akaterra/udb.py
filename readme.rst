@@ -233,7 +233,8 @@ By this sequence of fields, the index key will be generated and will be associat
 
   record = {'a': 'A', 'b': 'B', 'c': 'C'}  # index key=ABC
 
-In this case of declaration in order that the record to be indexed it must contain all of the fields declared in the sequence of index fields.
+In order that the record to be indexed it is not obliged to contain all of the fields declared in the sequence of index fields.
+By default the "None" value is used for the missing field.
 
 .. code:: python
 
@@ -243,16 +244,16 @@ In this case of declaration in order that the record to be indexed it must conta
       'abc': UdbBtreeIndex(['a', 'b', 'c'])  # "a", "b" and "c" fields will be fetched from the indexed record
   })
 
-  record = {'a': 'A', 'b': 'B'}  # won't be indexed, raises FieldRequiredError
+  record = {'a': 'A', 'b': 'B'}  # index key=ANoneC
 
 Using dictionary in case of Python 3:
 
 .. code:: python
 
-  from udb_py import Udb, UdbBtreeIndex, required
+  from udb_py import Udb, UdbBtreeIndex, REQUIRED
 
   db = Udb(indexes={
-      'abc': UdbBtreeIndex({'a': required, 'b': required, 'c': required})  # "a", "b" and "c" fields will be fetched from the indexed record
+      'abc': UdbBtreeIndex({'a': REQUIRED, 'b': REQUIRED, 'c': REQUIRED})  # "a", "b" and "c" fields will be fetched from the indexed record
   })
 
   record = {'a': 'A', 'b': 'B'}  # won't be indexed, raises FieldRequiredError
@@ -261,10 +262,10 @@ Using list of tuples in case of Python 2 (to keep key order):
 
 .. code:: python
 
-  from udb_py import Udb, UdbBtreeIndex, required
+  from udb_py import Udb, UdbBtreeIndex, REQUIRED
 
   db = Udb(indexes={
-      'abc': UdbBtreeIndex([('a', required), ('b', required), ('c', required)])  # "a", "b" and "c" fields will be fetched from the indexed record
+      'abc': UdbBtreeIndex([('a', REQUIRED), ('b', REQUIRED), ('c', REQUIRED)])  # "a", "b" and "c" fields will be fetched from the indexed record
   })
 
   record = {'a': 'A', 'b': 'B'}  # won't be indexed, raises FieldRequiredError

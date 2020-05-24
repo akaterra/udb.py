@@ -34,22 +34,22 @@ def test_should_select_by_full_covered_query():
 def test_should_select_by_partially_covered_query():
     udb = Udb({
         'a': UdbBtreeIndex(['a']),
-        'ab': UdbBtreeIndex(['a', 'b']),
+        'ab': UdbBtreeIndex(['a', 'c']),
         'b': UdbBtreeIndex(['b']),
     })
 
     a = {'a': 1, 'b': 1, 'c': 1}
-    b = {'a': 2, 'b': 2, 'c': 2}
+    b = {'a': 2, 'b': 2}
     c = {'a': 3, 'b': 3, 'c': 3}
 
     udb.insert(a)
     udb.insert(b)
     udb.insert(c)
 
-    records = list(udb.select({'a': 2, 'b': 2, 'c': 2}))
+    records = list(udb.select({'a': 2, 'b': 2}))
 
     assert len(records) == 1
-    assert records[0] == {'a': 2, 'b': 2, 'c': 2, '__rev__': 1}
+    assert records[0] == {'a': 2, 'b': 2, '__rev__': 1}
 
     records = list(udb.select({'a': 2, 'b': 2, 'c': 3}))
 

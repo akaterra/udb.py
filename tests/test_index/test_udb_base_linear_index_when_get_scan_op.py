@@ -41,7 +41,7 @@ def test_should_get_const_scan_op():
     assert prefix_key_len == 1
     assert priority == 2
     assert callable(fn)
-    assert list(fn('\x03222')) == ['search_by_key', '\x03222']
+    assert list(fn('\x04222')) == ['search_by_key', '\x04222']
     assert fn_q_arranger is None
 
 
@@ -55,10 +55,10 @@ def test_should_get_in_scan_op():
     assert priority == 2
     assert callable(fn)
 
-    params = list(fn('\x03222'))
+    params = list(fn('\x04222'))
 
     assert params[0] == 'search_by_key_in'
-    assert list(params[1]) == ['\x03222\x03000', '\x03222\x03111']
+    assert list(params[1]) == ['\x04222\x04000', '\x04222\x04111']
 
     assert callable(fn_q_arranger)
 
@@ -72,7 +72,7 @@ def test_should_get_prefix_scan_op():
     assert prefix_key_len == 2
     assert priority == 1
     assert callable(fn)
-    assert list(fn('\x03222')) == ['search_by_key_prefix', '\x03222']
+    assert list(fn('\x04222')) == ['search_by_key_prefix', '\x04222']
     assert fn_q_arranger is None
 
 
@@ -85,7 +85,7 @@ def test_should_get_range_scan_op():
     assert prefix_key_len == 2
     assert priority == 1
     assert callable(fn)
-    assert list(fn('\x03222')) == ['search_by_key_range', '\x03222\x03000', '\x03222\x03111', False, False]
+    assert list(fn('\x04222')) == ['search_by_key_range', '\x04222\x04000', '\x04222\x04111', False, False]
     assert callable(fn_q_arranger)
 
 
@@ -98,7 +98,7 @@ def test_should_get_range_excluding_min_scan_op():
     assert prefix_key_len == 2
     assert priority == 1
     assert callable(fn)
-    assert list(fn('\x03222')) == ['search_by_key_range', '\x03222\x03000', '\x03222\x03111', True, False]
+    assert list(fn('\x04222')) == ['search_by_key_range', '\x04222\x04000', '\x04222\x04111', True, False]
     assert callable(fn_q_arranger)
 
 
@@ -111,7 +111,7 @@ def test_should_get_range_excluding_max_scan_op():
     assert prefix_key_len == 2
     assert priority == 1
     assert callable(fn)
-    assert list(fn('\x03222')) == ['search_by_key_range', '\x03222\x03000', '\x03222\x03111', False, True]
+    assert list(fn('\x04222')) == ['search_by_key_range', '\x04222\x04000', '\x04222\x04111', False, True]
     assert callable(fn_q_arranger)
 
 

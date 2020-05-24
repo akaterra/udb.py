@@ -94,7 +94,7 @@ class UdbIndex(object):
         else:
             second = None
 
-        self.insert(self.get_cover_key_or_raise(values, second), uid)
+        self.insert(self.get_cover_key(values, second), uid)
 
         return True
 

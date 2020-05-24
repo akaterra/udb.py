@@ -1,6 +1,6 @@
 import pytest
 
-from udb_py.common import FieldRequiredError, REQUIRED, type_formatter_iter
+from udb_py.common import FieldRequiredError, EMPTY, REQUIRED, type_formatter_iter
 from udb_py.index.udb_base_linear_index import UdbBaseLinearIndex
 
 
@@ -15,12 +15,12 @@ def test_should_get_cover_key_on_partially_covered_data():
     i = UdbBaseLinearIndex(['a', 'b', 'c'])
     d = {'a': 1, 'c': 3}
 
-    assert i.get_cover_key(d) == ''.join(type_formatter_iter([1, None, 3]))
+    assert i.get_cover_key(d) == ''.join(type_formatter_iter([1, EMPTY, 3]))
 
 
 def test_should_not_get_cover_key_on_not_covered_data():
     i = UdbBaseLinearIndex(['a', 'b', 'c'])
-    d = {'b': 1, 'c': 3}
+    d = {'d': 1, 'e': 2, 'f': 3}
 
     assert i.get_cover_key(d) is None
 

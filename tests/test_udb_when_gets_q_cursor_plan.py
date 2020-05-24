@@ -61,14 +61,18 @@ def test_should_plan_in_scan():
 @pytest.mark.udb
 def test_should_plan_in_scan_with_sort_stage():
     i = Udb({
-        # 'a': UdbBtreeIndex(['a']),
-        # 'ab': UdbBtreeIndex(['a', 'b']),
-        # 'b': UdbBtreeIndex(['b']),
+        'a': UdbBtreeIndex(['a']),
+        'ab': UdbBtreeIndex(['a', 'b']),
+        'b': UdbBtreeIndex(['b']),
     })
 
     plan = i.get_q_cursor({'a': 1, 'b': {'$in': [2]}}, sort='-a', get_plan=True)
 
     assert len(plan) == 2
+    assert plan[0][0] == i.indexes['ab']
+    assert plan[0][1] == SCAN_OP_IN
+    assert plan[0][2] == 2
+    assert plan[0][3] == 2
     assert plan[1][0] is None
     assert plan[1][1] == SCAN_OP_SORT
     assert plan[1][4] == 'a'
@@ -76,7 +80,7 @@ def test_should_plan_in_scan_with_sort_stage():
 
 
 @pytest.mark.udb
-def test_should_plan_in_scan_without_sort_stage_using_sorted_index():
+def test_should_plan_in_scan_with_dropped_sort_stage_using_sorted_index():
     i = Udb({
         'a': UdbBtreeIndex(['a']),
         'ab': UdbBtreeIndex(['a', 'b']),
@@ -101,6 +105,44 @@ def test_should_plan_prefix_scan():
     })
 
     plan = i.get_q_cursor({'a': 1, 'c': 2}, get_plan=True)
+
+    assert len(plan) == 2  # prefix, seq
+    assert plan[0][0] == i.indexes['ab']
+    assert plan[0][1] == SCAN_OP_PREFIX
+    assert plan[0][2] == 1
+    assert plan[0][3] == 1
+
+
+@pytest.mark.udb
+def test_should_plan_prefix_scan_with_sort_stage():
+    i = Udb({
+        # 'a': UdbBtreeIndex(['a']),
+        'ab': UdbBtreeIndex(['a', 'b']),
+        # 'b': UdbBtreeIndex(['b']),
+    })
+
+    plan = i.get_q_cursor({'a': 1, 'c': 2}, sort='c', get_plan=True)
+
+    assert len(plan) == 3  # prefix, seq
+    assert plan[0][0] == i.indexes['ab']
+    assert plan[0][1] == SCAN_OP_PREFIX
+    assert plan[0][2] == 1
+    assert plan[0][3] == 1
+    assert plan[2][0] is None
+    assert plan[2][1] == SCAN_OP_SORT
+    assert plan[2][4] == 'c'
+    assert plan[2][5] is True
+
+
+@pytest.mark.udb
+def test_should_plan_prefix_scan_with_dropped_sort_stage():
+    i = Udb({
+        # 'a': UdbBtreeIndex(['a']),
+        'ab': UdbBtreeIndex(['a', 'b']),
+        # 'b': UdbBtreeIndex(['b']),
+    })
+
+    plan = i.get_q_cursor({'a': 1, 'c': 2}, sort='b', get_plan=True)
 
     assert len(plan) == 2  # prefix, seq
     assert plan[0][0] == i.indexes['ab']
