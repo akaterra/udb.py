@@ -7,7 +7,6 @@ from udb_py.index.udb_base_geo_index import SCAN_OP_INTERSECTION, SCAN_OP_NEAR
 from udb_py.index import UdbBtreeIndex
 
 
-@pytest.mark.udb
 def test_should_plan_const_scan():
     i = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -24,7 +23,6 @@ def test_should_plan_const_scan():
     assert plan[0][3] == 2
 
 
-@pytest.mark.udb
 def test_should_plan_const_scan_with_dropped_sort_stage():
     i = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -41,7 +39,6 @@ def test_should_plan_const_scan_with_dropped_sort_stage():
     assert plan[0][3] == 2
 
 
-@pytest.mark.udb
 def test_should_plan_in_scan():
     i = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -58,7 +55,6 @@ def test_should_plan_in_scan():
     assert plan[0][3] == 2
 
 
-@pytest.mark.udb
 def test_should_plan_in_scan_with_sort_stage():
     i = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -79,7 +75,6 @@ def test_should_plan_in_scan_with_sort_stage():
     assert plan[1][5] is False
 
 
-@pytest.mark.udb
 def test_should_plan_in_scan_with_dropped_sort_stage_using_sorted_index():
     i = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -96,7 +91,6 @@ def test_should_plan_in_scan_with_dropped_sort_stage_using_sorted_index():
     assert plan[0][3] == 2
 
 
-@pytest.mark.udb
 def test_should_plan_prefix_scan():
     i = Udb({
         # 'a': UdbBtreeIndex(['a']),
@@ -113,7 +107,6 @@ def test_should_plan_prefix_scan():
     assert plan[0][3] == 1
 
 
-@pytest.mark.udb
 def test_should_plan_prefix_scan_with_sort_stage():
     i = Udb({
         # 'a': UdbBtreeIndex(['a']),
@@ -134,7 +127,6 @@ def test_should_plan_prefix_scan_with_sort_stage():
     assert plan[2][5] is True
 
 
-@pytest.mark.udb
 def test_should_plan_prefix_scan_with_dropped_sort_stage():
     i = Udb({
         # 'a': UdbBtreeIndex(['a']),
@@ -151,7 +143,6 @@ def test_should_plan_prefix_scan_with_dropped_sort_stage():
     assert plan[0][3] == 1
 
 
-@pytest.mark.udb
 def test_should_plan_prefix_in_scan():
     i = Udb({
         # 'a': UdbBtreeIndex(['a']),
@@ -168,7 +159,6 @@ def test_should_plan_prefix_in_scan():
     assert plan[0][3] == 1
 
 
-@pytest.mark.udb
 def test_should_plan_range_scan():
     i = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -185,7 +175,6 @@ def test_should_plan_range_scan():
     assert plan[0][3] == 1
 
 
-@pytest.mark.udb
 def test_should_plan_seq_scan():
     i = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -202,7 +191,6 @@ def test_should_plan_seq_scan():
     assert plan[0][3] == 0
 
 
-@pytest.mark.udb
 def test_should_plan_additional_seq_scan_on_partial_index_coverage():
     i = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -222,7 +210,6 @@ def test_should_plan_additional_seq_scan_on_partial_index_coverage():
     assert plan[1][4]['c'] == 3
 
 
-@pytest.mark.udb
 def test_should_plan_sub_scan():
     i = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -242,7 +229,6 @@ def test_should_plan_sub_scan():
     assert plan[1][5] == 2
 
 
-@pytest.mark.udb
 def test_should_not_plan_sub_scan_on_const_not_multivalued_coverage():
     i = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -256,7 +242,6 @@ def test_should_not_plan_sub_scan_on_const_not_multivalued_coverage():
     assert plan[0][1] == SCAN_OP_CONST
 
 
-@pytest.mark.udb
 def test_should_not_plan_any_scan_on_const_not_multivalued_coverage_with_transcending_offset():
     i = Udb({
         'a': UdbBtreeIndex(['a']),

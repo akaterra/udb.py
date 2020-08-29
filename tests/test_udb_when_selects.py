@@ -4,7 +4,6 @@ from udb_py.common import *
 from udb_py.udb import Udb, UdbBtreeIndex
 
 
-@pytest.mark.udb
 def test_should_select_by_full_covered_query():
     udb = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -30,7 +29,6 @@ def test_should_select_by_full_covered_query():
     assert len(records) == 0
 
 
-@pytest.mark.udb
 def test_should_select_by_partially_covered_query():
     udb = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -56,7 +54,6 @@ def test_should_select_by_partially_covered_query():
     assert len(records) == 0
 
 
-@pytest.mark.udb
 def test_should_select_by_subset_using_indexes():
     udb = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -82,7 +79,6 @@ def test_should_select_by_subset_using_indexes():
     assert len(records) == 0
 
 
-@pytest.mark.udb
 def test_should_select_using_seq_scan_by_gt_operator():
     udb = Udb()
 
@@ -105,7 +101,6 @@ def test_should_select_using_seq_scan_by_gt_operator():
     assert records == [b, c, d, e, f]
 
 
-@pytest.mark.udb
 def test_should_select_using_seq_scan_by_gte_operator():
     udb = Udb()
 
@@ -128,7 +123,6 @@ def test_should_select_using_seq_scan_by_gte_operator():
     assert records == [b, c, d, e, f]
 
 
-@pytest.mark.udb
 def test_should_select_using_seq_scan_by_lt_operator():
     udb = Udb()
 
@@ -151,7 +145,6 @@ def test_should_select_using_seq_scan_by_lt_operator():
     assert records == [a, b, c, d, e]
 
 
-@pytest.mark.udb
 def test_should_select_using_seq_scan_by_lte_operator():
     udb = Udb()
 
@@ -174,7 +167,6 @@ def test_should_select_using_seq_scan_by_lte_operator():
     assert records == [a, b, c, d, e]
 
 
-@pytest.mark.udb
 def test_should_select_using_seq_scan_by_eq_operator():
     udb = Udb()
 
@@ -197,7 +189,6 @@ def test_should_select_using_seq_scan_by_eq_operator():
     assert records == [e]
 
 
-@pytest.mark.udb
 def test_should_select_using_seq_scan_by_ne_operator():
     udb = Udb()
 
@@ -220,7 +211,6 @@ def test_should_select_using_seq_scan_by_ne_operator():
     assert records == [a, b, c, d, f]
 
 
-@pytest.mark.udb
 def test_should_select_using_seq_scan_by_in_operator():
     udb = Udb()
 
@@ -243,7 +233,6 @@ def test_should_select_using_seq_scan_by_in_operator():
     assert records == [b, e]
 
 
-@pytest.mark.udb
 def test_should_select_using_seq_scan_by_nin_operator():
     udb = Udb()
 
@@ -266,7 +255,6 @@ def test_should_select_using_seq_scan_by_nin_operator():
     assert records == [a, c ,d, f]
 
 
-@pytest.mark.udb
 def test_should_select_using_seq_scan_by_intersection_operator():
     udb = Udb()
 
@@ -289,7 +277,6 @@ def test_should_select_using_seq_scan_by_intersection_operator():
     assert records == [d, f]
 
 
-@pytest.mark.udb
 def test_should_select_using_seq_scan_by_near_operator():
     udb = Udb()
 
@@ -312,7 +299,6 @@ def test_should_select_using_seq_scan_by_near_operator():
     assert records == [e, f, c, d, b]
 
 
-@pytest.mark.udb
 def test_should_select_using_seq_scan_by_near_operator_with_min_distance():
     udb = Udb()
 
@@ -335,7 +321,6 @@ def test_should_select_using_seq_scan_by_near_operator_with_min_distance():
     assert records == [f, c, d, b]
 
 
-@pytest.mark.udb
 def test_should_select_using_seq_scan_by_near_operator_with_max_distance():
     udb = Udb()
 
@@ -358,7 +343,6 @@ def test_should_select_using_seq_scan_by_near_operator_with_max_distance():
     assert records == [e, f, c, d]
 
 
-@pytest.mark.udb
 def test_should_select_by_range():
     udb = Udb()
 
@@ -381,7 +365,6 @@ def test_should_select_by_range():
     ]
 
 
-@pytest.mark.udb
 def test_should_select_using_btree_index_by_range():
     udb = Udb(indexes={'a': UdbBtreeIndex(['a', 'b', 'c'])})
 
@@ -404,7 +387,6 @@ def test_should_select_using_btree_index_by_range():
     ]
 
 
-@pytest.mark.udb
 def test_should_select_using_sort():
     udb = Udb()
 
@@ -427,7 +409,6 @@ def test_should_select_using_sort():
     assert records == [b, d, f, e, c, a]
 
 
-@pytest.mark.udb
 def test_should_select_using_reverse_sort():
     udb = Udb()
 

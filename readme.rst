@@ -292,6 +292,42 @@ The default value for missing field can be defined as a primitive value or calla
 
   record = {'a': 'A', 'c': 'C'}  # index key=AbC
 
+Example of functional index over the size of list:
+
+.. code:: python
+
+  from udb_py import Udb, UdbBtreeMultivaluedIndex
+
+  db = Udb(indexes={
+      'abc': UdbBtreeIndex({
+        '$size': lambda key, values: len(values['arr'] if isinstance(values['arr'], list) else 0),
+      }),
+  })
+
+  db.insert({'arr': [1]})
+  db.insert({'arr': [1, 2]})
+  db.insert({'arr': [1]})
+
+  print(list(db.select({'$size': 2})))
+
+Use **EMPTY** value to exclude zero-length records from the index:
+
+.. code:: python
+
+  from udb_py import Udb, UdbBtreeMultivaluedIndex, EMPTY
+
+  db = Udb(indexes={
+      'abc': UdbBtreeIndex({
+        '$size': lambda key, values: len(values['arr'] if isinstance(values['arr'], list) else 0 or EMPTY),
+      }),
+  })
+
+  db.insert({'arr': [1]})
+  db.insert({'arr': [1, 2]})
+  db.insert({'arr': [1]})
+
+  print(list(db.select({'$size': 2})))
+
 Float precision
 ~~~~~~~~~~~~~~~
 
@@ -444,15 +480,15 @@ Scan operations
 
 BTree index:
 
-* **const** - an index covers only one record by the index key
+* **const** - an index has only one index key that refers exactly to the one record in case of single valued index or to the set of records covered by the same index key in case of multivalued index (can be fetched linearly)
 
-* **in** - an index covers multiple records by the list of the index keys, each of which covers exactly one record
+* **in** - an index has multiple index keys, each one refers exactly to the one record in case of single valued index or to the set of records covered by the same index key in case of multivalued index (can be fetched linearly)
 
-* **range** - an index covers multiple records by the index keys set by the minimum and maximum values
+* **range** - an index covers multiple records by the index keys set having minimum and maximum values
 
 * **prefix** - an index covers range of records by the partial index key
 
-* **prefix_in** - an index covers multiple records by the list of the partial index keys, each of which covers range of records
+* **prefix_in** - an index covers multiple records by the list of the partial index keys, each one covers range of records
 
 RTree index:
 

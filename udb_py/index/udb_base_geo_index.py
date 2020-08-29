@@ -147,7 +147,7 @@ class UdbBaseGEOIndex(UdbIndex):
 
     @classmethod
     def merge_condition(cls, q1, q2, context=None, extend=None):
-        raise NotImplementedError
+        return q1
 
     @classmethod
     def seq(cls, seq, q, collection):
@@ -298,7 +298,7 @@ class UdbBaseGEOIndex(UdbIndex):
                             c_near.get('minDistance'),
                             c_near.get('maxDistance'),
                             limit,
-                            collection
+                            collection,
                         ),
                         _q_arr_near
                     )

@@ -25,7 +25,6 @@ class UdbIndexB(UdbBaseLinearIndex):
         return True
 
 
-@pytest.mark.udb
 def test_should_validate_query():
     udb = Udb({
         'a': UdbIndexA('a'),

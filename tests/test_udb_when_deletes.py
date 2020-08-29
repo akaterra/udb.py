@@ -4,7 +4,6 @@ from udb_py.common import *
 from udb_py.udb import Udb, UdbBtreeIndex
 
 
-@pytest.mark.udb
 def test_should_delete_all():
     udb = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -29,7 +28,6 @@ def test_should_delete_all():
     assert len(udb.indexes['b']) == 0
 
 
-@pytest.mark.udb
 def test_should_delete_by_query():
     udb = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -54,7 +52,6 @@ def test_should_delete_by_query():
     assert len(udb.indexes['b']) == 2
 
 
-@pytest.mark.udb
 def test_should_delete_rotating_delete_buffer():
     udb = Udb({
         'a': UdbBtreeIndex(['a']),
