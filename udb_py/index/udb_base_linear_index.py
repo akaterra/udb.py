@@ -204,6 +204,11 @@ class UdbBaseLinearIndex(UdbIndex):
                 else (v, EMPTY) for v in schema
             )
 
+        schema = {
+            k: EMPTY if type(v) == dict and '__emp__' in v else v
+            for k, v in schema.items()
+        }
+
         self.schema = schema
         self.schema_default_values = {key: val for key, val in schema.items() if val != EMPTY}
         self.schema_keys = list(schema.keys())
@@ -265,7 +270,14 @@ class UdbBaseLinearIndex(UdbIndex):
         return cover_key
 
     def get_meta(self):
-        return {'schema': self.schema, 'name': self.name, 'sparse': self.is_sparse}
+        return {
+            'schema': {
+                k: {'__emp__': True} if type(v) not in TYPE_COMPARERS or v == EMPTY else v
+                for k, v in self.schema.items()
+            },
+            'name': self.name,
+            'sparse': self.is_sparse,
+        }
 
     def get_scan_op(self, q, limit=None, offset=None, collection=None):
         """

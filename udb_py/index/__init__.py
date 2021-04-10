@@ -1,5 +1,6 @@
 from .udb_base_linear_index import UdbBaseLinearIndex, UdbBaseLinearEmbeddedIndex
 from .udb_base_geo_index import UdbBaseGEOIndex
+from .udb_base_text_index import UdbBaseTextIndex
 from .udb_btree_index import UdbBtreeIndex, UdbBtreeEmbeddedIndex
 from .udb_btree_multivalued_index import UdbBtreeMultivaluedIndex, UdbBtreeMultivaluedEmbeddedIndex
 from .udb_btree_uniq_index import UdbBtreeUniqIndex
@@ -7,3 +8,4 @@ from .udb_hash_index import UdbHashIndex, UdbHashEmbeddedIndex
 from .udb_hash_multivalued_index import UdbHashMultivaluedIndex, UdbHashMultivaluedEmbeddedIndex
 from .udb_hash_uniq_index import UdbHashUniqIndex
 from .udb_rtree_index import UdbRtreeIndex
+from .udb_text_index import UdbTextIndex

@@ -2,17 +2,7 @@ from .aggregate import aggregate, register_aggregation_pipe
 from .index import (
     UdbBaseGEOIndex,
     UdbBaseLinearIndex,
-    # UdbBtreeIndex,
-    # UdbBtreeEmbeddedIndex,
-    # UdbBtreeMultivaluedIndex,
-    # UdbBtreeMultivaluedEmbeddedIndex,
-    # UdbBtreeUniqIndex,
-    # UdbHashIndex,
-    # UdbHashEmbeddedIndex,
-    # UdbHashMultivaluedIndex,
-    # UdbHashMultivaluedEmbeddedIndex,
-    # UdbHashUniqIndex,
-    # UdbRtreeIndex,
+    UdbBaseTextIndex,
 )
 from .udb_index import (
     SCAN_OP_CONST,

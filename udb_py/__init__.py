@@ -21,6 +21,7 @@ from .index import (
     UdbHashMultivaluedEmbeddedIndex,
     UdbHashUniqIndex,
     UdbRtreeIndex,
+    UdbTextIndex,
 )
 from .storage import UdbJsonFileStorage, UdbWalStorage
 from .udb import Udb

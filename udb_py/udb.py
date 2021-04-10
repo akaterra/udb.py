@@ -13,6 +13,7 @@ from .index import (
     UdbHashMultivaluedEmbeddedIndex,
     UdbHashUniqIndex,
     UdbRtreeIndex,
+    UdbTextIndex,
 )
 from .udb_core import UdbCore
 
@@ -30,6 +31,7 @@ _INDEXES = (
     UdbHashMultivaluedEmbeddedIndex,
     UdbHashUniqIndex,
     UdbRtreeIndex,
+    UdbTextIndex,
 )
 
 
@@ -101,7 +103,7 @@ class Udb(UdbCore):
         data = self._storage.load()
 
         logging.debug('db loaded')
-
+        
         if not isinstance(data, dict) or 'indexes' not in data or 'data' not in data:
             raise ValueError('invalid db format')
 
