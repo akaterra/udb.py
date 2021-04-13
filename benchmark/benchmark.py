@@ -47,7 +47,25 @@ def stop(samples=None, title=None, show_mem_usage=None):
         print()
 
 
-SAMPLES = 1000000
+SAMPLES = 100000
+
+
+udb = Udb({'a': UdbTextIndex(['a'])})
+
+start()
+
+for i in range(0, SAMPLES):
+    udb.insert({'a': str(i)})
+
+stop(SAMPLES, 'insert (full text, 1st index covers 1 field)', True)
+
+
+start()
+
+for i in range(0, SAMPLES):
+    list(udb.select({'a': {'$text': str(i)}}))
+
+stop(SAMPLES, 'select (full text, 1st index covers 1 field)')
 
 
 udb = Udb({'a': UdbBtreeIndex(['a'])})

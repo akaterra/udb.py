@@ -31,11 +31,11 @@ class UdbTextIndex(UdbBaseTextIndex):
         self.schema_keys = list(schema.keys())
         self.schema_last_index = len(schema) - 1
 
-        self._whoosh_schema = Schema(**{key: TEXT(stored=True) for key in self.schema_keys}, udb__uid__=NUMERIC)
+        self._whoosh_schema = Schema(**{key: TEXT(stored=True) for key in self.schema_keys}, udb__uid__=NUMERIC(stored=True))
         self._whoosh_storage = RamStorage()
         self._whoosh_index = self._whoosh_storage.create_index(self._whoosh_schema)
         self._whoosh_parser = QueryParser('a', schema=self._whoosh_index.schema)
-        self._whoosh_writer = self._whoosh_index.writer()
+        self._whoosh_writer = None
 
     def __len__(self):
         return 0
@@ -52,15 +52,20 @@ class UdbTextIndex(UdbBaseTextIndex):
 
     def insert(self, key_dict, uid):
         if key_dict:
-          self._whoosh_writer.add_document(**key_dict, udb__uid__=uid)
-          self._whoosh_writer.commit()
+            if self._whoosh_writer is None:
+                self._whoosh_writer = self._whoosh_index.writer()
+
+            self._whoosh_writer.add_document(**key_dict, udb__uid__=uid)
 
         return self
 
     def search_by_text(self, q):
+        if self._whoosh_writer:
+          self._whoosh_writer.commit()
+          self._whoosh_writer = None
+
         with self._whoosh_index.searcher() as searcher:
             for rec in searcher.search(self._whoosh_parser.parse(' '.join(q.values())), limit=None):
-                print(rec)
                 yield rec['udb__uid__']
 
     def upsert(self, old, new, uid):
