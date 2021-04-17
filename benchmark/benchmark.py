@@ -47,7 +47,7 @@ def stop(samples=None, title=None, show_mem_usage=None):
         print()
 
 
-SAMPLES = 100000
+SAMPLES = 10000
 
 
 udb = Udb({'a': UdbTextIndex(['a'])})

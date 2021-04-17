@@ -8,7 +8,7 @@ class UdbTextIndex(UdbBaseTextIndex):
     type = 'text'
 
     def __init__(self, schema, name=None):
-        from whoosh.fields import ID, NUMERIC, Schema, TEXT
+        from whoosh.fields import ID, NUMERIC, Schema, STORED, TEXT
         from whoosh.filedb.filestore import RamStorage
         from whoosh.qparser import QueryParser
 
@@ -31,7 +31,7 @@ class UdbTextIndex(UdbBaseTextIndex):
         self.schema_keys = list(schema.keys())
         self.schema_last_index = len(schema) - 1
 
-        self._whoosh_schema = Schema(**{key: TEXT(stored=True) for key in self.schema_keys}, udb__uid__=NUMERIC(stored=True))
+        self._whoosh_schema = Schema(**{key: TEXT(phrase=False) for key in self.schema_keys}, udb__uid__=STORED)
         self._whoosh_storage = RamStorage()
         self._whoosh_index = self._whoosh_storage.create_index(self._whoosh_schema)
         self._whoosh_parser = QueryParser('a', schema=self._whoosh_index.schema)
@@ -41,9 +41,7 @@ class UdbTextIndex(UdbBaseTextIndex):
         return 0
 
     def clear(self):
-        #self._btree.clear()
-
-        return self
+        return self._whoosh_index.doc_count
 
     def delete(self, key_dict, uid=None):
         #self._btree.pop(key_or_keys, EMPTY)
@@ -61,8 +59,11 @@ class UdbTextIndex(UdbBaseTextIndex):
 
     def search_by_text(self, q):
         if self._whoosh_writer:
-          self._whoosh_writer.commit()
-          self._whoosh_writer = None
+            self._whoosh_writer.commit()
+            self._whoosh_writer = None
+
+        # for rec in self._s.search(self._whoosh_parser.parse(' '.join(q.values())), limit=None):
+        #     yield rec['udb__uid__']
 
         with self._whoosh_index.searcher() as searcher:
             for rec in searcher.search(self._whoosh_parser.parse(' '.join(q.values())), limit=None):
