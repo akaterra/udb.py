@@ -382,6 +382,12 @@ Supported query operations:
 
     udb.select({'a': {'$intersection': {'minX': 5, 'minY': 5, 'maxX': 1, 'maxY': 5}}})
 
+* **$like** - like value (sql compatible)
+
+  .. code:: python
+
+    udb.select({'a': {'$like': 'a%b_c'}})
+
 * **$lt** - less then value
 
   .. code:: python

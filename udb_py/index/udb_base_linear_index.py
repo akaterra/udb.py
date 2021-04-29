@@ -1,4 +1,5 @@
 import collections
+import re
 
 from ..common import (
     FieldRequiredError,
@@ -19,15 +20,25 @@ def _q_arr_in(q):
     q.pop('$in')
 
 
+def _q_arr_like(q):
+      q.pop('$like')
+
+
+def _q_arr_none(q):
+    pass
+
+
 def _q_arr_range(q):
     q.pop('$gt', q.pop('$gte', q.pop('$lt', q.pop('$lte', EMPTY))))
 
 
+_LIKE_REGEX_CACHE = {}
 _PRIMITIVE_VALS = (None, bool, float, int, str)
 
 
 SCAN_OP_EMPTY = 'empty'
 SCAN_OP_IN = 'in'
+SCAN_OP_LIKE = 'like'
 SCAN_OP_PREFIX = 'prefix'
 SCAN_OP_PREFIX_IN = 'prefix_in'
 SCAN_OP_RANGE = 'range'
@@ -57,6 +68,16 @@ def _in_op(a, values):
             return True
 
     return False  # return a in b
+
+
+def _like_op(a, b):
+    if type(a) != str:
+        return False
+
+    if b not in _LIKE_REGEX_CACHE:
+        _LIKE_REGEX_CACHE[b] = re.compile('^' + re.escape(b).replace('%', '.*').replace('_', '.'))
+
+    return _LIKE_REGEX_CACHE[b].search(a) is not None
 
 
 def _lt_op(a, b):
@@ -99,6 +120,7 @@ class UdbBaseLinearIndex(UdbIndex):
         '$gt': _gt_op,
         '$gte': _gte_op,
         '$in': _in_op,
+        '$like': _like_op,
         '$lt': _lt_op,
         '$lte': _lte_op,
         '$ne': _ne_op,
@@ -179,6 +201,8 @@ class UdbBaseLinearIndex(UdbIndex):
                         for ind, in_value in enumerate(op_condition):
                             if op_key in cls._OPS and in_value is not None and type(in_value) not in _PRIMITIVE_VALS:
                                 raise InvalidScanOperationValueError('{}.{}[{}]'.format(key, op_key, ind))
+                    elif op_key == '$like' and type(op_condition) != str:
+                        raise InvalidScanOperationValueError('{}.{}'.format(key, op_key))
                     elif op_key in cls._OPS and op_condition is not None and type(op_condition) not in _PRIMITIVE_VALS:
                         raise InvalidScanOperationValueError('{}.{}'.format(key, op_key))
             else:
@@ -397,6 +421,37 @@ class UdbBaseLinearIndex(UdbIndex):
                         )
 
                 if self.is_prefixed:
+                    c_like = condition.get('$like', EMPTY)
+
+                    if c_like != EMPTY:
+                        c_like_index = -1
+                        c_like_pos_p = c_like.find('%')
+                        c_like_pos__ = c_like.find('_')
+
+                        if c_like_pos_p > -1:
+                            c_like_index = c_like_pos_p
+                        
+                        if c_like_pos__ > -1 and c_like_pos__ < c_like_pos_p:
+                            c_like_index = c_like_pos__
+                        
+                        if c_like_index == -1 and ind == self.schema_last_index:  # no pattern symbols, const scan
+                            return (
+                                SCAN_OP_CONST,
+                                ind + 1,  # cover key length
+                                2,  # priority
+                                lambda k: self.search_by_key(k + type_format_mappers[type(c_like)](c_like)),
+                                _q_arr_like
+                            )
+                        
+                        if c_like_index > 0:  # use pattern partially as prefix up to first pattern symbol appearance
+                            return (
+                                SCAN_OP_PREFIX,
+                                ind + 1,  # cover key length
+                                1,  # priority
+                                lambda k: self.search_by_key_prefix(k + type_format_mappers[str](c_like[0:c_like_index])),
+                                _q_arr_none
+                            )                            
+
                     return SCAN_OP_PREFIX, ind, 1, self.search_by_key_prefix, None
 
                 return SCAN_OP_SEQ, 0, 0, None, None

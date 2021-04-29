@@ -39,6 +39,22 @@ def test_should_plan_const_scan_with_dropped_sort_stage():
     assert plan[0][3] == 2
 
 
+def test_should_plan_const_scan_in_case_of_like_with_no_pattern_symbols():
+    i = Udb({
+        'a': UdbBtreeIndex(['a']),
+        'ab': UdbBtreeIndex(['a', 'b']),
+        'b': UdbBtreeIndex(['b']),
+    })
+
+    plan = i.get_q_cursor({'a': 1, 'b': {'$like': '1234567'}}, get_plan=True)
+
+    assert len(plan) == 1
+    assert plan[0][0] == i.indexes['ab']
+    assert plan[0][1] == SCAN_OP_CONST
+    assert plan[0][2] == 2
+    assert plan[0][3] == 2
+
+
 def test_should_plan_in_scan():
     i = Udb({
         'a': UdbBtreeIndex(['a']),
@@ -140,6 +156,22 @@ def test_should_plan_prefix_scan_with_dropped_sort_stage():
     assert plan[0][0] == i.indexes['ab']
     assert plan[0][1] == SCAN_OP_PREFIX
     assert plan[0][2] == 1
+    assert plan[0][3] == 1
+
+
+def test_should_plan_prefix_scan_in_case_of_partial_like():
+    i = Udb({
+        'a': UdbBtreeIndex(['a']),
+        'ab': UdbBtreeIndex(['a', 'b']),
+        'b': UdbBtreeIndex(['b']),
+    })
+
+    plan = i.get_q_cursor({'a': '1', 'b': {'$like': '345%678'}}, get_plan=True)
+
+    assert len(plan) == 2  # prefix, seq
+    assert plan[0][0] == i.indexes['ab']
+    assert plan[0][1] == SCAN_OP_PREFIX
+    assert plan[0][2] == 2
     assert plan[0][3] == 1
 
 

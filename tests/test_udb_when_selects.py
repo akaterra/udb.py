@@ -255,6 +255,28 @@ def test_should_select_using_seq_scan_by_nin_operator():
     assert records == [a, c ,d, f]
 
 
+def test_should_select_using_seq_scan_by_like_operator():
+    udb = Udb()
+
+    a = {'a': 'abbbcd', '__rev__': 0}
+    b = {'a': 'abbbdd', '__rev__': 1}
+    c = {'a': 'abcd', '__rev__': 2}
+    d = {'a': 'abdd', '__rev__': 3}
+    e = {'a': 'abc', '__rev__': 4}
+    f = {'a': 'Aabcd', '__rev__': 5}
+
+    udb.insert(a)
+    udb.insert(b)
+    udb.insert(c)
+    udb.insert(d)
+    udb.insert(e)
+    udb.insert(f)
+
+    records = list(udb.select({'a': {'$like': 'a%c_'}}))
+
+    assert records == [a, c]
+
+
 def test_should_select_using_seq_scan_by_intersection_operator():
     udb = Udb()
 
