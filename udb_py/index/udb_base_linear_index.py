@@ -75,7 +75,15 @@ def _like_op(a, b):
         return False
 
     if b not in _LIKE_REGEX_CACHE:
-        _LIKE_REGEX_CACHE[b] = re.compile('^' + re.escape(b).replace('%', '.*').replace('_', '.'))
+        _LIKE_REGEX_CACHE[b] = re.compile(
+            '^'
+            + re.escape(b)
+                .replace('%', '.*')
+                .replace('_', '.')
+                .replace('^', '\\^')
+                .replace('$', '\\$')
+            + '$'
+        )
 
     return _LIKE_REGEX_CACHE[b].search(a) is not None
 
@@ -450,7 +458,10 @@ class UdbBaseLinearIndex(UdbIndex):
                                 1,  # priority
                                 lambda k: self.search_by_key_prefix(k + type_format_mappers[str](c_like[0:c_like_index])),
                                 _q_arr_none
-                            )                            
+                            )
+
+                        if ind == 0:
+                            return SCAN_OP_SEQ, 0, 0, None, None                         
 
                     return SCAN_OP_PREFIX, ind, 1, self.search_by_key_prefix, None
 

@@ -261,7 +261,7 @@ def test_should_select_using_seq_scan_by_like_operator():
     a = {'a': 'abbbcd', '__rev__': 0}
     b = {'a': 'abbbdd', '__rev__': 1}
     c = {'a': 'abcd', '__rev__': 2}
-    d = {'a': 'abdd', '__rev__': 3}
+    d = {'a': 'abcdd', '__rev__': 3}
     e = {'a': 'abc', '__rev__': 4}
     f = {'a': 'Aabcd', '__rev__': 5}
 
