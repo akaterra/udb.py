@@ -6,6 +6,6 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install -y libspatialindex-dev
 install:
-  - pip install BTrees==4.4.1 Rtree==0.8.3
+  - pip install BTrees==4.4.1 Rtree==0.8.3 Whoosh==2.7.4
 script:
   - pytest
