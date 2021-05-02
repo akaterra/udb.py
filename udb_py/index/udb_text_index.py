@@ -31,7 +31,7 @@ class UdbTextIndex(UdbBaseTextIndex):
         self.schema_keys = list(schema.keys())
         self.schema_last_index = len(schema) - 1
 
-        self._whoosh_schema = Schema(**{key: TEXT(phrase=False) for key in self.schema_keys}, udb__uid__=STORED)
+        self._whoosh_schema = Schema(udb__uid__=STORED, **{key: TEXT(phrase=False) for key in self.schema_keys})
         self._whoosh_storage = RamStorage()
         self._whoosh_index = self._whoosh_storage.create_index(self._whoosh_schema)
         self._whoosh_parser = QueryParser('a', schema=self._whoosh_index.schema)
@@ -53,7 +53,7 @@ class UdbTextIndex(UdbBaseTextIndex):
             if self._whoosh_writer is None:
                 self._whoosh_writer = self._whoosh_index.writer()
 
-            self._whoosh_writer.add_document(**key_dict, udb__uid__=uid)
+            self._whoosh_writer.add_document(udb__uid__=uid, **key_dict)
 
         return self
 

@@ -60,7 +60,7 @@ class UdbCore(object):
     def get_index(self, key):
         return self._indexes[key]
 
-    def aggregate(self, *pipes, q=None, limit=None, offset=None, sort=None, use_indexes=None):
+    def aggregate(self, pipes, q=None, limit=None, offset=None, sort=None, use_indexes=None):
         return aggregate(self.get_q_cursor(q, limit, offset, sort, use_indexes=use_indexes), *pipes)
 
     def select(self, q=None, limit=None, offset=None, sort=None, use_indexes=None, get_plan=False):

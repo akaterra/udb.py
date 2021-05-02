@@ -6,8 +6,7 @@ import uuid
 from struct import pack
 
 
-PYTHON2 = sys.version_info[0] == 2
-CHAR255 = u'\xff' if PYTHON2 else chr(255)
+CHAR255 = chr(255)
 
 
 class ConstraintError(Exception):
@@ -42,7 +41,7 @@ def auto_id(generator=lambda: str(uuid.uuid1())):
 
 
 def current_timestamp(formatter=int):
-    return lambda key, record: formatter(time.mktime(_now().timetuple()) if PYTHON2 else _now().timestamp())
+    return lambda key, record: formatter(_now().timestamp())
 
 
 def fn(func):

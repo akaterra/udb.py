@@ -33,6 +33,7 @@ def _q_arr_range(q):
 
 
 _LIKE_REGEX_CACHE = {}
+_LIKE_OP_ESCAPED_PERCENT = re.escape('%') == '\\%'
 _PRIMITIVE_VALS = (None, bool, float, int, str)
 
 
@@ -75,10 +76,16 @@ def _like_op(a, b):
         return False
 
     if b not in _LIKE_REGEX_CACHE:
+        escaped_b = re.escape(b)
+
+        if _LIKE_OP_ESCAPED_PERCENT:
+            escaped_b = escaped_b.replace('\\%', '.*')
+        else:
+            escaped_b = escaped_b.replace('%', '.*')
+
         _LIKE_REGEX_CACHE[b] = re.compile(
             '^'
-            + re.escape(b)
-                .replace('%', '.*')
+            + escaped_b
                 .replace('_', '.')
                 .replace('^', '\\^')
                 .replace('$', '\\$')

@@ -1,11 +1,10 @@
 language: python
 python:
-  - "2.7"
   - "3.6"
 before_install:
   - sudo apt-get update
   - sudo apt-get install -y libspatialindex-dev
 install:
-  - pip install BTrees==4.4.1 Rtree==0.8.3 Whoosh==2.7.4
+  - pip install cffi BTrees==4.8.0 Rtree==0.9.7 Whoosh==2.7.4
 script:
   - pytest -v

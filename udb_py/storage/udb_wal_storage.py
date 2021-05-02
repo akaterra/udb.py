@@ -3,7 +3,6 @@ import logging
 import os
 import struct
 
-from ..common import PYTHON2
 from ..udb_storage import UdbStorage
 
 
@@ -71,10 +70,9 @@ class UdbWalStorage(UdbStorage):
 
                         while chunk:
                             if file_w_desc.write(chunk) != len(chunk):
-                                if not PYTHON2:
-                                    os.remove(self._name + '.wal.data.bak')
+                                os.remove(self._name + '.wal.data.bak')
 
-                                    raise FSWalError(self._name + '.wal.data')
+                                raise FSWalError(self._name + '.wal.data')
 
                             chunk = file_r_desc.read(1024 * 1024 * 16)
 
@@ -223,8 +221,7 @@ class UdbWalStorage(UdbStorage):
         packed = struct.pack('BIB', operation, rid, len(values))
 
         if self._file_wal.write(packed) != len(packed):
-            if not PYTHON2:
-                raise FSWalError()
+            raise FSWalError()
 
         for val in values:
             val = json.dumps(val).encode('utf-8')
@@ -232,8 +229,7 @@ class UdbWalStorage(UdbStorage):
             packed = struct.pack('I' + str(len(val)) + 's', len(val), val)
 
             if self._file_wal.write(packed) != len(packed):
-                if not PYTHON2:
-                    raise FSWalError()
+                raise FSWalError()
 
     def _wal_corrupted_warn(self):
         if self._allow_corrupted_wal:
