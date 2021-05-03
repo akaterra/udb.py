@@ -449,15 +449,26 @@ class UdbBaseLinearIndex(UdbIndex):
                         if c_like_pos__ > -1 and c_like_pos__ < c_like_pos_p:
                             c_like_index = c_like_pos__
                         
-                        if c_like_index == -1 and ind == self.schema_last_index:  # no pattern symbols, const scan
-                            return (
-                                SCAN_OP_CONST,
-                                ind + 1,  # cover key length
-                                2,  # priority
-                                lambda k: self.search_by_key(k + type_format_mappers[type(c_like)](c_like)),
-                                _q_arr_like
-                            )
-                        
+                        if c_like_index == -1:
+                            # no pattern symbols, const scan
+                            if ind == self.schema_last_index:
+                                return (
+                                    SCAN_OP_CONST,
+                                    ind + 1,  # cover key length
+                                    2,  # priority
+                                    lambda k: self.search_by_key(k + type_format_mappers[type(c_like)](c_like)),
+                                    _q_arr_like
+                                )
+                            # no pattern symbols but key not fully covered, prefix scan
+                            else:
+                                return (
+                                    SCAN_OP_PREFIX,
+                                    ind + 1,  # cover key length
+                                    1,  # priority
+                                    lambda k: self.search_by_key_prefix(k + type_format_mappers[str](c_like[0:c_like_index])),
+                                    _q_arr_like
+                                )
+
                         if c_like_index > 0:  # use pattern partially as prefix up to first pattern symbol appearance
                             return (
                                 SCAN_OP_PREFIX,

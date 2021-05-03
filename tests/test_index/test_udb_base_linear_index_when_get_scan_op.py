@@ -102,6 +102,19 @@ def test_should_get_prefix_scan_op_in_case_of_partial_like():
     assert callable(fn_q_arranger)
 
 
+def test_should_get_prefix_scan_op_in_case_of_partial_like_2():
+    i = UdbBaseLinearTestIndex(['a', 'b', 'c'])
+
+    op, prefix_key_len, priority, fn, fn_q_arranger = i.get_scan_op({'a': '1', 'b': {'$like': '345%678'}})
+
+    assert op == SCAN_OP_PREFIX
+    assert prefix_key_len == 2
+    assert priority == 1
+    assert callable(fn)
+    assert list(fn('\x04222')) == ['search_by_key_prefix', '\x04222\x04345']
+    assert callable(fn_q_arranger)
+
+
 def test_should_get_prefix_scan_op_in_case_of_full_like():
     i = UdbBaseLinearTestIndex(['a', 'b', 'c'])
 
