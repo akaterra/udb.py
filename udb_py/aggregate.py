@@ -65,6 +65,33 @@ _GROUP_OPS = {
 }
 
 
+def _facet(seq, args):
+    acc = {}
+
+    def stream():
+        record = None
+
+        while True:
+            record = yield record
+
+    streams = [(key_to, pipes, stream()) for key_to, pipes in args.items()]
+
+    def gen(seq, pipes):
+        for _, _, stream in streams:
+            next(stream)
+
+        for record in seq:
+            for key_to, pipe in pipes:
+                acc[key_to] = pipe.send(record)
+
+        for _, _, stream in streams:
+            stream.close()
+
+        yield acc
+    
+    return gen(seq, [(key_to, aggregate(stream, *pipes)) for key_to, pipes, stream in streams])
+
+
 def _group(seq, args):
     ops = args[-1]
     acc = {}
@@ -184,6 +211,15 @@ def _rebase(seq, args):
             yield record
 
 
+def _reduce(seq, args):
+    fn, acc = args
+
+    for record in seq:
+        fn(record, acc)
+
+    yield acc
+
+
 def _unwind(seq, key):
     for record in seq:
         val = record.get(key, EMPTY)
@@ -205,6 +241,7 @@ def _unwind(seq, key):
 
 
 _PIPES = {
+    '$facet': _facet,
     '$group': _group,
     '$limit': _limit,
     '$o2m': _o2m,
@@ -212,6 +249,7 @@ _PIPES = {
     '$offset': _offset,
     '$project': _project,
     '$rebase': _rebase,
+    '$reduce': _reduce,
     '$unwind': _unwind,
 }
 
@@ -234,3 +272,16 @@ def aggregate(seq, *pipes):
 
 def register_aggregation_pipe(pipe, fn):
     _PIPES[pipe] = fn
+
+
+
+a = [{'a': 1},{'a': 2},{'a': 3}]
+
+for x in _facet(
+    a,
+    {
+        'a': [('$match', {'a': 1})],
+        'b': [('$match', {'a': 3})],
+    }
+):
+    print(x)
