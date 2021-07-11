@@ -20,7 +20,7 @@ class UdbBaseTextIndex(UdbIndex):
 
     @classmethod
     def check_condition(cls, values, q, context=None, extend=None):
-        return True
+        return False
 
     @classmethod
     def seq(cls, seq, q, collection):

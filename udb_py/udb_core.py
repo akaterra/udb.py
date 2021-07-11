@@ -270,7 +270,7 @@ def _match_aggregation_pipe(seq, q):
         for index, context in index_context:
             passed = index.check_condition(record, q, context)
 
-            if  not passed:
+            if not passed:
                 break
 
         if passed:

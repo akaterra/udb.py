@@ -66,7 +66,7 @@ _GROUP_OPS = {
 
 
 def _facet(seq, args):
-    acc = {}
+    acc = {key_to: [] for key_to in args.keys()}
 
     def stream():
         record = None
@@ -76,20 +76,23 @@ def _facet(seq, args):
 
     streams = [(key_to, pipes, stream()) for key_to, pipes in args.items()]
 
+    for _, _, stream in streams:
+        next(stream)
+
     def gen(seq, pipes):
-        for _, _, stream in streams:
-            next(stream)
+        # for _, pipe in pipes:
+        #     next(pipe)
 
         for record in seq:
-            for key_to, pipe in pipes:
-                acc[key_to] = pipe.send(record)
+            for key_to, pipe, stream in pipes:
+                acc[key_to].append(stream.send(record))
 
         for _, _, stream in streams:
             stream.close()
 
         yield acc
-    
-    return gen(seq, [(key_to, aggregate(stream, *pipes)) for key_to, pipes, stream in streams])
+
+    return gen(seq, [(key_to, _aggregate_with_none(stream, *pipes), stream) for key_to, pipes, stream in streams])
 
 
 def _group(seq, args):
@@ -220,6 +223,13 @@ def _reduce(seq, args):
     yield acc
 
 
+def _tap(seq, fn):
+    for record in seq:
+        fn(record)
+
+        yield record
+
+
 def _unwind(seq, key):
     for record in seq:
         val = record.get(key, EMPTY)
@@ -250,6 +260,7 @@ _PIPES = {
     '$project': _project,
     '$rebase': _rebase,
     '$reduce': _reduce,
+    '$tap': _tap,
     '$unwind': _unwind,
 }
 
@@ -270,18 +281,31 @@ def aggregate(seq, *pipes):
     return seq
 
 
+def _aggregate_with_none(seq, *pipes):
+    s = aggregate(seq, *pipes)
+    next(s)
+
+    for record in s:
+        yield record
+
+
 def register_aggregation_pipe(pipe, fn):
     _PIPES[pipe] = fn
 
 
+# from .udb_core import UdbCore
 
-a = [{'a': 1},{'a': 2},{'a': 3}]
 
-for x in _facet(
-    a,
-    {
-        'a': [('$match', {'a': 1})],
-        'b': [('$match', {'a': 3})],
-    }
-):
-    print(x)
+
+# a = [{'a': 1},{'a': 2},{'a': 3}]
+
+# for x in _facet(
+#     a,
+#     {
+#         # 'a': [('$match', {'a': 1})],
+#         # 'b': [('$match', {'a': 3})],
+#         'a': [('$tap', lambda r: print(r))],
+#         'b': [('$tap', lambda r: print(r))],
+#     }
+# ):
+#     print(x)

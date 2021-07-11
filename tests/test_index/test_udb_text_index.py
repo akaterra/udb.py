@@ -30,7 +30,7 @@ def test_should_insert():
 
     i.insert({'a': '123'}, 123)
 
-    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': 123}]
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': str(123)}]
 
 
 def test_should_insert_by_schema():
@@ -38,7 +38,7 @@ def test_should_insert_by_schema():
 
     i.insert_by_schema({'a': '123'}, 123)
 
-    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': 123}]
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': str(123)}]
 
 
 def test_should_insert_by_schema_with_default_value():
@@ -46,7 +46,7 @@ def test_should_insert_by_schema_with_default_value():
 
     i.insert_by_schema({'c': 1}, 123)
 
-    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': 123}]
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': str(123)}]
 
 
 def test_should_insert_by_schema_with_default_value_as_callable():
@@ -54,23 +54,23 @@ def test_should_insert_by_schema_with_default_value_as_callable():
 
     i.insert_by_schema({'c': 1}, 123)
 
-    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': 123}]
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': str(123)}]
 
 
-# def test_should_upsert():
-#     i = UdbBtreeIndexTest(['a', 'b', 'c'])
+def test_should_upsert():
+    i = UdbTextIndexTest(['a'])
 
-#     i.insert('123', 123).upsert('123', '321', 123)
+    i.insert({'a': '123'}, 123).upsert({'a': '123'}, {'a': '321'}, 123)
 
-#     assert i.index.get('321') == 123
+    assert list(i.index.searcher().search(i.parser.parse('321'))) == [{'udb__uid__': str(123)}]
 
 
-# def test_should_upsert_deleting_old_key():
-#     i = UdbBtreeIndexTest(['a', 'b', 'c'])
+def test_should_upsert_deleting_old_key():
+    i = UdbTextIndexTest(['a'])
 
-#     i.insert('123', 123).upsert('123', '321', 123)
+    i.insert({'a': '123'}, 123).upsert({'a': '123'}, {'a': '321'}, 123)
 
-#     assert i.index.get('123', None) is None
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == []
 
 
 # def test_should_search_by_key():
