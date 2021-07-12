@@ -4,7 +4,7 @@ Udb.py
 .. image:: https://travis-ci.org/akaterra/udb.py.svg?branch=master
   :target: https://travis-ci.org/akaterra/udb.py
 
-Udb is an in-memory schemaless database based on the `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_, the `Rtree <https://rtree.readthedocs.io/en/latest>`_ and on the native python's dict.
+Udb is an in-memory weak schema database based on the `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_, the `Rtree <https://rtree.readthedocs.io/en/latest>`_, , the `Whoosh <https://github.com/mchaput/w>`_ and on the native python's dict.
 Udb provides indexes support and limited MongoDB-like queries.
 
 Table of contents
@@ -519,6 +519,10 @@ RTree index:
 * **intersection** - an index covers records intersected by the rectangle
 
 * **near** - an index covers records near to the point
+
+Full-text index:
+
+* **text** - an index covers records containing words
 
 No index:
 
