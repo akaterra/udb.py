@@ -86,6 +86,12 @@ Installing **libspatialindex** on MacOS with Homebrew:
 
   brew install spatialindex
 
+To enable Full-Text indexes support install `Whoosh <https://github.com/mchaput/whoosh>`_ package:
+
+.. code:: bash
+
+  pip install Whoosh
+
 Quick start
 -----------
 
@@ -215,6 +221,10 @@ Hash indexes:
 Spatial indexes:
 
 * **UdbRtreeIndex** - spatial index that supports "intersection with rectangle" and "near to point" search
+
+Full-Text indexes:
+
+* **UdbTextIndex** - full text index that supports searching by words
 
 Index declaration
 ~~~~~~~~~~~~~~~~~
@@ -425,6 +435,14 @@ Supported query operations:
     udb.select({'a': {'$nin': [1, 2, 3]}})
 
   * performs "seq" scan.
+
+* **$text** - contains text words
+
+  .. code:: python
+
+    udb.select({'a': {'$text': 5}})
+
+  * needs Full-Text index
 
 * **primitive value** - equal to a value
 

@@ -17,12 +17,20 @@ class UdbTextIndexTest(UdbTextIndex):
     def parser(self):
         return self._whoosh_parser
 
-# def test_should_delete():
-#     i = UdbBtreeIndexTest(['a', 'b', 'c'])
+def test_should_delete():
+    i = UdbTextIndexTest(['a'])
 
-#     i.insert('123', 123).delete('123')
+    i.insert({'a': '123'}, 123).delete({'a': '123'}, 123)
 
-#     assert i.index.get('123', 0) == 0
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == []
+
+
+def test_should_not_delete_not_requested():
+    i = UdbTextIndexTest(['a'])
+
+    i.insert({'a': '123'}, 123).insert({'a': '123'}, 124).delete({'a': '123'}, 123)
+
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': str(124)}]
 
 
 def test_should_insert():
@@ -60,22 +68,22 @@ def test_should_insert_by_schema_with_default_value_as_callable():
 def test_should_upsert():
     i = UdbTextIndexTest(['a'])
 
-    i.insert({'a': '123'}, 123).upsert({'a': '123'}, {'a': '321'}, 123)
+    i.insert({'a': '123'}, 123).insert({'a': '123'}, 124).upsert({'a': '123'}, {'a': '321'}, 123).upsert({'a': '123'}, {'a': '321'}, 124)
 
-    assert list(i.index.searcher().search(i.parser.parse('321'))) == [{'udb__uid__': str(123)}]
+    assert list(i.index.searcher().search(i.parser.parse('321'))) == [{'udb__uid__': str(123)}, {'udb__uid__': str(124)}]
 
 
-def test_should_upsert_deleting_old_key():
+def test_should_upsert_deleting_old():
     i = UdbTextIndexTest(['a'])
 
-    i.insert({'a': '123'}, 123).upsert({'a': '123'}, {'a': '321'}, 123)
+    i.insert({'a': '123'}, 123).insert({'a': '123'}, 124).upsert({'a': '123'}, {'a': '321'}, 123).upsert({'a': '123'}, {'a': '321'}, 124)
 
     assert list(i.index.searcher().search(i.parser.parse('123'))) == []
 
 
-# def test_should_search_by_key():
-#     i = UdbBtreeIndexTest(['a', 'b', 'c'])
+def test_should_upsert_not_deleting_not_requested():
+    i = UdbTextIndexTest(['a'])
 
-#     i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
+    i.insert({'a': '123'}, 123).insert({'a': '123'}, 124).upsert({'a': '123'}, {'a': '321'}, 123)
 
-#     assert list(i.search_by_key('123')) == [123]
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': str(124)}]
