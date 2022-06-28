@@ -68,7 +68,7 @@ Installation
 
   pip install udb_py
 
-To enable BTree indexes support install `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_ package:
+To enable BTree indexes support install `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_ package (installing of "persistent" package may be needed):
 
 .. code:: bash
 

@@ -5,7 +5,7 @@ from ..common import (
     FieldRequiredError,
     InvalidScanOperationValueError,
     CHAR255,
-    Empty,
+    InfL,
     EMPTY,
     TYPE_COMPARERS,
 )
@@ -18,6 +18,10 @@ def _q_arr_eq(q):
 
 def _q_arr_in(q):
     q.pop('$in')
+
+
+def _q_arr_nin(q):
+    q.pop('$nin')
 
 
 def _q_arr_like(q):
@@ -39,9 +43,11 @@ _PRIMITIVE_VALS = (None, bool, float, int, str)
 
 SCAN_OP_EMPTY = 'empty'
 SCAN_OP_IN = 'in'
+SCAN_OP_NIN = 'nin'
 SCAN_OP_LIKE = 'like'
 SCAN_OP_PREFIX = 'prefix'
 SCAN_OP_PREFIX_IN = 'prefix_in'
+SCAN_OP_PREFIX_NIN = 'prefix_nin'
 SCAN_OP_RANGE = 'range'
 
 
@@ -276,7 +282,7 @@ class UdbBaseLinearIndex(UdbIndex):
                 if ind == 0:
                     return None
                 else:
-                    cover_key += self.type_format_mappers[Empty](None)
+                    cover_key += self.type_format_mappers[InfL](None)
             else:
                 cover_key += self.type_format_mappers[type(val)](val)
 
@@ -409,6 +415,33 @@ class UdbBaseLinearIndex(UdbIndex):
 
                     return SCAN_OP_SEQ, 0, 0, None, None
 
+                c_nin = condition.get('$nin', EMPTY)
+
+                if c_nin != EMPTY:
+                    if ind == self.schema_last_index:
+                        return (
+                            SCAN_OP_NIN,
+                            ind + 1,  # cover key length
+                            2,  # priority
+                            lambda k: self.search_by_key_nin(
+                                map(lambda x: k + type_format_mappers[type(x)](x), c_nin)
+                            ),
+                            _q_arr_nin
+                        )
+
+                    if self.is_prefixed:
+                        return (
+                            SCAN_OP_PREFIX_NIN,
+                            ind + 1,  # cover key length
+                            1,  # priority
+                            lambda k: self.search_by_key_prefix_nin(
+                                map(lambda x: k + type_format_mappers[type(x)](x), c_in)
+                            ),
+                            _q_arr_nin
+                        )
+
+                    return SCAN_OP_SEQ, 0, 0, None, None
+
                 if self.is_ranged:
                     c_gt = condition.get('$gt', EMPTY)
                     c_gte = condition.get('$gte', c_gt)
@@ -498,10 +531,16 @@ class UdbBaseLinearIndex(UdbIndex):
     def search_by_key_in(self, keys):
         raise NotImplementedError
 
+    def search_by_key_nin(self, keys):
+        raise NotImplementedError
+
     def search_by_key_prefix(self, key):
         raise NotImplementedError
 
     def search_by_key_prefix_in(self, keys):
+        raise NotImplementedError
+
+    def search_by_key_prefix_nin(self, keys):
         raise NotImplementedError
 
     def search_by_key_range(self, gte=None, lte=None, gte_excluded=True, lte_excluded=True):

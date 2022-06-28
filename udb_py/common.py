@@ -29,11 +29,15 @@ class ViewScanFieldOverriddenError(Exception):
     pass
 
 
-class Empty(object):
+class InfL(object):
     pass
 
 
-EMPTY = Empty()
+class InfR(object):
+    pass
+
+
+EMPTY = InfL()
 
 
 def auto_id(generator=lambda: str(uuid.uuid1())):
@@ -66,24 +70,26 @@ class Lst(list):
 
 
 TYPE_COMPARERS = {
-    Empty: {
-        Empty: False,
+    InfL: {
+        InfL: False,
         bool: False,
         int: False,
         float: False,
         type(None): False,
         str: False,
+        InfR: False,
     },
     bool: {
-        Empty: False,
+        InfL: False,
         bool: None,
         int: False,
         float: False,
         type(None): True,
         str: False,
+        InfR: False,
     },
     int: {
-        Empty: False,
+        InfL: False,
         bool: True,
         int: None,
         float: None,
@@ -91,7 +97,7 @@ TYPE_COMPARERS = {
         str: False,
     },
     float: {
-        Empty: False,
+        InfL: False,
         bool: True,
         int: None,
         float: None,
@@ -99,30 +105,51 @@ TYPE_COMPARERS = {
         str: False,
     },
     type(None): {
-        Empty: False,
+        InfL: False,
         bool: False,
         int: False,
         float: False,
         type(None): False,
         str: False,
+        InfR: False,
     },
     str: {
-        Empty: False,
+        InfL: False,
         bool: True,
         int: True,
         float: True,
         type(None): True,
         str: None,
+        InfR: False,
     },
 }
 TYPE_FORMAT_MAPPERS = {
-    Empty: lambda x: chr(0),
+    InfL: lambda x: chr(0),
     bool: lambda x: '\x02\x01' if x else '\x02\x00',
     int: lambda x: ('\x03\x00' if x < 0 else '\x03\x01') + pack('>q', x).decode('latin'),
     float: None,
     type(None): lambda x: chr(1),
     str: lambda x: chr(4) + x,
+    InfR: lambda x: chr(255),
 }
+TYPE_INFL = chr(0)
+TYPE_INFR = chr(255)
+
+
+def sort_key_iter(key, iterable, reverse=False, type_format_mappers=TYPE_FORMAT_MAPPERS):
+    return iter(sorted(
+        iterable,
+        key=lambda record: type_format_mappers.get(type(record.get(key, None)), type_format_mappers[type(None)])(record.get(key, None)),
+        reverse=reverse,
+    ))
+
+
+def sort_iter(iterable, reverse=False, type_format_mappers=TYPE_FORMAT_MAPPERS):
+    return iter(sorted(
+        iterable,
+        key=lambda record: type_format_mappers.get(type(record), type_format_mappers[type(None)])(record),
+        reverse=reverse,
+    ))
 
 
 def type_formatter_iter(iterable):

@@ -82,6 +82,22 @@ def test_should_search_by_key_in():
     assert list(i.search_by_key_in(['123', '111'])) == [123, 111]
 
 
+def test_should_search_by_key_nin():
+    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+
+    i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
+
+    assert list(i.search_by_key_nin(['321', '111'])) == [123, 333]
+
+
+def test_should_search_by_key_nin_with_only_one_value():
+    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+
+    i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
+
+    assert list(i.search_by_key_nin(['321'])) == [111, 123, 333]
+
+
 def test_should_search_by_key_prefix():
     i = UdbBtreeIndexTest(['a', 'b', 'c'])
 

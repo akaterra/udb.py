@@ -1,4 +1,5 @@
 from .aggregate import aggregate, register_aggregation_pipe
+from .common import sort_key_iter
 from .index import (
     UdbBaseGEOIndex,
     UdbBaseLinearIndex,
@@ -206,9 +207,9 @@ class UdbCore(object):
                 seq = sort(seq)
             else:
                 if sort_direction:
-                    seq = iter(sorted(seq, key=lambda record: record.get(sort)))
+                    seq = sort_key_iter(sort, seq)
                 else:
-                    seq = iter(sorted(seq, key=lambda record: record.get(sort[1:]), reverse=True))
+                    seq = sort_key_iter(sort[1:], seq, reverse=True)
 
         return seq
 

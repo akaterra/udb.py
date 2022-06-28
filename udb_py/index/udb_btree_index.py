@@ -1,4 +1,4 @@
-from ..common import CHAR255, EMPTY
+from ..common import CHAR255, EMPTY, TYPE_INFL, TYPE_INFR, sort_iter
 from .udb_base_linear_index import UdbBaseLinearIndex, UdbBaseLinearEmbeddedIndex
 
 
@@ -46,13 +46,35 @@ class UdbBtreeIndex(UdbBaseLinearIndex):
             if val != EMPTY:
                 yield val
 
+    def search_by_key_nin(self, keys):
+        keys = list(keys)
+
+        if len(keys) > 1:
+            keys = list(sorted(keys))
+
+            for val in self._btree.values(TYPE_INFL, keys[0], False, True):
+                yield val
+
+            for i in range(len(keys) - 1):
+                for val in self._btree.values(keys[i], keys[i + 1], True, True):
+                    yield val
+
+            for val in self._btree.values(keys[-1], TYPE_INFR, True, False):
+                yield val
+        else:
+            for val in self._btree.values(TYPE_INFL, keys[0], False, True):
+                yield val
+
+            for val in self._btree.values(keys[0], TYPE_INFR, True, False):
+                yield val
+
     def search_by_key_prefix(self, key):
-        for val in self._btree.values(key, key + CHAR255):
+        for val in self._btree.values(key, key + TYPE_INFR):
             yield val
 
     def search_by_key_prefix_in(self, keys):
         for key in keys:
-            for val in self._btree.values(key, key + CHAR255):
+            for val in self._btree.values(key, key + TYPE_INFR):
                 yield val
 
     def search_by_key_range(self, gte=None, lte=None, gte_excluded=False, lte_excluded=False):

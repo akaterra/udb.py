@@ -2,8 +2,10 @@ from udb_py.index.udb_base_linear_index import (
     UdbBaseLinearIndex,
     SCAN_OP_CONST,
     SCAN_OP_IN,
+    SCAN_OP_NIN,
     SCAN_OP_PREFIX,
     SCAN_OP_PREFIX_IN,
+    SCAN_OP_PREFIX_NIN,
     SCAN_OP_RANGE,
     SCAN_OP_SEQ,
 )
@@ -19,11 +21,17 @@ class UdbBaseLinearTestIndex(UdbBaseLinearIndex):
     def search_by_key_in(self, keys):
         return 'search_by_key_in', keys
 
+    def search_by_key_nin(self, keys):
+        return 'search_by_key_nin', keys
+
     def search_by_key_prefix(self, key):
         return 'search_by_key_prefix', key
 
     def search_by_key_prefix_in(self, keys):
         return 'search_by_key_prefix_in', keys
+
+    def search_by_key_prefix_nin(self, keys):
+        return 'search_by_key_prefix_nin', keys
 
     def search_by_key_range(self, gte=None, lte=None, gte_excluded=True, lte_excluded=True):
         return 'search_by_key_range', gte, lte, gte_excluded, lte_excluded
@@ -72,6 +80,24 @@ def test_should_get_in_scan_op():
 
     assert params[0] == 'search_by_key_in'
     assert list(params[1]) == ['\x04222\x04000', '\x04222\x04111']
+
+    assert callable(fn_q_arranger)
+
+
+def test_should_get_nin_scan_op():
+    i = UdbBaseLinearTestIndex(['a', 'b'])
+
+    op, prefix_key_len, priority, fn, fn_q_arranger = i.get_scan_op({'a': None, 'b': {'$nin': ['000', '111']}})
+
+    assert op == SCAN_OP_NIN
+    # assert prefix_key_len == 2
+    # assert priority == 2
+    # assert callable(fn)
+
+    # params = list(fn('\x04222'))
+
+    # assert params[0] == 'search_by_key_in'
+    # assert list(params[1]) == ['\x04222\x04000', '\x04222\x04111']
 
     assert callable(fn_q_arranger)
 
