@@ -417,7 +417,7 @@ class UdbBaseLinearIndex(UdbIndex):
 
                 c_nin = condition.get('$nin', EMPTY)
 
-                if c_nin != EMPTY:
+                if c_nin != EMPTY and self.is_ranged:
                     if ind == self.schema_last_index:
                         return (
                             SCAN_OP_NIN,
@@ -435,7 +435,7 @@ class UdbBaseLinearIndex(UdbIndex):
                             ind + 1,  # cover key length
                             1,  # priority
                             lambda k: self.search_by_key_prefix_nin(
-                                map(lambda x: k + type_format_mappers[type(x)](x), c_in)
+                                map(lambda x: k + type_format_mappers[type(x)](x), c_nin)
                             ),
                             _q_arr_nin
                         )

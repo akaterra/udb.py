@@ -77,6 +77,28 @@ class UdbBtreeIndex(UdbBaseLinearIndex):
             for val in self._btree.values(key, key + TYPE_INFR):
                 yield val
 
+    def search_by_key_prefix_nin(self, keys):
+        keys = list(keys)
+
+        if len(keys) > 1:
+            keys = list(sorted(keys))
+
+            for val in self._btree.values(TYPE_INFL, keys[0], False, True):
+                yield val
+
+            for i in range(len(keys) - 1):
+                for val in self._btree.values(keys[i] + TYPE_INFR, keys[i + 1], True, True):
+                    yield val
+
+            for val in self._btree.values(keys[-1] + TYPE_INFR, TYPE_INFR, True, False):
+                yield val
+        else:
+            for val in self._btree.values(TYPE_INFL, keys[0], False, True):
+                yield val
+
+            for val in self._btree.values(keys[0]+ TYPE_INFR, TYPE_INFR, True, False):
+                yield val
+
     def search_by_key_range(self, gte=None, lte=None, gte_excluded=False, lte_excluded=False):
         for val in self._btree.values(gte, lte, gte_excluded, lte_excluded):
             yield val
