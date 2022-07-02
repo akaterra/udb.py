@@ -28,7 +28,7 @@ class UdbClusteredIndex(UdbBaseLinearIndex):
 
         return self
 
-    def search_by_key(self, key):
+    def search_by_key_eq(self, key):
         val = self._hash.get(key, EMPTY)
 
         if val != EMPTY:

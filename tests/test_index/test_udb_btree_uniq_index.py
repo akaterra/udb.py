@@ -87,7 +87,7 @@ def test_should_search_by_key():
 
     i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
 
-    assert list(i.search_by_key('123')) == [123]
+    assert list(i.search_by_key_eq('123')) == [123]
 
 
 def test_should_search_by_key_in():

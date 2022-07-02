@@ -15,7 +15,7 @@ class UdbBaseLinearTestIndex(UdbBaseLinearIndex):
     is_prefixed = True
     is_ranged = True
 
-    def search_by_key(self, key):
+    def search_by_key_eq(self, key):
         return 'search_by_key', key
 
     def search_by_key_in(self, keys):

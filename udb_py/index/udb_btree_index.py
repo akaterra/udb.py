@@ -33,10 +33,17 @@ class UdbBtreeIndex(UdbBaseLinearIndex):
 
         return self
 
-    def search_by_key(self, key):
+    def search_by_key_eq(self, key):
         val = self._btree.get(key, EMPTY)
 
         if val != EMPTY:
+            yield val
+
+    def search_by_key_ne(self, key):
+        for val in self._btree.values(TYPE_INFL, key, False, True):
+            yield val
+
+        for val in self._btree.values(key, TYPE_INFR, True, False):
             yield val
 
     def search_by_key_in(self, keys):
@@ -75,28 +82,6 @@ class UdbBtreeIndex(UdbBaseLinearIndex):
     def search_by_key_prefix_in(self, keys):
         for key in keys:
             for val in self._btree.values(key, key + TYPE_INFR):
-                yield val
-
-    def search_by_key_prefix_nin(self, keys):
-        keys = list(keys)
-
-        if len(keys) > 1:
-            keys = list(sorted(keys))
-
-            for val in self._btree.values(TYPE_INFL, keys[0], False, True):
-                yield val
-
-            for i in range(len(keys) - 1):
-                for val in self._btree.values(keys[i] + TYPE_INFR, keys[i + 1], True, True):
-                    yield val
-
-            for val in self._btree.values(keys[-1] + TYPE_INFR, TYPE_INFR, True, False):
-                yield val
-        else:
-            for val in self._btree.values(TYPE_INFL, keys[0], False, True):
-                yield val
-
-            for val in self._btree.values(keys[0]+ TYPE_INFR, TYPE_INFR, True, False):
                 yield val
 
     def search_by_key_range(self, gte=None, lte=None, gte_excluded=False, lte_excluded=False):

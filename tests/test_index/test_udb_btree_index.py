@@ -71,7 +71,7 @@ def test_should_search_by_key():
 
     i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
 
-    assert list(i.search_by_key('123')) == [123]
+    assert list(i.search_by_key_eq('123')) == [123]
 
 
 def test_should_search_by_key_in():
@@ -114,20 +114,20 @@ def test_should_search_by_key_prefix_in():
     assert list(i.search_by_key_prefix_in(['12', '11'])) == [12, 123, 11, 111]
 
 
-def test_should_search_by_key_prefix_nin():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+# def test_should_search_by_key_prefix_nin():
+#     i = UdbBtreeIndexTest(['a', 'b', 'c'])
+#
+#     i.insert('123', 123).insert('3', 3).insert('32', 321).insert('321', 321).insert('1', 1).insert('111', 111).insert('1111', 1111).insert('333', 333)
+#
+#     assert list(i.search_by_key_prefix_nin(['32', '11'])) == [1, 123, 3, 333]
 
-    i.insert('123', 123).insert('3', 3).insert('32', 321).insert('321', 321).insert('1', 1).insert('111', 111).insert('1111', 1111).insert('333', 333)
 
-    assert list(i.search_by_key_prefix_nin(['32', '11'])) == [1, 123, 3, 333]
-
-
-def test_should_search_by_key_prefix_nin_with_only_one_value():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
-
-    i.insert('123', 123).insert('3', 3).insert('32', 321).insert('321', 321).insert('1', 1).insert('111', 111).insert('1111', 1111).insert('333', 333)
-
-    assert list(i.search_by_key_prefix_nin(['32'])) == [1, 111, 1111, 123, 3, 333]
+# def test_should_search_by_key_prefix_nin_with_only_one_value():
+#     i = UdbBtreeIndexTest(['a', 'b', 'c'])
+#
+#     i.insert('123', 123).insert('3', 3).insert('32', 321).insert('321', 321).insert('1', 1).insert('111', 111).insert('1111', 1111).insert('333', 333)
+#
+#     assert list(i.search_by_key_prefix_nin(['32'])) == [1, 111, 1111, 123, 3, 333]
 
 
 def test_should_search_by_key_range():
