@@ -416,7 +416,7 @@ Supported query operations:
 
     udb.select({'a': {'$ne': 5}})
 
-  * performs "seq" scan.
+  * BTree index - performs "range" scan of [-∞, value)∪(value, +∞]
 
 * **$near** - near to point with optional min and max distances
 
@@ -434,7 +434,7 @@ Supported query operations:
 
     udb.select({'a': {'$nin': [1, 2, 3]}})
 
-  * performs "seq" scan.
+  * BTree index - performs "range" scan of [-∞, value_1)∪(value_1, value_2)∪...(value_n, +∞]
 
 * **$text** - contains text words
 
