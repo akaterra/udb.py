@@ -434,7 +434,7 @@ Supported query operations:
 
     udb.select({'a': {'$nin': [1, 2, 3]}})
 
-  * BTree index - performs "range" scan of [-∞, value_1)∪(value_1, value_2)∪...(value_n, +∞]
+  * BTree index - performs "range" scan of [-∞, value_1)∪(value_1, value_2)∪...∪(value_n, +∞]
 
 * **$text** - contains text words
 

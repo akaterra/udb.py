@@ -77,17 +77,41 @@ def test_should_search_by_key():
 def test_should_search_by_key_in():
     i = UdbBtreeMultivaluedIndexTest(['a', 'b', 'c'])
 
-    i.insert('123', 123).insert('123', 123).insert('123', 333).insert('321', 321).insert('111', 111).insert('333', 333)
+    i.insert('123', 123).insert('123', 124).insert('123', 333).insert('321', 321).insert('111', 111).insert('333', 333)
 
-    assert list(i.search_by_key_in(['123', '111'])) == [123, 333, 111]
+    assert list(i.search_by_key_in(['123', '111'])) == [123, 124, 333, 111]
+
+
+def test_should_search_by_key_nin():
+    i = UdbBtreeMultivaluedIndexTest(['a', 'b', 'c'])
+
+    i.insert('123', 123).insert('123', 124).insert('321', 321).insert('321', 321).insert('111', 111).insert('333', 333)
+
+    assert list(i.search_by_key_nin(['321', '111'])) == [123, 124, 333]
+
+
+def test_should_search_by_key_nin_with_only_one_value():
+    i = UdbBtreeMultivaluedIndexTest(['a', 'b', 'c'])
+
+    i.insert('123', 123).insert('123', 124).insert('321', 321).insert('321', 321).insert('111', 111).insert('333', 333)
+
+    assert list(i.search_by_key_nin(['321'])) == [111, 123, 124, 333]
 
 
 def test_should_search_by_key_prefix():
     i = UdbBtreeMultivaluedIndexTest(['a', 'b', 'c'])
 
-    i.insert('123', 123).insert('123', 123).insert('123', 333).insert('321', 321).insert('111', 111).insert('333', 333)
+    i.insert('123', 123).insert('123', 124).insert('123', 333).insert('321', 321).insert('111', 111).insert('333', 333)
 
-    assert list(i.search_by_key_prefix('1')) == [111, 123, 333]
+    assert list(i.search_by_key_prefix('1')) == [111, 123, 124, 333]
+
+
+def test_should_search_by_key_prefix_in():
+    i = UdbBtreeMultivaluedIndexTest(['a', 'b', 'c'])
+
+    i.insert('1', 1).insert('12', 12).insert('123', 123).insert('123', 124).insert('321', 321).insert('11', 11).insert('111', 111).insert('333', 333)
+
+    assert list(i.search_by_key_prefix_in(['12', '11'])) == [12, 123, 124, 11, 111]
 
 
 def test_should_search_by_key_range():
