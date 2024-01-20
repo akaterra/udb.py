@@ -89,9 +89,7 @@ class UdbBaseGEOIndex(UdbIndex):
                     return False
 
                 c_x = c_near_q.x - val[0]
-
                 c_y = c_near_q.y - val[1]
-
                 distance = c_x * c_x + c_y * c_y
 
                 if c_near_q.min_distance and c_near_q.min_distance > distance:

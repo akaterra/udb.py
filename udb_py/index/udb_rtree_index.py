@@ -56,7 +56,6 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
                 doc = collection[val][self._key]
                 c_x = p_x - doc[0]
                 c_y = p_y - doc[1]
-
                 distance = c_x * c_x + c_y * c_y
 
                 if max_distance and max_distance < distance:
