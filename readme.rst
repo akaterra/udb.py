@@ -310,7 +310,7 @@ Example of functional index over the size of list:
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex({
-        '$size': lambda key, values: len(values['arr'] if isinstance(values['arr'], list) else 0),
+        '$size': lambda key, values: len(values['arr']) if isinstance(values['arr'], list) else 0,
       }),
   })
 

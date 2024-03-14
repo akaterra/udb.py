@@ -69,7 +69,7 @@ class Lst(list):
         self.extend(l)
 
 
-TYPE_COMPARERS = {
+TYPE_COMPARATORS = {
     InfL: {
         InfL: False,
         bool: False,

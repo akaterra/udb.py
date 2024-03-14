@@ -7,7 +7,7 @@ from ..common import (
     CHAR255,
     InfL,
     EMPTY,
-    TYPE_COMPARERS,
+    TYPE_COMPARATORS,
 )
 from ..udb_index import UdbIndex, SCAN_OP_CONST, SCAN_OP_SEQ
 
@@ -58,19 +58,19 @@ SCAN_OP_RANGE = 'range'
 
 
 def _eq_op(a, b):
-    # can_be_compared = TYPE_COMPARERS[type(a)][type(b)]
+    # can_be_compared = TYPE_COMPARATORS[type(a)][type(b)]
 
     return a is b
 
 
 def _gt_op(a, b):
-    can_be_compared = TYPE_COMPARERS[type(a)][type(b)]
+    can_be_compared = TYPE_COMPARATORS[type(a)][type(b)]
 
     return a > b if can_be_compared is None else can_be_compared
 
 
 def _gte_op(a, b):
-    can_be_compared = TYPE_COMPARERS[type(a)][type(b)]
+    can_be_compared = TYPE_COMPARATORS[type(a)][type(b)]
 
     return a >= b if can_be_compared is None else can_be_compared
 
@@ -108,19 +108,19 @@ def _like_op(a, b):
 
 
 def _lt_op(a, b):
-    can_be_compared = TYPE_COMPARERS[type(a)][type(b)]
+    can_be_compared = TYPE_COMPARATORS[type(a)][type(b)]
 
     return a < b if can_be_compared is None else not can_be_compared
 
 
 def _lte_op(a, b):
-    can_be_compared = TYPE_COMPARERS[type(a)][type(b)]
+    can_be_compared = TYPE_COMPARATORS[type(a)][type(b)]
 
     return a <= b if can_be_compared is None else not can_be_compared
 
 
 def _ne_op(a, b):
-    # can_be_compared = TYPE_COMPARERS[type(a)][type(b)]
+    # can_be_compared = TYPE_COMPARATORS[type(a)][type(b)]
 
     return a is not b
 
@@ -277,7 +277,7 @@ class UdbBaseLinearIndex(UdbIndex):
             if callable(get):
                 val = get(key, record)
             elif second:
-                val = second.get(key, get)
+                val = second.get(key, EMPTY)
 
                 if val == EMPTY:
                     val = record.get(key, get)
@@ -323,7 +323,7 @@ class UdbBaseLinearIndex(UdbIndex):
     def get_meta(self):
         return {
             'schema': {
-                k: {'__emp__': True} if type(v) not in TYPE_COMPARERS or v == EMPTY else v
+                k: {'__emp__': True} if type(v) not in TYPE_COMPARATORS or v == EMPTY else v
                 for k, v in self.schema.items()
             },
             'name': self.name,
