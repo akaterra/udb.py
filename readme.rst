@@ -16,7 +16,7 @@ Table of contents
 
 * `Quick start <#quick-start>`_
 
-* `Data schema for default values <#data-schema-for-default-values>`_
+* `Data schema <#data-schema`_
 
   * `Functional fields <#functional-fields>`_
 
@@ -133,8 +133,8 @@ Select records:
 
   [{'a': 3, 'b': 3, 'c': 3, 'd': 4, 'e': 5}, {'a': 4, 'b': 4, 'c': 3, 'd': 4, 'e': 6}]
 
-Data schema for default values
-------------------------------
+Data schema
+-----------
 
 Data schema allows to fill the inserted record with default values.
 The default value can be defined as a primitive value or callable:
@@ -256,7 +256,7 @@ By default the "None" value is used for the missing field.
 
   record = {'a': 'A', 'b': 'B'}  # index key=ANoneC
 
-Using dictionary in case of Python 3:
+Using dictionary:
 
 .. code:: python
 
@@ -264,18 +264,6 @@ Using dictionary in case of Python 3:
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex({'a': REQUIRED, 'b': REQUIRED, 'c': REQUIRED})  # "a", "b" and "c" fields will be fetched from the indexed record
-  })
-
-  record = {'a': 'A', 'b': 'B'}  # won't be indexed, raises FieldRequiredError
-
-Using list of tuples in case of Python 2 (to keep key order):
-
-.. code:: python
-
-  from udb_py import Udb, UdbBtreeIndex, REQUIRED
-
-  db = Udb(indexes={
-      'abc': UdbBtreeIndex([('a', REQUIRED), ('b', REQUIRED), ('c', REQUIRED)])  # "a", "b" and "c" fields will be fetched from the indexed record
   })
 
   record = {'a': 'A', 'b': 'B'}  # won't be indexed, raises FieldRequiredError
@@ -301,6 +289,23 @@ The default value for missing field can be defined as a primitive value or calla
   })
 
   record = {'a': 'A', 'c': 'C'}  # index key=AbC
+
+Note that the default value is used as missing value for index key only.
+So if the query is not fully covered by index so that part of the query moves to "seq" scan then search may not return results.
+
+.. code:: python
+
+  from udb_py import Udb, UdbBtreeIndex
+
+  db = Udb(indexes={
+      'abc': UdbBtreeIndex({'a': 'a', 'b': 'b', 'c': 'c'})
+  })
+
+  db.insert({'a': 'A', 'b': 'B'})
+
+  results = list(db.select({'a': 'A', 'c': 'c'}))  # no results since query covering key consists of "a", "c" is searched by "seq" scan but nothing was defined in record as "c", only in index
+
+To define the default record value use `Data schema <#data-schema`_.
 
 Example of functional index over the size of list:
 
