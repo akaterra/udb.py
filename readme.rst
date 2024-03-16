@@ -16,7 +16,7 @@ Table of contents
 
 * `Quick start <#quick-start>`_
 
-* `Data schema <#data-schema`_
+* `Data schema <#data-schema>`_
 
   * `Functional fields <#functional-fields>`_
 
@@ -305,7 +305,7 @@ So if the query is not fully covered by index so that part of the query moves to
 
   results = list(db.select({'a': 'A', 'c': 'c'}))  # no results since query covering key consists of "a", "c" is searched by "seq" scan but nothing was defined in record as "c", only in index
 
-To define the default record value use `Data schema <#data-schema`_.
+To define the default record value use `Data schema <#data-schema>`_.
 
 Example of functional index over the size of list:
 
