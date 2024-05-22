@@ -1,4 +1,4 @@
-from .aggregate import aggregate, register_aggregation_pipe
+from .aggregate import aggregate, register_aggregation_pipe, SKIP
 from .common import sort_key_iter
 from .index import (
     UdbBaseGEOIndex,
@@ -262,7 +262,7 @@ class UdbCore(object):
                     break
 
 
-def _match_aggregation_pipe(seq, q):
+def _match_aggregation_pipe(seq, q, with_facet=False):
     index_context = [(index, index.create_condition_context(q)) for index in UdbCore._indexes_with_custom_ops]
 
     for record in seq:
@@ -272,6 +272,9 @@ def _match_aggregation_pipe(seq, q):
             passed = index.check_condition(record, q, context)
 
             if not passed:
+                if with_facet:
+                    yield SKIP
+
                 break
 
         if passed:

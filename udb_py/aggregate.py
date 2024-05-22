@@ -1,6 +1,14 @@
 from .common import cpy_dict, EMPTY, TYPE_FORMAT_MAPPERS
 
 
+class SKIP:
+    pass
+
+
+class STOP:
+    pass
+
+
 def _count_group_op(acc, key, record):
     acc[key] = acc.get(key, 0) + 1
 
@@ -65,41 +73,59 @@ _GROUP_OPS = {
 }
 
 
-def _facet(seq, args):
-    acc = {key_to: [] for key_to in args.keys()}
+def _facet(seq, args, with_facet=False):
+    item = None
 
-    def stream():
-        record = None
-
+    def iter_item():
         while True:
-            record = yield record
+            if item == STOP:
+                break
 
-    streams = [(key_to, pipes, stream()) for key_to, pipes in args.items()]
+            yield item
 
-    for _, _, stream in streams:
-        next(stream)
+    iter_pipelines = {}
+    facet = {}
 
-    def gen(seq, pipes):
-        # for _, pipe in pipes:
-        #     next(pipe)
+    for key_to, pipes in args.items():
+        iter_pipelines[key_to] = aggregate_with_facet(iter_item(), *pipes)
+        facet[key_to] = []
 
-        for record in seq:
-            for key_to, pipe, stream in pipes:
-                acc[key_to].append(stream.send(record))
+    for record in seq:
+        item = record
 
-        for _, _, stream in streams:
-            stream.close()
+        for key_to, pipeline in iter_pipelines.items():
+            if pipeline is None:
+                continue
 
-        yield acc
+            try:
+                record = next(pipeline)
 
-    return gen(seq, [(key_to, _aggregate_with_none(stream, *pipes), stream) for key_to, pipes, stream in streams])
+                if record != SKIP:
+                    facet[key_to].append(record)
+            except StopIteration:
+                iter_pipelines[key_to] = None
+
+    item = STOP
+
+    for pipeline in iter_pipelines.values():
+        if pipeline is not None:
+            try:
+                next(pipeline)
+            except StopIteration:
+                pass
+
+    yield facet
 
 
-def _group(seq, args):
+def _group(seq, args, with_facet=False):
     ops = args[-1]
     acc = {}
 
     for record in seq:
+        if record == SKIP:
+            yield record
+            continue
+
         acc_key = ''
 
         for ind in range(0, len(args) - 1):
@@ -125,20 +151,28 @@ def _group(seq, args):
         yield rec
 
 
-def _limit(seq, count):
-    for val in seq:
+def _limit(seq, count, with_facet=False):
+    for record in seq:
+        if record == SKIP:
+            yield record
+            continue
+
         if count == 0:
             break
         
         count -= 1
         
-        yield val
+        yield record
 
 
-def _o2m(seq, args):
+def _o2m(seq, args, with_facet=False):
     key_from, key_to, db, key_as = args
 
     for record in seq:
+        if record == SKIP:
+            yield record
+            continue
+
         val_from = record.get(key_from, EMPTY)
 
         if val_from != EMPTY:
@@ -147,10 +181,14 @@ def _o2m(seq, args):
         yield record
 
 
-def _o2o(seq, args):
+def _o2o(seq, args, with_facet=False):
     key_from, key_to, db, key_as = args
 
     for record in seq:
+        if record == SKIP:
+            yield record
+            continue
+
         val_from = record.get(key_from, EMPTY)
 
         if val_from != EMPTY:
@@ -159,18 +197,25 @@ def _o2o(seq, args):
         yield record
 
 
-def _offset(seq, count):
-    for val in seq:
+def _offset(seq, count, with_facet=False):
+    for record in seq:
+        if record == SKIP:
+            continue
+
         if count > 0:
             count -= 1
 
             continue
         
-        yield val
+        yield record
 
 
-def _project(seq, keys):
+def _project(seq, keys, with_facet=False):
     for record in seq:
+        if record == SKIP:
+            yield record
+            continue
+
         for key_from, key_to in keys.items():
             val = record.get(key_from, EMPTY)
 
@@ -183,17 +228,21 @@ def _project(seq, keys):
         yield record
 
 
-def _rebase(seq, args):
+def _rebase(seq, args, with_facet=False):
     key = None
-    skip_exising = False
+    skip_existing = False
 
     if len(args) > 1:
-        key, skip_exising = args[0], args[1]
+        key, skip_existing = args[0], args[1]
     else:
         key = args
 
-    if skip_exising:  # @todo
+    if skip_existing:  # TODO
         for record in seq:
+            if record == SKIP:
+                yield record
+                continue
+
             val = record.get(key, EMPTY)
 
             if val != EMPTY and isinstance(val, dict):
@@ -204,6 +253,10 @@ def _rebase(seq, args):
             yield record
     else:
         for record in seq:
+            if record == SKIP:
+                yield record
+                continue
+
             val = record.get(key, EMPTY)
 
             if val != EMPTY and isinstance(val, dict):
@@ -214,24 +267,36 @@ def _rebase(seq, args):
             yield record
 
 
-def _reduce(seq, args):
+def _reduce(seq, args, with_facet=False):
     fn, acc = args
 
     for record in seq:
+        if record == SKIP:
+            yield record
+            continue
+
         fn(record, acc)
 
     yield acc
 
 
-def _tap(seq, fn):
+def _tap(seq, fn, with_facet=False):
     for record in seq:
+        if record == SKIP:
+            yield record
+            continue
+
         fn(record)
 
         yield record
 
 
-def _unwind(seq, key):
+def _unwind(seq, key, with_facet=False):
     for record in seq:
+        if record == SKIP:
+            yield record
+            continue
+
         val = record.get(key, EMPTY)
 
         if val != EMPTY:
@@ -281,31 +346,21 @@ def aggregate(seq, *pipes):
     return seq
 
 
-def _aggregate_with_none(seq, *pipes):
-    s = aggregate(seq, *pipes)
-    next(s)
+def aggregate_with_facet(seq, *pipes):
+    for args in pipes:
+        pipe = args[0]
 
-    for record in s:
-        yield record
+        if not callable(pipe):
+            pipe = _PIPES.get(pipe, None)
+
+        if pipe:
+            if len(args) > 1:
+                seq = pipe(seq, args[1], True)
+            else:
+                seq = pipe(seq, True)
+
+    return seq
 
 
 def register_aggregation_pipe(pipe, fn):
     _PIPES[pipe] = fn
-
-
-# from .udb_core import UdbCore
-
-
-
-# a = [{'a': 1},{'a': 2},{'a': 3}]
-
-# for x in _facet(
-#     a,
-#     {
-#         # 'a': [('$match', {'a': 1})],
-#         # 'b': [('$match', {'a': 3})],
-#         'a': [('$tap', lambda r: print(r))],
-#         'b': [('$tap', lambda r: print(r))],
-#     }
-# ):
-#     print(x)

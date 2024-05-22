@@ -651,6 +651,8 @@ Aggregation accepts an interable with the pipelines to be applied over it.
 
 Pipes:
 
+* **$facet** - run multiple pipelines over previous result - `('$facet', {'result_key_1': [<pipeline 1>, <pipeline 2>, ...], 'result_key_2': [<pipeline 1>, <pipeline 2>, ...], ...})`
+
 * **$group** - group by keys with group operations - `('$group', ('key1', 'key2', ..., { '$operation': (arg1, arg2, ... ), ... })`
 
   Operations:
