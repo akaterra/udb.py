@@ -1,14 +1,14 @@
 import pytest
 
 from udb_py.common import *
-from udb_py.udb import Udb, UdbBtreeIndex, UdbBtreeMultivaluedIndex
+from udb_py.udb import Udb, UdbBtreeBaseIndex, UdbBtreeIndex
 
 
 def test_should_select_by_full_covered_query():
     udb = Udb({
-        'a': UdbBtreeIndex(['a']),
-        'ab': UdbBtreeIndex(['a', 'b']),
-        'b': UdbBtreeIndex(['b']),
+        'a': UdbBtreeBaseIndex(['a']),
+        'ab': UdbBtreeBaseIndex(['a', 'b']),
+        'b': UdbBtreeBaseIndex(['b']),
     })
 
     a = {'a': 1, 'b': 1, 'c': 1}
@@ -31,9 +31,9 @@ def test_should_select_by_full_covered_query():
 
 def test_should_select_by_full_covered_query_using_functional_index():
     udb = Udb({
-        'a': UdbBtreeIndex(['a']),
-        'ab': UdbBtreeMultivaluedIndex({'a': 'a', '$size': lambda key, values: len(values['c']) if isinstance(values['c'], list) else 0}),
-        'b': UdbBtreeIndex(['b']),
+        'a': UdbBtreeBaseIndex(['a']),
+        'ab': UdbBtreeIndex({'a': 'a', '$size': lambda key, values: len(values['c']) if isinstance(values['c'], list) else 0}),
+        'b': UdbBtreeBaseIndex(['b']),
     })
 
     a = {'a': 1, 'b': 1, 'c': 1}
@@ -56,9 +56,9 @@ def test_should_select_by_full_covered_query_using_functional_index():
 
 def test_should_select_by_partially_covered_query():
     udb = Udb({
-        'a': UdbBtreeIndex(['a']),
-        'ab': UdbBtreeIndex(['a', 'c']),
-        'b': UdbBtreeIndex(['b']),
+        'a': UdbBtreeBaseIndex(['a']),
+        'ab': UdbBtreeBaseIndex(['a', 'c']),
+        'b': UdbBtreeBaseIndex(['b']),
     })
 
     a = {'a': 1, 'b': 1, 'c': 1}
@@ -81,9 +81,9 @@ def test_should_select_by_partially_covered_query():
 
 def test_should_select_by_subset_using_indexes():
     udb = Udb({
-        'a': UdbBtreeIndex(['a']),
-        'ab': UdbBtreeIndex(['a', 'b']),
-        'b': UdbBtreeIndex(['b']),
+        'a': UdbBtreeBaseIndex(['a']),
+        'ab': UdbBtreeBaseIndex(['a', 'b']),
+        'b': UdbBtreeBaseIndex(['b']),
     })
 
     a = {'a': 1, 'b': 1, 'c': 1}
@@ -413,7 +413,7 @@ def test_should_select_by_range():
 
 
 def test_should_select_using_btree_index_by_range():
-    udb = Udb(indexes={'a': UdbBtreeIndex(['a', 'b', 'c'])})
+    udb = Udb(indexes={'a': UdbBtreeBaseIndex(['a', 'b', 'c'])})
 
     udb.insert({'a': 1, 'b': 0, 'c': 0})
     udb.insert({'a': 1, 'b': 1, 'c': 1})

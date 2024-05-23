@@ -2,16 +2,16 @@ import logging
 
 from .common import Lst
 from .index import (
+    UdbBtreeBaseIndex,
+    UdbBtreeEmbeddedBaseIndex,
     UdbBtreeIndex,
     UdbBtreeEmbeddedIndex,
-    UdbBtreeMultivaluedIndex,
-    UdbBtreeMultivaluedEmbeddedIndex,
-    UdbBtreeUniqIndex,
+    UdbBtreeUniqBaseIndex,
+    UdbHashBaseIndex,
+    UdbHashEmbeddedBaseIndex,
     UdbHashIndex,
     UdbHashEmbeddedIndex,
-    UdbHashMultivaluedIndex,
-    UdbHashMultivaluedEmbeddedIndex,
-    UdbHashUniqIndex,
+    UdbHashUniqBaseIndex,
     UdbRtreeIndex,
     UdbTextIndex,
 )
@@ -20,16 +20,16 @@ from .udb_core import UdbCore
 
 _DELETE_BUFFER_SIZE = 5000
 _INDEXES = (
+    UdbBtreeBaseIndex,
+    UdbBtreeEmbeddedBaseIndex,
     UdbBtreeIndex,
     UdbBtreeEmbeddedIndex,
-    UdbBtreeMultivaluedIndex,
-    UdbBtreeMultivaluedEmbeddedIndex,
-    UdbBtreeUniqIndex,
+    UdbBtreeUniqBaseIndex,
+    UdbHashBaseIndex,
+    UdbHashEmbeddedBaseIndex,
     UdbHashIndex,
     UdbHashEmbeddedIndex,
-    UdbHashMultivaluedIndex,
-    UdbHashMultivaluedEmbeddedIndex,
-    UdbHashUniqIndex,
+    UdbHashUniqBaseIndex,
     UdbRtreeIndex,
     UdbTextIndex,
 )

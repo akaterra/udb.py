@@ -1,14 +1,14 @@
 import pytest
 
 from udb_py.common import auto_id, current_timestamp, ConstraintError
-from udb_py.udb import Udb, UdbBtreeIndex, UdbBtreeUniqIndex
+from udb_py.udb import Udb, UdbBtreeBaseIndex, UdbBtreeUniqBaseIndex
 
 
 def test_should_insert():
     udb = Udb({
-        'a': UdbBtreeIndex(['a']),
-        'ab': UdbBtreeIndex(['a', 'b']),
-        'b': UdbBtreeIndex(['b']),
+        'a': UdbBtreeBaseIndex(['a']),
+        'ab': UdbBtreeBaseIndex(['a', 'b']),
+        'b': UdbBtreeBaseIndex(['b']),
     })
 
     a = {'a': 1, 'b': 1}
@@ -81,9 +81,9 @@ def test_should_insert_with_default_value_as_current_timestamp():
 
 def test_should_raise_conflict_error_on_uniq_index():
     udb = Udb({
-        'a': UdbBtreeUniqIndex(['a']),
-        'ab': UdbBtreeUniqIndex(['a', 'b']),
-        'b': UdbBtreeUniqIndex(['b']),
+        'a': UdbBtreeUniqBaseIndex(['a']),
+        'ab': UdbBtreeUniqBaseIndex(['a', 'b']),
+        'b': UdbBtreeUniqBaseIndex(['b']),
     })
 
     a = {'a': 1, 'b': 1}

@@ -1,10 +1,10 @@
 import pytest
 
 from udb_py.common import *
-from udb_py.index.udb_btree_uniq_index import UdbBtreeUniqIndex, ConstraintError
+from udb_py.index.udb_btree_uniq_index import UdbBtreeUniqBaseIndex, ConstraintError
 
 
-class UdbBtreeUniqIndexTest(UdbBtreeUniqIndex):
+class UdbBtreeUniqIndexTest(UdbBtreeUniqBaseIndex):
     @property
     def index(self):
         return self._btree

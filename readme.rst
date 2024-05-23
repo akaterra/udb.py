@@ -200,23 +200,19 @@ The Udb also includes a simple query optimiser that can select the most appropri
 
 BTree indexes:
 
-* **UdbBtreeMultivaluedIndex** - btree based multivalued index supporting multiple records with the same index key.
+* **UdbBtreeIndex** - btree based index supporting multiple records with the same index key.
 
-* **UdbBtreeMultivaluedEmbeddedIndex** - same as the **UdbBtreeMultivaluedIndex**, but supports embedded list of values.
+* **UdbBtreeEmbeddedIndex** - same as the **UdbBtreeIndex**, but supports embedded list of values.
 
 * **UdbBtreeUniqIndex** - btree based index operating with always single records, but the second record insertion with the same index key will raise IndexConstraintError.
 
-* **UdbBtreeIndex** - btree based index operating with always single records, so that the second record insertion with the same index key will overwrite the old one. Can be used when the inserting record definitely generates a unique index key.
-
 Hash indexes:
 
-* **UdbHashMultivaluedIndex** - hash based multivalued index supporting multiple records with the same index key.
+* **UdbHashIndex** - hash based index supporting multiple records with the same index key.
 
-* **UdbHashMultivaluedEmbeddedIndex** - same as the **UdbHashMultivaluedIndex**, but supports embedded list of values.
+* **UdbHashEmbeddedIndex** - same as the **UdbHashIndex**, but supports embedded list of values.
 
 * **UdbHashUniqIndex** - hash based index operating with always single records, but the second record insertion with the same index key will raise IndexConstraintError.
-
-* **UdbHashIndex** - hash based index operating with always single records, so that the second record insertion with the same index key will overwrite the old one. Can be used when the inserting record definitely generates a unique index key.
 
 Spatial indexes:
 
@@ -311,7 +307,7 @@ Example of functional index over the size of list:
 
 .. code:: python
 
-  from udb_py import Udb, UdbBtreeMultivaluedIndex
+  from udb_py import Udb, UdbBtreeIndex
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex({
@@ -329,7 +325,7 @@ Use **EMPTY** value to exclude zero-length records from the index:
 
 .. code:: python
 
-  from udb_py import Udb, UdbBtreeMultivaluedIndex, EMPTY
+  from udb_py import Udb, UdbBtreeIndex, EMPTY
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex({
@@ -509,9 +505,9 @@ Scan operations
 
 BTree index:
 
-* **const** - an index has only one index key that refers exactly to the one record in case of single valued index or to the set of records covered by the same index key in case of multivalued index (can be fetched linearly)
+* **const** - an index has only one index key that refers exactly to the one record in case of single valued index or to the set of records covered by the same index key in case of multi-record index (can be fetched linearly)
 
-* **in** - an index has multiple index keys, each one refers exactly to the one record in case of single valued index or to the set of records covered by the same index key in case of multivalued index (can be fetched linearly)
+* **in** - an index has multiple index keys, each one refers exactly to the one record in case of single valued index or to the set of records covered by the same index key in case of multi-record index (can be fetched linearly)
 
 * **range** - an index covers multiple records by the index keys set having minimum and maximum values
 

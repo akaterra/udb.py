@@ -1,14 +1,14 @@
 import pytest
 
 from udb_py.common import *
-from udb_py.udb import Udb, UdbBtreeIndex
+from udb_py.udb import Udb, UdbBtreeBaseIndex
 
 
 def test_should_delete_all():
     udb = Udb({
-        'a': UdbBtreeIndex(['a']),
-        'ab': UdbBtreeIndex(['a', 'b']),
-        'b': UdbBtreeIndex(['b']),
+        'a': UdbBtreeBaseIndex(['a']),
+        'ab': UdbBtreeBaseIndex(['a', 'b']),
+        'b': UdbBtreeBaseIndex(['b']),
     })
 
     a = {'a': 1, 'b': 1}
@@ -30,9 +30,9 @@ def test_should_delete_all():
 
 def test_should_delete_by_query():
     udb = Udb({
-        'a': UdbBtreeIndex(['a']),
-        'ab': UdbBtreeIndex(['a', 'b']),
-        'b': UdbBtreeIndex(['b']),
+        'a': UdbBtreeBaseIndex(['a']),
+        'ab': UdbBtreeBaseIndex(['a', 'b']),
+        'b': UdbBtreeBaseIndex(['b']),
     })
 
     a = {'a': 1, 'b': 1}
@@ -54,7 +54,7 @@ def test_should_delete_by_query():
 
 def test_should_delete_rotating_delete_buffer():
     udb = Udb({
-        'a': UdbBtreeIndex(['a']),
+        'a': UdbBtreeBaseIndex(['a']),
     })
 
     for i in range(0, 10000):

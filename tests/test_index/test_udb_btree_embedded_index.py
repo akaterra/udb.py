@@ -1,10 +1,10 @@
 import pytest
 
 from udb_py.common import *
-from udb_py.index.udb_btree_index import UdbBtreeEmbeddedIndex
+from udb_py.index.udb_btree_base_index import UdbBtreeEmbeddedBaseIndex
 
 
-class UdbBtreeEmbeddedIndexTest(UdbBtreeEmbeddedIndex):
+class UdbBtreeEmbeddedIndexTest(UdbBtreeEmbeddedBaseIndex):
     @property
     def index(self):
         return self._btree

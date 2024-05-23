@@ -1,17 +1,17 @@
 import pytest
 
 from udb_py.common import *
-from udb_py.index.udb_btree_index import UdbBtreeIndex
+from udb_py.index.udb_btree_base_index import UdbBtreeBaseIndex
 
 
-class UdbBtreeIndexTest(UdbBtreeIndex):
+class UdbBtreeBaseIndexTest(UdbBtreeBaseIndex):
     @property
     def index(self):
         return self._btree
 
 
 def test_should_delete():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).delete('123')
 
@@ -19,7 +19,7 @@ def test_should_delete():
 
 
 def test_should_insert():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123)
 
@@ -27,7 +27,7 @@ def test_should_insert():
 
 
 def test_should_insert_by_schema():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert_by_schema({'a': 1, 'b': 2, 'c': 3}, 123)
 
@@ -35,7 +35,7 @@ def test_should_insert_by_schema():
 
 
 def test_should_insert_by_schema_with_default_value():
-    i = UdbBtreeIndexTest((('a', REQUIRED), ('b', 1), ('c', REQUIRED)))
+    i = UdbBtreeBaseIndexTest((('a', REQUIRED), ('b', 1), ('c', REQUIRED)))
 
     i.insert_by_schema({'a': 1, 'c': 3}, 123)
 
@@ -43,7 +43,7 @@ def test_should_insert_by_schema_with_default_value():
 
 
 def test_should_insert_by_schema_with_default_value_as_callable():
-    i = UdbBtreeIndexTest((('a', REQUIRED), ('b', lambda key, values: 1), ('c', REQUIRED)))
+    i = UdbBtreeBaseIndexTest((('a', REQUIRED), ('b', lambda key, values: 1), ('c', REQUIRED)))
 
     i.insert_by_schema({'a': 1, 'c': 3}, 123)
 
@@ -51,7 +51,7 @@ def test_should_insert_by_schema_with_default_value_as_callable():
 
 
 def test_should_upsert():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).upsert('123', '321', 123)
 
@@ -59,7 +59,7 @@ def test_should_upsert():
 
 
 def test_should_upsert_deleting_old_key():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).upsert('123', '321', 123)
 
@@ -67,7 +67,7 @@ def test_should_upsert_deleting_old_key():
 
 
 def test_should_search_by_key():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
 
@@ -75,7 +75,7 @@ def test_should_search_by_key():
 
 
 def test_should_search_by_key_in():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
 
@@ -83,7 +83,7 @@ def test_should_search_by_key_in():
 
 
 def test_should_search_by_key_nin():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
 
@@ -91,7 +91,7 @@ def test_should_search_by_key_nin():
 
 
 def test_should_search_by_key_nin_with_only_one_value():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
 
@@ -99,7 +99,7 @@ def test_should_search_by_key_nin_with_only_one_value():
 
 
 def test_should_search_by_key_prefix():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
 
@@ -107,7 +107,7 @@ def test_should_search_by_key_prefix():
 
 
 def test_should_search_by_key_prefix_in():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('1', 1).insert('12', 12).insert('123', 123).insert('321', 321).insert('11', 11).insert('111', 111).insert('333', 333)
 
@@ -115,7 +115,7 @@ def test_should_search_by_key_prefix_in():
 
 
 def test_should_search_by_key_range():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
 
@@ -123,7 +123,7 @@ def test_should_search_by_key_range():
 
 
 def test_should_search_by_key_range_excluding_min():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
 
@@ -131,7 +131,7 @@ def test_should_search_by_key_range_excluding_min():
 
 
 def test_should_search_by_key_range_excluding_max():
-    i = UdbBtreeIndexTest(['a', 'b', 'c'])
+    i = UdbBtreeBaseIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
 

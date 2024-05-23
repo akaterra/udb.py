@@ -1,10 +1,10 @@
 import pytest
 
 from udb_py.common import *
-from udb_py.index.udb_hash_index import UdbHashEmbeddedIndex
+from udb_py.index.udb_hash_base_index import UdbHashEmbeddedBaseIndex
 
 
-class UdbHashEmbeddedIndexTest(UdbHashEmbeddedIndex):
+class UdbHashEmbeddedIndexTest(UdbHashEmbeddedBaseIndex):
     @property
     def index(self):
         return self._hash

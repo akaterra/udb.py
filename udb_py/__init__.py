@@ -12,14 +12,14 @@ from .common import (
     REQUIRED,
 )
 from .index import (
+    UdbBtreeBaseIndex,
     UdbBtreeIndex,
-    UdbBtreeMultivaluedIndex,
-    UdbBtreeMultivaluedEmbeddedIndex,
-    UdbBtreeUniqIndex,
+    UdbBtreeEmbeddedIndex,
+    UdbBtreeUniqBaseIndex,
+    UdbHashBaseIndex,
     UdbHashIndex,
-    UdbHashMultivaluedIndex,
-    UdbHashMultivaluedEmbeddedIndex,
-    UdbHashUniqIndex,
+    UdbHashEmbeddedIndex,
+    UdbHashUniqBaseIndex,
     UdbRtreeIndex,
     UdbTextIndex,
 )

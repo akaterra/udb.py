@@ -1,17 +1,17 @@
 import pytest
 
 from udb_py.common import *
-from udb_py.index.udb_hash_multivalued_index import UdbHashMultivaluedIndex
+from udb_py.index.udb_hash_index import UdbHashIndex
 
 
-class UdbHashMultivaluedIndexTest(UdbHashMultivaluedIndex):
+class UdbHashIndexTest(UdbHashIndex):
     @property
     def index(self):
         return self._hash
 
 
 def test_should_delete():
-    i = UdbHashMultivaluedIndexTest(['a', 'b', 'c'])
+    i = UdbHashIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('123', 123).insert('123', 333).delete('123', 123)
 
@@ -19,7 +19,7 @@ def test_should_delete():
 
 
 def test_should_insert():
-    i = UdbHashMultivaluedIndexTest(['a', 'b', 'c'])
+    i = UdbHashIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('123', 123).insert('123', 333)
 
@@ -27,7 +27,7 @@ def test_should_insert():
 
 
 def test_should_insert_by_schema():
-    i = UdbHashMultivaluedIndexTest(['a', 'b', 'c'])
+    i = UdbHashIndexTest(['a', 'b', 'c'])
 
     i.insert_by_schema({'a': 1, 'b': 2, 'c': 3}, 123)
 
@@ -35,7 +35,7 @@ def test_should_insert_by_schema():
 
 
 def test_should_insert_by_schema_with_default_value():
-    i = UdbHashMultivaluedIndexTest((('a', REQUIRED), ('b', 1), ('c', REQUIRED)))
+    i = UdbHashIndexTest((('a', REQUIRED), ('b', 1), ('c', REQUIRED)))
 
     i.insert_by_schema({'a': 1, 'c': 3}, 123)
 
@@ -43,7 +43,7 @@ def test_should_insert_by_schema_with_default_value():
 
 
 def test_should_insert_by_schema_with_default_value_as_callable():
-    i = UdbHashMultivaluedIndexTest((('a', REQUIRED), ('b', lambda key, values: 1), ('c', REQUIRED)))
+    i = UdbHashIndexTest((('a', REQUIRED), ('b', lambda key, values: 1), ('c', REQUIRED)))
 
     i.insert_by_schema({'a': 1, 'c': 3}, 123)
 
@@ -51,7 +51,7 @@ def test_should_insert_by_schema_with_default_value_as_callable():
 
 
 def test_should_upsert():
-    i = UdbHashMultivaluedIndexTest(['a', 'b', 'c'])
+    i = UdbHashIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('123', 123).insert('123', 111).upsert('123', '321', 123)
 
@@ -59,7 +59,7 @@ def test_should_upsert():
 
 
 def test_should_upsert_deleting_old_key():
-    i = UdbHashMultivaluedIndexTest(['a', 'b', 'c'])
+    i = UdbHashIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('123', 123).insert('123', 111).upsert('123', '321', 123)
 
@@ -67,7 +67,7 @@ def test_should_upsert_deleting_old_key():
 
 
 def test_should_search_by_key():
-    i = UdbHashMultivaluedIndexTest(['a', 'b', 'c'])
+    i = UdbHashIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('123', 123).insert('123', 333).insert('321', 321).insert('111', 111).insert('333', 333)
 
@@ -75,7 +75,7 @@ def test_should_search_by_key():
 
 
 def test_should_search_by_key_in():
-    i = UdbHashMultivaluedIndexTest(['a', 'b', 'c'])
+    i = UdbHashIndexTest(['a', 'b', 'c'])
 
     i.insert('123', 123).insert('123', 123).insert('123', 333).insert('321', 321).insert('111', 111).insert('333', 333)
 

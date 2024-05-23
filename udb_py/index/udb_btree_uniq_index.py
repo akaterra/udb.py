@@ -1,8 +1,8 @@
 from ..common import ConstraintError
-from .udb_btree_index import UdbBtreeIndex
+from .udb_btree_base_index import UdbBtreeBaseIndex
 
 
-class UdbBtreeUniqIndex(UdbBtreeIndex):
+class UdbBtreeUniqBaseIndex(UdbBtreeBaseIndex):
     is_uniq = True
     type = 'btree_uniq'
 
