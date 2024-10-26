@@ -149,6 +149,16 @@ class UdbBaseGEOIndex(UdbIndex):
 
     @classmethod
     def seq(cls, seq, q, collection):
+        has_condition = False
+
+        for cnd in q.values():
+            if type(cnd) == dict and ('$intersection' in cnd or '$near' in cnd):
+                has_condition = True
+                break
+
+        if not has_condition:
+            return seq
+
         context = cls.create_condition_context(q)
 
         if context.near_last:
@@ -163,12 +173,18 @@ class UdbBaseGEOIndex(UdbIndex):
 
                 return (c_near[0] - context.near_last.x) ** 2 + (c_near[1] - context.near_last.y) ** 2
 
-            for rid in sorted(seq_q(), key=seq_sort):
-                yield rid
-        else:
-            for rid in seq:
-                if cls.check_condition(collection[rid], q, context):
+            def gen():
+                for rid in sorted(seq_q(), key=seq_sort):
                     yield rid
+
+            return gen()
+        else:
+            def gen():
+                for rid in seq:
+                    if cls.check_condition(collection[rid], q, context):
+                        yield rid
+
+            return gen()
 
     @classmethod
     def validate_query(cls, q):

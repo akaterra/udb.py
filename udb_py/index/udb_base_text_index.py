@@ -24,9 +24,22 @@ class UdbBaseTextIndex(UdbIndex):
 
     @classmethod
     def seq(cls, seq, q, collection):
-        for rid in seq:
-            if cls.check_condition(collection[rid], q):
-                yield rid
+        has_condition = False
+
+        for cnd in q.values():
+            if type(cnd) == dict and '$text' in cnd:
+                has_condition = True
+                break
+
+        if not has_condition:
+            return seq
+
+        def gen():
+            for rid in seq:
+                if cls.check_condition(collection[rid], q):
+                    yield rid
+
+        return gen()
 
     def get_cover_key(self, record, second=None):
         cover_key = {}
