@@ -37,7 +37,11 @@ class InfR(object):
     pass
 
 
-EMPTY = InfL()
+class Empty(object):
+    pass
+
+
+EMPTY = Empty()
 
 
 def auto_id(generator=lambda: str(uuid.uuid1())):
@@ -124,6 +128,7 @@ TYPE_COMPARATORS = {
     },
 }
 TYPE_FORMAT_MAPPERS = {
+    Empty: lambda x: chr(0),
     InfL: lambda x: chr(0),
     bool: lambda x: '\x02\x01' if x else '\x02\x00',
     int: lambda x: ('\x03\x00' if x < 0 else '\x03\x01') + pack('>q', x).decode('latin'),

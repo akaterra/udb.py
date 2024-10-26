@@ -76,6 +76,7 @@ class UdbBtreeBaseIndex(UdbBaseLinearIndex):
                 yield val
 
     def search_by_key_prefix(self, key):
+        print(key)
         for val in self._btree.values(key, key + TYPE_INFR):
             yield val
 

@@ -20,7 +20,7 @@ class UdbBaseTextIndex(UdbIndex):
 
     @classmethod
     def check_condition(cls, values, q, context=None, extend=None):
-        return False
+        return True
 
     @classmethod
     def seq(cls, seq, q, collection):
@@ -113,10 +113,11 @@ class UdbBaseTextIndex(UdbIndex):
                     schema_keys_matched[key] = c_text
 
         if not schema_keys_matched:
-            return SCAN_OP_SEQ, 0, 0, None, None
+            return SCAN_OP_SEQ, 0, 0, 0, None, None
 
         return (
             SCAN_OP_TEXT,
+            len(schema_keys_matched),
             len(schema_keys_matched),
             3,
             lambda _: self.search_by_text(schema_keys_matched),

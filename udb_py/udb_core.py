@@ -43,7 +43,7 @@ class UdbCore(object):
         self._collection = {}
 
         if indexes_with_custom_ops:
-            self._indexes_with_custom_ops = set(indexes_with_custom_seq)
+            self._indexes_with_custom_ops = set(indexes_with_custom_ops)
 
         if indexes:
             self._indexes = indexes
@@ -97,6 +97,7 @@ class UdbCore(object):
         s_index = None
         s_op_type = None
         s_op_key_sequence_length = 0
+        s_op_key_sequence_length_to_remove = 0
         s_op_priority = 0
         s_op_fn = None
         s_op_fn_q_arranger = None
@@ -117,6 +118,7 @@ class UdbCore(object):
                 (
                     c_s_op_type,
                     c_op_key_sequence_length,
+                    c_op_key_sequence_length_to_remove,
                     c_op_priority,
                     c_op_fn,
                     c_op_fn_q_arranger,
@@ -131,6 +133,7 @@ class UdbCore(object):
                     s_index = custom_seq
                     s_op_type = c_s_op_type
                     s_op_key_sequence_length = c_op_key_sequence_length
+                    s_op_key_sequence_length_to_remove = c_op_key_sequence_length_to_remove
                     s_op_priority = c_op_priority
                     s_op_fn = c_op_fn
                     s_op_fn_q_arranger = c_op_fn_q_arranger
@@ -138,6 +141,7 @@ class UdbCore(object):
                     s_index = custom_seq
                     s_op_type = c_s_op_type
                     s_op_key_sequence_length = c_op_key_sequence_length
+                    s_op_key_sequence_length_to_remove = c_op_key_sequence_length_to_remove
                     s_op_priority = c_op_priority
                     s_op_fn = c_op_fn
                     s_op_fn_q_arranger = c_op_fn_q_arranger
@@ -157,7 +161,11 @@ class UdbCore(object):
                 if i == s_op_key_sequence_length - 1 and s_op_fn_q_arranger:
                     pass
                 else:
-                    c_key_val = q.pop(s_index.schema_keys[i])
+                    if i < s_op_key_sequence_length_to_remove:
+                        c_key_val = q.pop(s_index.schema_keys[i])
+                    else:
+                        c_key_val = q.get(s_index.schema_keys[i])
+
                     key = key + type_format_mappers[type(c_key_val)](c_key_val)
 
             if s_op_fn_q_arranger:
@@ -266,6 +274,10 @@ def _match_aggregation_pipe(seq, q, with_facet=False):
     index_context = [(index, index.create_condition_context(q)) for index in UdbCore._indexes_with_custom_ops]
 
     for record in seq:
+        if record == SKIP:
+            yield record
+            continue
+
         passed = True
 
         for index, context in index_context:

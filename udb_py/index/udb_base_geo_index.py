@@ -273,6 +273,7 @@ class UdbBaseGEOIndex(UdbIndex):
                     return (
                         SCAN_OP_INTERSECTION,
                         1,
+                        1,
                         3,
                         lambda _: self.search_by_intersection(
                             c_intersection['minX'],
@@ -289,6 +290,7 @@ class UdbBaseGEOIndex(UdbIndex):
                     return (
                         SCAN_OP_NEAR,
                         1,
+                        1,
                         3,
                         lambda _: self.search_by_near(
                             c_near['x'],
@@ -301,7 +303,7 @@ class UdbBaseGEOIndex(UdbIndex):
                         _q_arr_near
                     )
 
-        return SCAN_OP_SEQ, 0, 0, None, None
+        return SCAN_OP_SEQ, 0, 0, 0, None, None
 
     def has_key(self, key):
         return self._key == key
