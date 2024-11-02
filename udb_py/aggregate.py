@@ -1,4 +1,4 @@
-from .common import cpy_dict, EMPTY, TYPE_FORMAT_MAPPERS
+from .common import InvalidAggregationOperationError, EMPTY, TYPE_FORMAT_MAPPERS
 
 
 class SKIP:
@@ -42,7 +42,10 @@ def _mul_group_op(acc, args, record):
     if args[1] not in acc:
         acc[args[1]] = None
 
-    acc[args[1]] = acc.get(args[1], 1) * record.get(args[0], 1) if acc[args[1]] is not None else record.get(args[0], None)
+    if acc[args[1]] is not None:
+        acc[args[1]] = acc.get(args[1], 1) * record.get(args[0], 1)
+    else:
+        acc[args[1]] = record.get(args[0], None)
 
 
 def _push_group_op(acc, args, record):
@@ -59,7 +62,10 @@ def _sum_group_op(acc, args, record):
     if args[1] not in acc:
         acc[args[1]] = None
 
-    acc[args[1]] = acc.get(args[1], 0) + record.get(args[0], 0) if acc[args[1]] is not None else record.get(args[0], None)
+    if acc[args[1]] is not None:
+        acc[args[1]] = acc.get(args[1], 0) + record.get(args[0], 0)
+    else:
+        acc[args[1]] = record.get(args[0], None)
 
 
 _GROUP_OPS = {
@@ -351,6 +357,9 @@ def aggregate_with_facet(seq, *pipes):
         pipe = args[0]
 
         if not callable(pipe):
+            if pipe == '$facet':
+                raise InvalidAggregationOperationError('$facet inside $facet is not allowed')
+
             pipe = _PIPES.get(pipe, None)
 
         if pipe:

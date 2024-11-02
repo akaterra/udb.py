@@ -345,6 +345,7 @@ class UdbBaseLinearIndex(UdbIndex):
 
         :return: (
             op type,
+            key sequence length,
             key sequence length to extract as prefix key,
             priority,
             fn,
@@ -521,36 +522,47 @@ class UdbBaseLinearIndex(UdbIndex):
                         
                         if -1 < c_like_pos__ < c_like_pos_p:
                             c_like_index = c_like_pos__
-                        
+
+                        # no pattern symbols
                         if c_like_index == -1:
-                            # no pattern symbols, const scan
+                            # key is fully covered, const scan
                             if ind == self.schema_last_index:
+                                key_part = type_format_mappers[type(c_like)](c_like)
+
                                 return (
                                     SCAN_OP_CONST,
                                     ind + 1,  # cover key length
                                     ind + 1,
                                     2,  # priority
-                                    lambda k: self.search_by_key_eq(k + type_format_mappers[type(c_like)](c_like)),
+                                    lambda k: self.search_by_key_eq(k + key_part),
                                     _q_arr_like
                                 )
-                            # no pattern symbols but key not fully covered, prefix scan
-                            else:
+                            # key not fully covered and cond has extra filtering, prefix scan
+                            elif len(condition) > 1:
+                                key_part = type_format_mappers[str](c_like[0:c_like_index])
+
                                 return (
                                     SCAN_OP_PREFIX,
                                     ind + 1,  # cover key length
                                     ind + 1,
                                     1,  # priority
-                                    lambda k: self.search_by_key_prefix(k + type_format_mappers[str](c_like[0:c_like_index])),
+                                    lambda k: self.search_by_key_prefix(k + key_part),
                                     _q_arr_like_eq
                                 )
+                            # cond replaced by '$eq', continue key checking
+                            else:
+                                q[key] = c_like
+                                continue
 
                         if c_like_index > 0:  # use pattern partially as prefix up to first pattern symbol appearance
+                            key_part = type_format_mappers[str](c_like[0:c_like_index])
+
                             return (
                                 SCAN_OP_PREFIX,
                                 ind + 1,  # cover key length
                                 ind + 1,
                                 1,  # priority
-                                lambda k: self.search_by_key_prefix(k + type_format_mappers[str](c_like[0:c_like_index])),
+                                lambda k: self.search_by_key_prefix(k + key_part),
                                 _q_arr_none
                             )
 

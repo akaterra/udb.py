@@ -17,6 +17,10 @@ class FieldRequiredError(Exception):
     pass
 
 
+class InvalidAggregationOperationError(Exception):
+    pass
+
+
 class InvalidScanOperationValueError(Exception):
     pass
 

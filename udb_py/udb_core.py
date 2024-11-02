@@ -129,7 +129,8 @@ class UdbCore(object):
                     self._collection,
                 )
 
-                if s_op_key_sequence_length < c_op_key_sequence_length:
+                if s_op_key_sequence_length < c_op_key_sequence_length \
+                        or s_op_key_sequence_length_to_remove < c_op_key_sequence_length_to_remove:
                     s_index = custom_seq
                     s_op_type = c_s_op_type
                     s_op_key_sequence_length = c_op_key_sequence_length
