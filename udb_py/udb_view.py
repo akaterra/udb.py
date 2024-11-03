@@ -38,12 +38,12 @@ class UdbView(UdbCore):
         get_plan=False,
         get_keys_only=False,
         use_indexes=None
-    ):        
-        if self._indexes:
-            return UdbCore.get_q_cursor(self, q, limit, offset, sort, get_plan, get_keys_only, use_indexes)
-
+    ):
         for index in self._indexes_with_custom_ops:
             q = index.merge_condition(q or {}, self._query)
+
+        if self._indexes:
+            return UdbCore.get_q_cursor(self, q, limit, offset, sort, get_plan, get_keys_only, use_indexes)
 
         return self._udb.get_q_cursor(q, limit, offset, sort, get_plan, get_keys_only, use_indexes)
 

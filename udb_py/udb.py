@@ -197,6 +197,9 @@ class Udb(UdbCore):
             for index in self._indexes_to_check_for_ins_upd_allowance:
                 index.insert_is_allowed(index.get_cover_key(values))
 
+        values['__rev__'] = self._revision
+        self._collection[self._revision] = values
+
         if self._on_insert:
             for on_insert in self._on_insert:
                 on_insert(self._revision, values)
@@ -204,7 +207,6 @@ class Udb(UdbCore):
         for index in self._indexes.values():
             index.insert_by_schema(values, self._revision)
 
-        self._collection[self._revision] = cpy_dict(values, {'__rev__': self._revision})
         self._revision += 1
 
         return values
@@ -218,7 +220,7 @@ class Udb(UdbCore):
                 limit,
                 offset,
                 get_keys_only=True
-            ):
+        ):
             before = self._collection.get(key)
             values['__rev__'] = self._revision
 
