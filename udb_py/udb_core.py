@@ -158,14 +158,15 @@ class UdbCore(object):
             key = ''
             type_format_mappers = s_index.type_format_mappers
 
-            for i in range(0, s_op_key_sequence_length):
-                if i == s_op_key_sequence_length - 1 and s_op_fn_q_arranger:
+            for i in range(0, s_op_key_sequence_length_to_remove):
+                if i == s_op_key_sequence_length_to_remove - 1 and s_op_fn_q_arranger:
                     pass
                 else:
-                    if i < s_op_key_sequence_length_to_remove:
-                        c_key_val = q.pop(s_index.schema_keys[i])
-                    else:
-                        c_key_val = q.get(s_index.schema_keys[i])
+                    # if i < s_op_key_sequence_length_to_remove:
+                    #     c_key_val = q.pop(s_index.schema_keys[i])
+                    # else:
+                    #     c_key_val = q.get(s_index.schema_keys[i])
+                    c_key_val = q.pop(s_index.schema_keys[i])
 
                     key = key + type_format_mappers[type(c_key_val)](c_key_val)
 

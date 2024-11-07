@@ -14,13 +14,15 @@ def test_should_plan_const_scan():
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1, 'b': 2}, get_plan=True)
+    q = {'a': 1, 'b': 2}
+    plan = i.get_q_cursor(q, get_plan=True)
 
     assert len(plan) == 1
     assert plan[0][0] == i.indexes['ab']
     assert plan[0][1] == SCAN_OP_CONST
     assert plan[0][2] == 2
     assert plan[0][3] == 2
+    assert q == {}
 
 
 def test_should_plan_const_scan_with_dropped_sort_stage():
@@ -30,13 +32,15 @@ def test_should_plan_const_scan_with_dropped_sort_stage():
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1, 'b': 2}, sort='a', get_plan=True)
+    q = {'a': 1, 'b': 2}
+    plan = i.get_q_cursor(q, sort='a', get_plan=True)
 
     assert len(plan) == 1
     assert plan[0][0] == i.indexes['ab']
     assert plan[0][1] == SCAN_OP_CONST
     assert plan[0][2] == 2
     assert plan[0][3] == 2
+    assert q == {}
 
 
 def test_should_plan_const_scan_in_case_of_like_with_no_pattern_symbols():
@@ -46,13 +50,15 @@ def test_should_plan_const_scan_in_case_of_like_with_no_pattern_symbols():
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1, 'b': {'$like': '1234567'}}, get_plan=True)
+    q = {'a': 1, 'b': {'$like': '1234567'}}
+    plan = i.get_q_cursor(q, get_plan=True)
 
     assert len(plan) == 1
     assert plan[0][0] == i.indexes['ab']
     assert plan[0][1] == SCAN_OP_CONST
     assert plan[0][2] == 2
     assert plan[0][3] == 2
+    assert q == {}
 
 
 def test_should_plan_in_scan():
@@ -62,13 +68,15 @@ def test_should_plan_in_scan():
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1, 'b': {'$in': [2]}}, get_plan=True)
+    q = {'a': 1, 'b': {'$in': [2]}}
+    plan = i.get_q_cursor(q, get_plan=True)
 
     assert len(plan) == 1
     assert plan[0][0] == i.indexes['ab']
     assert plan[0][1] == SCAN_OP_IN
     assert plan[0][2] == 2
     assert plan[0][3] == 2
+    assert q == {}
 
 
 def test_should_plan_in_scan_with_sort_stage():
@@ -78,7 +86,8 @@ def test_should_plan_in_scan_with_sort_stage():
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1, 'b': {'$in': [2]}}, sort='-a', get_plan=True)
+    q = {'a': 1, 'b': {'$in': [2]}}
+    plan = i.get_q_cursor(q, sort='-a', get_plan=True)
 
     assert len(plan) == 2
     assert plan[0][0] == i.indexes['ab']
@@ -89,6 +98,7 @@ def test_should_plan_in_scan_with_sort_stage():
     assert plan[1][1] == SCAN_OP_SORT
     assert plan[1][4] == 'a'
     assert plan[1][5] is False
+    assert q == {}
 
 
 def test_should_plan_in_scan_with_dropped_sort_stage_using_sorted_index():
@@ -98,13 +108,15 @@ def test_should_plan_in_scan_with_dropped_sort_stage_using_sorted_index():
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1, 'b': {'$in': [2]}}, sort='a', get_plan=True)
+    q = {'a': 1, 'b': {'$in': [2]}}
+    plan = i.get_q_cursor(q, sort='a', get_plan=True)
 
     assert len(plan) == 1
     assert plan[0][0] == i.indexes['ab']
     assert plan[0][1] == SCAN_OP_IN
     assert plan[0][2] == 2
     assert plan[0][3] == 2
+    assert q == {}
 
 
 def test_should_plan_prefix_scan():
@@ -114,13 +126,33 @@ def test_should_plan_prefix_scan():
         # 'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1, 'c': 2}, get_plan=True)
+    q = {'a': 1, 'c': 2}
+    plan = i.get_q_cursor(q, get_plan=True)
 
     assert len(plan) == 2  # prefix, seq
     assert plan[0][0] == i.indexes['ab']
     assert plan[0][1] == SCAN_OP_PREFIX
     assert plan[0][2] == 1
     assert plan[0][3] == 1
+    assert q == {'a': 1, 'c': 2}
+
+
+def test_should_plan_prefix_scan_2():
+    i = Udb({
+        # 'a': UdbBtreeBaseIndex(['a']),
+        'ab': UdbBtreeBaseIndex(['a', 'b', 'c']),
+        # 'b': UdbBtreeBaseIndex(['b']),
+    })
+
+    q = {'a': 1, 'b': 2, 'd': 3}
+    plan = i.get_q_cursor(q, get_plan=True)
+
+    assert len(plan) == 2  # prefix, seq
+    assert plan[0][0] == i.indexes['ab']
+    assert plan[0][1] == SCAN_OP_PREFIX
+    assert plan[0][2] == 2
+    assert plan[0][3] == 1
+    assert q == {'b': 2, 'd': 3}
 
 
 def test_should_plan_prefix_scan_with_sort_stage():
@@ -130,7 +162,8 @@ def test_should_plan_prefix_scan_with_sort_stage():
         # 'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1, 'c': 2}, sort='c', get_plan=True)
+    q = {'a': 1, 'c': 2}
+    plan = i.get_q_cursor(q, sort='c', get_plan=True)
 
     assert len(plan) == 3  # prefix, seq
     assert plan[0][0] == i.indexes['ab']
@@ -141,6 +174,7 @@ def test_should_plan_prefix_scan_with_sort_stage():
     assert plan[2][1] == SCAN_OP_SORT
     assert plan[2][4] == 'c'
     assert plan[2][5] is True
+    assert q == {'a': 1, 'c': 2}
 
 
 def test_should_plan_prefix_scan_with_dropped_sort_stage():
@@ -150,13 +184,15 @@ def test_should_plan_prefix_scan_with_dropped_sort_stage():
         # 'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1, 'c': 2}, sort='b', get_plan=True)
+    q = {'a': 1, 'c': 2}
+    plan = i.get_q_cursor(q, sort='b', get_plan=True)
 
     assert len(plan) == 2  # prefix, seq
     assert plan[0][0] == i.indexes['ab']
     assert plan[0][1] == SCAN_OP_PREFIX
     assert plan[0][2] == 1
     assert plan[0][3] == 1
+    assert q == {'a': 1, 'c': 2}
 
 
 def test_should_plan_prefix_scan_in_case_of_partial_like():
@@ -166,13 +202,15 @@ def test_should_plan_prefix_scan_in_case_of_partial_like():
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': '1', 'b': {'$like': '345%678'}}, get_plan=True)
+    q = {'a': '1', 'b': {'$like': '345%678'}}
+    plan = i.get_q_cursor(q, get_plan=True)
 
     assert len(plan) == 2  # prefix, seq
     assert plan[0][0] == i.indexes['ab']
     assert plan[0][1] == SCAN_OP_PREFIX
     assert plan[0][2] == 2
     assert plan[0][3] == 1
+    assert q == {'b': {'$like': '345%678'}}
 
 
 def test_should_plan_prefix_in_scan():
@@ -182,13 +220,15 @@ def test_should_plan_prefix_in_scan():
         # 'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': {'$in': [1]}, 'c': 2}, get_plan=True)
+    q = {'a': {'$in': [1]}, 'c': 2}
+    plan = i.get_q_cursor(q, get_plan=True)
 
     assert len(plan) == 2  # prefix in, seq
     assert plan[0][0] == i.indexes['ab']
     assert plan[0][1] == SCAN_OP_PREFIX_IN
-    assert plan[0][2] == 1
+    assert plan[0][2] == 0
     assert plan[0][3] == 1
+    assert q == {'a': {'$in': [1]}, 'c': 2}
 
 
 def test_should_plan_range_scan():
@@ -198,13 +238,15 @@ def test_should_plan_range_scan():
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1, 'b': {'$gte': 2}}, get_plan=True)
+    q = {'a': 1, 'b': {'$gte': 2}}
+    plan = i.get_q_cursor(q, get_plan=True)
 
     assert len(plan) == 1
     assert plan[0][0] == i.indexes['ab']
     assert plan[0][1] == SCAN_OP_RANGE
     assert plan[0][2] == 2
     assert plan[0][3] == 1
+    assert q == {}
 
 
 def test_should_plan_seq_scan():
@@ -214,13 +256,15 @@ def test_should_plan_seq_scan():
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'x': 1}, get_plan=True)
+    q = {'x': 1}
+    plan = i.get_q_cursor(q, get_plan=True)
 
     assert len(plan) == 1
     assert plan[0][0] is None
     assert plan[0][1] == SCAN_OP_SEQ
     assert plan[0][2] == 0
     assert plan[0][3] == 0
+    assert q == {'x': 1}
 
 
 def test_should_plan_additional_seq_scan_on_partial_index_coverage():
@@ -230,7 +274,8 @@ def test_should_plan_additional_seq_scan_on_partial_index_coverage():
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1, 'b': 2, 'c': 3}, get_plan=True)
+    q = {'a': 1, 'b': 2, 'c': 3}
+    plan = i.get_q_cursor(q, get_plan=True)
 
     assert len(plan) == 2
     assert plan[0][1] == SCAN_OP_CONST
@@ -240,6 +285,7 @@ def test_should_plan_additional_seq_scan_on_partial_index_coverage():
     assert plan[1][3] == 0
     assert len(plan[1][4]) == 1
     assert plan[1][4]['c'] == 3
+    assert q == {'c': 3}
 
 
 def test_should_plan_sub_scan():
@@ -249,7 +295,8 @@ def test_should_plan_sub_scan():
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'x': 1}, limit=3, offset=2, get_plan=True)
+    q = {'x': 1}
+    plan = i.get_q_cursor(q, limit=3, offset=2, get_plan=True)
 
     assert len(plan) == 2
     assert plan[0][1] == SCAN_OP_SEQ
@@ -259,6 +306,7 @@ def test_should_plan_sub_scan():
     assert plan[1][3] == 0
     assert plan[1][4] == 3
     assert plan[1][5] == 2
+    assert q == {'x': 1}
 
 
 def test_should_not_plan_sub_scan_on_const_not_multivalued_coverage():
@@ -268,10 +316,12 @@ def test_should_not_plan_sub_scan_on_const_not_multivalued_coverage():
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1}, limit=3, offset=0, get_plan=True)
+    q = {'a': 1}
+    plan = i.get_q_cursor(q, limit=3, offset=0, get_plan=True)
 
     assert len(plan) == 1
     assert plan[0][1] == SCAN_OP_CONST
+    assert q == {}
 
 
 def test_should_not_plan_any_scan_on_const_not_multivalued_coverage_with_transcending_offset():
@@ -281,6 +331,8 @@ def test_should_not_plan_any_scan_on_const_not_multivalued_coverage_with_transce
         'b': UdbBtreeBaseIndex(['b']),
     })
 
-    plan = i.get_q_cursor({'a': 1}, limit=3, offset=3, get_plan=True)
+    q = {'a': 1}
+    plan = i.get_q_cursor(q, limit=3, offset=3, get_plan=True)
 
     assert len(plan) == 0
+    assert q == {'a': 1}

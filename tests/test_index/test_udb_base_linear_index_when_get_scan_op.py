@@ -127,11 +127,11 @@ def test_should_get_prefix_scan_op_in_case_of_partial_like():
 
     assert op == SCAN_OP_PREFIX
     assert prefix_key_len == 3
-    assert prefix_key_len_to_remove == 3
+    assert prefix_key_len_to_remove == 2
     assert priority == 1
     assert callable(fn)
     assert list(fn('\x04222')) == ['search_by_key_prefix', '\x04222\x04345']
-    assert callable(fn_q_arranger)
+    assert fn_q_arranger is None
 
 
 def test_should_get_prefix_scan_op_in_case_of_partial_like_2():
@@ -141,11 +141,11 @@ def test_should_get_prefix_scan_op_in_case_of_partial_like_2():
 
     assert op == SCAN_OP_PREFIX
     assert prefix_key_len == 2
-    assert prefix_key_len_to_remove == 2
+    assert prefix_key_len_to_remove == 1
     assert priority == 1
     assert callable(fn)
     assert list(fn('\x04222')) == ['search_by_key_prefix', '\x04222\x04345']
-    assert callable(fn_q_arranger)
+    assert fn_q_arranger is None
 
 
 def test_should_get_prefix_scan_op_in_case_of_full_like():

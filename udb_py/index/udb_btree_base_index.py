@@ -80,9 +80,12 @@ class UdbBtreeBaseIndex(UdbBaseLinearIndex):
             yield val
 
     def search_by_key_prefix_in(self, keys):
-        for key in keys:
-            for val in self._btree.values(key, key + TYPE_INFR):
-                yield val
+        keys = list(keys)
+        min_key = min(*keys)
+        max_key = max(*keys)
+
+        for val in self._btree.values(min_key, max_key + TYPE_INFR):
+            yield val
 
     def search_by_key_range(self, gte=None, lte=None, gte_excluded=False, lte_excluded=False):
         for val in self._btree.values(gte, lte, gte_excluded, lte_excluded):

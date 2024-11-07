@@ -111,7 +111,7 @@ def test_should_search_by_key_prefix_in():
 
     i.insert('1', 1).insert('12', 12).insert('123', 123).insert('123', 124).insert('321', 321).insert('11', 11).insert('111', 111).insert('333', 333)
 
-    assert list(i.search_by_key_prefix_in(['12', '11'])) == [12, 123, 124, 11, 111]
+    assert list(i.search_by_key_prefix_in(['12', '11'])) == [11, 111, 12, 123, 124]
 
 
 def test_should_search_by_key_range():

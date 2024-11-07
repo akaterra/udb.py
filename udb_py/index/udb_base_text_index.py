@@ -23,7 +23,7 @@ class UdbBaseTextIndex(UdbIndex):
         return True
 
     @classmethod
-    def seq(cls, seq, q, collection):
+    def seq(cls, seq, q, collection, schema=None):
         has_condition = False
 
         for cnd in q.values():

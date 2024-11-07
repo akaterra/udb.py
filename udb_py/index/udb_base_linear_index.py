@@ -215,7 +215,7 @@ class UdbBaseLinearIndex(UdbIndex):
         return q1
 
     @classmethod
-    def seq(cls, seq, q, collection):
+    def seq(cls, seq, q, collection, schema=None):
         for rid in seq:
             if cls.check_condition(collection[rid], q):
                 yield rid
@@ -380,23 +380,27 @@ class UdbBaseLinearIndex(UdbIndex):
 
                 if c_eq != EMPTY:
                     if ind == self.schema_last_index:
+                        key_part = type_format_mappers[type(c_eq)](c_eq)
+
                         return (
                             SCAN_OP_CONST,
                             ind + 1,  # cover key length
                             ind + 1,
                             2,  # priority
-                            lambda k: self.search_by_key_eq(k + type_format_mappers[type(c_eq)](c_eq)),
-                            _q_arr_eq
+                            lambda k: self.search_by_key_eq(k + key_part),
+                            _q_arr_eq,
                         )
 
                     if self.is_prefixed:
+                        key_part = type_format_mappers[type(c_eq)](c_eq)
+
                         return (
                             SCAN_OP_PREFIX,
-                            ind + 1,  # cover key length
-                            ind + 1,
+                            ind,  # cover key length
+                            ind,
                             1,  # priority
-                            lambda k: self.search_by_key_prefix(k + type_format_mappers[type(c_eq)](c_eq)),
-                            _q_arr_eq
+                            lambda k: self.search_by_key_prefix(k + key_part),
+                            None,
                         )
 
                     return SCAN_OP_SEQ, 0, 0, 0, None, None
@@ -405,23 +409,27 @@ class UdbBaseLinearIndex(UdbIndex):
 
                 if c_ne != EMPTY:
                     if ind == self.schema_last_index:
+                        key_part = type_format_mappers[type(c_ne)](c_ne)
+
                         return (
                             SCAN_OP_NE,
                             ind + 1,  # cover key length
                             ind + 1,
                             2,  # priority
-                            lambda k: self.search_by_key_ne(k + type_format_mappers[type(c_ne)](c_ne)),
+                            lambda k: self.search_by_key_ne(k + key_part),
                             _q_arr_ne,
                         )
 
                     if self.is_prefixed:
+                        key_part = type_format_mappers[type(c_ne)](c_ne)
+
                         return (
                             SCAN_OP_PREFIX_NE,
-                            ind + 1,  # cover key length
-                            ind + 1,
+                            ind,  # cover key length
+                            ind,
                             1,  # priority
-                            lambda k: self.search_by_key_ne(k + type_format_mappers[type(c_ne)](c_ne)),
-                            _q_arr_none,
+                            lambda k: self.search_by_key_ne(k + key_part),
+                            None,
                         )
 
                 c_in = condition.get('$in', EMPTY)
@@ -442,13 +450,13 @@ class UdbBaseLinearIndex(UdbIndex):
                     if self.is_prefixed:
                         return (
                             SCAN_OP_PREFIX_IN,
-                            ind + 1,  # cover key length
-                            ind + 1,
+                            ind,  # cover key length
+                            ind,
                             1,  # priority
                             lambda k: self.search_by_key_prefix_in(
                                 map(lambda x: k + type_format_mappers[type(x)](x), c_in)
                             ),
-                            _q_arr_none,
+                            None,
                         )
 
                     return SCAN_OP_SEQ, 0, 0, 0, None, None
@@ -471,8 +479,8 @@ class UdbBaseLinearIndex(UdbIndex):
                     if self.is_prefixed:
                         return (
                             SCAN_OP_PREFIX_NIN,
-                            ind + 1,  # cover key length
-                            ind + 1,
+                            ind,  # cover key length
+                            ind,
                             1,  # priority
                             lambda k: self.search_by_key_nin(
                                 map(lambda x: k + type_format_mappers[type(x)](x), c_nin)
@@ -535,7 +543,7 @@ class UdbBaseLinearIndex(UdbIndex):
                                     ind + 1,
                                     2,  # priority
                                     lambda k: self.search_by_key_eq(k + key_part),
-                                    _q_arr_like
+                                    _q_arr_like,
                                 )
                             # key not fully covered and cond has extra filtering, prefix scan
                             elif len(condition) > 1:
@@ -547,7 +555,7 @@ class UdbBaseLinearIndex(UdbIndex):
                                     ind + 1,
                                     1,  # priority
                                     lambda k: self.search_by_key_prefix(k + key_part),
-                                    _q_arr_like_eq
+                                    _q_arr_like_eq,
                                 )
                             # cond replaced by '$eq', continue key checking
                             else:
@@ -560,10 +568,10 @@ class UdbBaseLinearIndex(UdbIndex):
                             return (
                                 SCAN_OP_PREFIX,
                                 ind + 1,  # cover key length
-                                ind + 1,
+                                ind,
                                 1,  # priority
                                 lambda k: self.search_by_key_prefix(k + key_part),
-                                _q_arr_none
+                                None,
                             )
 
                         if ind == 0:
@@ -604,7 +612,7 @@ class UdbBaseLinearIndex(UdbIndex):
     def search_by_key_prefix_nin(self, keys):
         raise NotImplementedError
 
-    def search_by_key_range(self, gte=None, lte=None, gte_excluded=True, lte_excluded=True):
+    def search_by_key_range(self, gte=None, lte=None, gte_excluded=False, lte_excluded=False):
         raise NotImplementedError
 
     def search_by_key_seq(self, q, source):
