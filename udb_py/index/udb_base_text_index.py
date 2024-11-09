@@ -1,4 +1,4 @@
-from ..common import EMPTY, FieldRequiredError, InvalidScanOperationValueError
+from ..common import EMPTY, FieldRequiredError, IndexRequiredError
 from ..udb_index import UdbIndex, SCAN_OP_SEQ
 
 
@@ -20,7 +20,7 @@ class UdbBaseTextIndex(UdbIndex):
 
     @classmethod
     def check_condition(cls, values, q, context=None, extend=None):
-        return True
+        raise IndexRequiredError('field required: {} on {}'.format(key, self.name))
 
     @classmethod
     def seq(cls, seq, q, collection, schema=None):
@@ -58,11 +58,7 @@ class UdbBaseTextIndex(UdbIndex):
                 val = record.get(key, get)
 
             if val == EMPTY:
-                pass
-                # if ind == 0:
-                #     return None
-                # else:
-                #     cover_key[key] = None
+                return None
             else:
                 cover_key[key] = val
 
@@ -85,10 +81,7 @@ class UdbBaseTextIndex(UdbIndex):
                 val = record.get(key, get)
 
             if val == EMPTY:
-                if ind == 0:
-                    return None
-                else:
-                    raise FieldRequiredError('field required: {} on {}'.format(key, self.name))
+                return None
             else:
                 cover_key[key] = val
 
@@ -105,6 +98,7 @@ class UdbBaseTextIndex(UdbIndex):
 
         :return: (
             op type,
+            key sequence length,
             key sequence length to extract as prefix key,
             priority,
             fn,

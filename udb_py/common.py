@@ -17,6 +17,10 @@ class FieldRequiredError(Exception):
     pass
 
 
+class IndexRequiredError(Exception):
+    pass
+
+
 class InvalidAggregationOperationError(Exception):
     pass
 

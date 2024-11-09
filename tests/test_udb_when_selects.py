@@ -476,3 +476,51 @@ def test_should_select_using_reverse_sort():
     records = list(udb.select(sort='-a'))
 
     assert records == [a, c, e, f, d, b]
+
+
+def test_should_use_copy_on_select():
+    udb = Udb().set_copy_on_select()
+
+    a = {'a': 6, '__rev__': 0}
+    b = {'a': 1, '__rev__': 1}
+    c = {'a': 5, '__rev__': 2}
+    d = {'a': 2, '__rev__': 3}
+    e = {'a': 4, '__rev__': 4}
+    f = {'a': 3, '__rev__': 5}
+
+    udb.insert(a)
+    udb.insert(b)
+    udb.insert(c)
+    udb.insert(d)
+    udb.insert(e)
+    udb.insert(f)
+
+    records = list(udb.select({'a': 6}))
+    records[0]['a'] = 7
+    records = list(udb.select({'a': 6}))
+
+    assert records[0]['a'] == 6
+
+
+def test_should_use_copy_on_insert():
+    udb = Udb().set_copy_on_insert()
+
+    a = {'a': 6, '__rev__': 0}
+    b = {'a': 1, '__rev__': 1}
+    c = {'a': 5, '__rev__': 2}
+    d = {'a': 2, '__rev__': 3}
+    e = {'a': 4, '__rev__': 4}
+    f = {'a': 3, '__rev__': 5}
+
+    udb.insert(a)
+    udb.insert(b)
+    udb.insert(c)
+    udb.insert(d)
+    udb.insert(e)
+    udb.insert(f)
+
+    list(udb.select({'a': 6}))
+    a['a'] = 7
+    records = list(udb.select({'a': 6}))
+
+    assert records[0]['a'] == 6

@@ -1,5 +1,5 @@
 from .aggregate import aggregate, register_aggregation_pipe, SKIP
-from .common import sort_key_iter
+from .common import cpy_dict, sort_key_iter
 from .index import (
     UdbBaseGEOIndex,
     UdbBaseLinearIndex,
@@ -60,6 +60,11 @@ class UdbCore(object):
 
     def get_index(self, key):
         return self._indexes[key]
+
+    def set_copy_on_select(self):
+        self._copy_on_select = True
+
+        return self
 
     def aggregate(self, *pipes, q=None, limit=None, offset=None, sort=None, use_indexes=None):
         return aggregate(self.get_q_cursor(q, limit, offset, sort, use_indexes=use_indexes), *pipes)
@@ -162,12 +167,7 @@ class UdbCore(object):
                 if i == s_op_key_sequence_length_to_remove - 1 and s_op_fn_q_arranger:
                     pass
                 else:
-                    # if i < s_op_key_sequence_length_to_remove:
-                    #     c_key_val = q.pop(s_index.schema_keys[i])
-                    # else:
-                    #     c_key_val = q.get(s_index.schema_keys[i])
                     c_key_val = q.pop(s_index.schema_keys[i])
-
                     key = key + type_format_mappers[type(c_key_val)](c_key_val)
 
             if s_op_fn_q_arranger:

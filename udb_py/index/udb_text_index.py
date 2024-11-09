@@ -85,7 +85,7 @@ class UdbTextIndex(UdbBaseTextIndex):
 
         with self._whoosh_index.searcher() as searcher:
             for rec in searcher.search(self._whoosh_parser.parse(' '.join(q.values())), limit=1):
-                yield rec['udb__uid__']
+                yield int(rec['udb__uid__'])
 
     def upsert(self, old_dict, new_dict, uid):
         if new_dict:

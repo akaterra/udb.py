@@ -37,7 +37,7 @@ _INDEXES = (
 
 class Udb(UdbCore):
     _collection = None
-    _copy_on_select = False
+    _copy_on_insert = False
     _delete_buffer = None
     _indexes_to_check_for_ins_upd_allowance = None
     _on_delete = None
@@ -71,8 +71,8 @@ class Udb(UdbCore):
                 self._on_insert.append(storage.on_insert)
                 self._on_update.append(storage.on_update)
 
-    def set_copy_on_select(self):
-        self._copy_on_select = True
+    def set_copy_on_insert(self):
+        self._copy_on_insert = True
 
         return self
 
@@ -186,6 +186,9 @@ class Udb(UdbCore):
                 self._collection.pop(key)
 
     def insert(self, values):
+        if self._copy_on_insert:
+            values = cpy_dict(values)
+
         if self._schema:
             for key, schema_entry in self._schema.items():
                 if callable(schema_entry):
@@ -236,7 +239,6 @@ class Udb(UdbCore):
                 index.upsert(index.get_cover_key(before), index.get_cover_key(before, values), key)
 
             self._collection[key].update(values)
-
             update_count += 1
 
         return update_count

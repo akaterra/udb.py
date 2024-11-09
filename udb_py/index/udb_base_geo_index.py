@@ -279,6 +279,23 @@ class UdbBaseGEOIndex(UdbIndex):
         return {'key': self._key, 'default_value': self._key_default_value, 'name': self.name}
 
     def get_scan_op(self, q, limit=None, offset=None, collection=None):
+        """
+        Gets scan op for the coverage key.
+
+        :param q:
+        :param limit:
+        :param offset:
+        :param collection:
+
+        :return: (
+            op type,
+            key sequence length,
+            key sequence length to extract as prefix key,
+            priority,
+            fn,
+            fn_q_arranger,
+        )
+        """
         for key in self.schema_keys:
             condition = q.get(key, EMPTY)
 

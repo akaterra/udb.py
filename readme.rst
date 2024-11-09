@@ -136,7 +136,7 @@ Select records:
 Data schema
 -----------
 
-Data schema allows to fill the inserted record with default values.
+Data schema allows to fill the inserted or updated record with default values.
 The default value can be defined as a primitive value or callable:
 
 .. code:: python
@@ -195,32 +195,32 @@ Functional fields
 Indexes
 -------
 
-To speed up the search for records, the necessary fields can be indexed.
-The Udb also includes a simple query optimiser that can select the most appropriate index.
+To speed up the search the records can be indexed by necessary for searching fields.
+The Udb also includes a simple query optimiser that can apply the most appropriate index.
 
-BTree indexes:
+BTree index (supports the range and prefix scan operations):
 
 * **UdbBtreeIndex** - btree based index supporting multiple records with the same index key.
 
 * **UdbBtreeEmbeddedIndex** - same as the **UdbBtreeIndex**, but supports embedded list of values.
 
-* **UdbBtreeUniqIndex** - btree based index operating with always single records, but the second record insertion with the same index key will raise IndexConstraintError.
+* **UdbBtreeUniqIndex** - btree based index operating with always single records, the second record inserted with the same index key will raise IndexConstraintError.
 
-Hash indexes:
+Hash index (supports only const scan operation):
 
 * **UdbHashIndex** - hash based index supporting multiple records with the same index key.
 
 * **UdbHashEmbeddedIndex** - same as the **UdbHashIndex**, but supports embedded list of values.
 
-* **UdbHashUniqIndex** - hash based index operating with always single records, but the second record insertion with the same index key will raise IndexConstraintError.
+* **UdbHashUniqIndex** - hash based index operating with always single records, the second record inserted with the same index key will raise IndexConstraintError.
 
-Spatial indexes:
+Spatial index:
 
-* **UdbRtreeIndex** - spatial index that supports "intersection with rectangle" and "near to point" search
+* **UdbRtreeIndex** - spatial index that supports "intersection with rectangle" and "near to point" search.
 
-Full-Text indexes:
+Full-Text index:
 
-* **UdbTextIndex** - full text index that supports searching by words
+* **UdbTextIndex** - full text index that supports searching by words.
 
 Index declaration
 ~~~~~~~~~~~~~~~~~
@@ -252,7 +252,7 @@ By default the "None" value is used for the missing field.
 
   record = {'a': 'A', 'b': 'B'}  # index key=ANoneC
 
-Using dictionary:
+Required fields constraint:
 
 .. code:: python
 
@@ -287,7 +287,7 @@ The default value for missing field can be defined as a primitive value or calla
   record = {'a': 'A', 'c': 'C'}  # index key=AbC
 
 Note that the default value is used as missing value for index key only.
-So if the query is not fully covered by index so that part of the query moves to "seq" scan then search may not return results.
+That means in case of the query is not fully covered by index, the part of the query moves to "seq" scan and then search may not return results.
 
 .. code:: python
 
@@ -301,7 +301,23 @@ So if the query is not fully covered by index so that part of the query moves to
 
   results = list(db.select({'a': 'A', 'c': 'c'}))  # no results since query covering key consists of "a", "c" is searched by "seq" scan but nothing was defined in record as "c", only in index
 
+  results = list(db.select({'a': 'A', 'b': 'B', 'c': 'c'}))  # now record returned due to index key is fully covered,
+
 To define the default record value use `Data schema <#data-schema>`_.
+
+.. code:: python
+
+  from udb_py import Udb, UdbBtreeIndex
+
+  db = Udb(indexes={
+      'abc': UdbBtreeIndex({'a': 'a', 'b': 'b', 'c': 'c'})
+  }, schema={'c': 'c'})
+
+  db.insert({'a': 'A', 'b': 'B'})
+
+  results = list(db.select({'a': 'A', 'c': 'c'}))  # record returned although index key is not fully covered
+
+  results = list(db.select({'a': 'A', 'b': 'B', 'c': 'c'}))  # record returned due to index key is fully covered
 
 Example of functional index over the size of list:
 
@@ -472,7 +488,7 @@ To check its validity use **validate_query** method.
 Comparison order
 ~~~~~~~~~~~~~~~~
 
-Due to the fact that the Udb database is not strictly typed for stored values, there is the following order of ascending comparisons for values ​​of different types:
+Udb database is not strictly typed for stored values, therefore it uses the following order of ascending comparisons for values of different types:
 
 * None
 
@@ -483,7 +499,7 @@ Due to the fact that the Udb database is not strictly typed for stored values, t
 * string
 
 So, for example, the record containing *int* value always greater than the record containing *boolean* value for the same field.
-Also, it means, that the records having indexed field will be fetched in the provided order.
+The records having indexed field will be fetched in the order above.
 
 Getting plan
 ~~~~~~~~~~~~
@@ -505,25 +521,25 @@ Scan operations
 
 BTree index:
 
-* **const** - an index has only one index key that refers exactly to the one record in case of single valued index or to the set of records covered by the same index key in case of multi-record index (can be fetched linearly)
+* **const** - index has only one index key that refers exactly to the one record in case of single valued index or to the set of records covered by the same index key in case of multi-record index (are fetched in order of insertion)
 
-* **in** - an index has multiple index keys, each one refers exactly to the one record in case of single valued index or to the set of records covered by the same index key in case of multi-record index (can be fetched linearly)
+* **in** - index has multiple index keys, each one refers exactly to the one record in case of single valued index or to the set of records covered by the same index key in case of multi-record index (are fetched in order of insertion)
 
-* **range** - an index covers multiple records by the index keys set having minimum and maximum values
+* **range** - index covers multiple records by the index keys set having minimum and maximum values
 
-* **prefix** - an index covers range of records by the partial index key
+* **prefix** - index covers range of records by the partial index key
 
-* **prefix_in** - an index covers multiple records by the list of the partial index keys, each one covers range of records
+* **prefix_in** - index covers multiple records by the list of the partial index keys, each one covers range of records
 
 RTree index:
 
-* **intersection** - an index covers records intersected by the rectangle
+* **intersection** - index covers records intersected by the rectangle
 
-* **near** - an index covers records near to the point
+* **near** - index covers records near to the point
 
 Full-text index:
 
-* **text** - an index covers records containing words
+* **text** - index covers records containing words
 
 No index:
 
@@ -535,6 +551,7 @@ Storages
 The storage allows keeping data persistent.
 
 **UdbJsonFileStorage** stores data in the JSON file.
+The file may be partially stored (broken) if no graceful app shutdown applied.
 
 .. code:: python
 
@@ -549,6 +566,7 @@ The storage allows keeping data persistent.
   db.save_db()
 
 **UdbWalStorage** stores data of delete, insert and update operations in the WAL (Write-Ahead-Logging) file chronologically.
+May partially store broken last insert/update/delete op if no graceful app shutdown applied. Use **allow_corrupted_wal=True** param to ignore such ops.
 
 .. code:: python
 
@@ -565,12 +583,16 @@ The storage allows keeping data persistent.
 Select operation
 ----------------
 
-Selected records are **mutable**, so avoid to update them directly.
-Otherwise use copy on select mode:
+Selected and inserted records are **mutable**, so avoid to update them directly.
+Otherwise use "copy on select" or "copy on insert" mode (shallow copy):
 
 .. code:: python
 
   udb.set_copy_on_select()
+
+.. code:: python
+
+  udb.set_copy_on_insert()
 
 To limit the result subset to particular number of records use **limit** parameter:
 
@@ -608,8 +630,8 @@ Update operation
 Aggregation
 -----------
 
-Aggregation mechanics allows to build aggregation pipeline over any iterable, particulary over the cursor.
-Aggregation accepts an interable with the pipelines to be applied over it.
+Aggregation mechanics allows to build aggregation pipeline over any iterable, particular over the cursor.
+Aggregation accepts an iterable with the stages to be applied over it.
 
 .. code:: python
 
@@ -629,8 +651,8 @@ Aggregation accepts an interable with the pipelines to be applied over it.
 
   results = list(aggregate(
     db.select(),
-    ('$unwind', 'a'),  # pipe 1
-    ('$o2o', ('a', 'x', related_db, 'rel1')),  # pipe 2
+    ('$unwind', 'a'),  # stage 1
+    ('$o2o', ('a', 'x', related_db, 'rel1')),  # stage 2
   ))
 
   [{
@@ -645,7 +667,7 @@ Aggregation accepts an interable with the pipelines to be applied over it.
     'a': 3, '__rev__': 2, 'rel1': {'x': 3, '__rev__': 2}
   }]
 
-Pipes:
+Stages:
 
 * **$facet** - run multiple pipelines over previous result - `('$facet', {'result_key_1': [<pipeline 1>, <pipeline 2>, ...], 'result_key_2': [<pipeline 1>, <pipeline 2>, ...], ...})`
 
