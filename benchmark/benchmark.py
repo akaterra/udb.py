@@ -47,10 +47,28 @@ def stop(samples=None, title=None, show_mem_usage=None):
         print()
 
 
-SAMPLES = 1000000
+SAMPLES = 100000
 
 
-udb = Udb({'a': UdbBtreeIndex(['a'])})
+udb = Udb({'a': UdbTextIndex(['a'])})
+
+start()
+
+for i in range(0, 10000):
+    udb.insert({'a': str(i)})
+
+stop(10000, 'insert (full text, 1st index covers 1 field)', True)
+
+
+start()
+
+for i in range(0, 10000):
+    list(udb.select({'a': {'$text': str(i)}}))
+
+stop(10000, 'select (full text, 1st index covers 1 field)')
+
+
+udb = Udb({'a': UdbBtreeBaseIndex(['a'])})
 
 start()
 
@@ -76,7 +94,7 @@ for i in range(0, SAMPLES):
 stop(SAMPLES, 'select (btree, 1st index covers 1 field, range scan - 5 records)')
 
 
-udb = Udb({'a': UdbBtreeIndex(['a']), 'b': UdbBtreeIndex(['b']), 'ab': UdbBtreeIndex(['a', 'b'])})
+udb = Udb({'a': UdbBtreeBaseIndex(['a']), 'b': UdbBtreeBaseIndex(['b']), 'ab': UdbBtreeBaseIndex(['a', 'b'])})
 
 start()
 
@@ -94,7 +112,7 @@ for i in range(0, SAMPLES):
 stop(SAMPLES, 'select (btree, 1st index covers 1 field, 2nd index covers 1 field, 3rd index covers 2 fields)')
 
 
-udb = Udb({'a': UdbHashIndex(['a'])})
+udb = Udb({'a': UdbHashBaseIndex(['a'])})
 
 start()
 
@@ -112,7 +130,7 @@ for i in range(0, SAMPLES):
 stop(SAMPLES, 'select (hash, 1st index covers 1 field)')
 
 
-udb = Udb({'a': UdbHashIndex(['a']), 'b': UdbHashIndex(['b']), 'ab': UdbHashIndex(['a', 'b'])})
+udb = Udb({'a': UdbHashBaseIndex(['a']), 'b': UdbHashBaseIndex(['b']), 'ab': UdbHashBaseIndex(['a', 'b'])})
 
 start()
 

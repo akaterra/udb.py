@@ -1,10 +1,10 @@
 import pytest
 
 from udb_py.common import *
-from udb_py.index.udb_hash_uniq_index import UdbHashUniqIndex, ConstraintError
+from udb_py.index.udb_hash_uniq_index import UdbHashUniqBaseIndex, ConstraintError
 
 
-class UdbHashUniqIndexTest(UdbHashUniqIndex):
+class UdbHashUniqIndexTest(UdbHashUniqBaseIndex):
     @property
     def index(self):
         return self._hash
@@ -44,7 +44,7 @@ def test_should_insert_by_schema():
 
 
 def test_should_insert_by_schema_with_default_value():
-    i = UdbHashUniqIndexTest((('a', required), ('b', 1), ('c', required)))
+    i = UdbHashUniqIndexTest((('a', REQUIRED), ('b', 1), ('c', REQUIRED)))
 
     i.insert_by_schema({'a': 1, 'c': 3}, 123)
 
@@ -52,7 +52,7 @@ def test_should_insert_by_schema_with_default_value():
 
 
 def test_should_insert_by_schema_with_default_value_as_callable():
-    i = UdbHashUniqIndexTest((('a', required), ('b', lambda key, values: 1), ('c', required)))
+    i = UdbHashUniqIndexTest((('a', REQUIRED), ('b', lambda key, values: 1), ('c', REQUIRED)))
 
     i.insert_by_schema({'a': 1, 'c': 3}, 123)
 
@@ -87,7 +87,7 @@ def test_should_search_by_key():
 
     i.insert('123', 123).insert('321', 321).insert('111', 111).insert('333', 333)
 
-    assert list(i.search_by_key('123')) == [123]
+    assert list(i.search_by_key_eq('123')) == [123]
 
 
 def test_should_search_by_key_in():

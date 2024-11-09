@@ -1,12 +1,13 @@
 from ..common import EMPTY
-from ..udb_index import UdbIndex, UdbEmbeddedIndex
+from .udb_base_linear_index import UdbBaseLinearIndex, UdbBaseLinearEmbeddedIndex
 
 
-class UdbHashIndex(UdbIndex):
+class UdbHashIndex(UdbBaseLinearIndex):
+    is_multivalued = True
     type = 'hash'
 
     def __init__(self, schema, name=None):
-        UdbIndex.__init__(self, schema, name)
+        UdbBaseLinearIndex.__init__(self, schema, name)
 
         self._hash = {}
 
@@ -18,50 +19,86 @@ class UdbHashIndex(UdbIndex):
 
         return self
 
-    def delete(self, key, uid=None):
-        self._hash.pop(key)
+    def delete(self, key, uid):
+        old_existing = self._hash.get(key, EMPTY)
+
+        if old_existing != EMPTY and uid in old_existing:
+            if len(old_existing) == 1:
+                self._hash.pop(key)
+            else:
+                old_existing.remove(uid)
 
         return self
 
     def insert(self, key, uid):
-        self._hash[key] = uid
+        old_existing = self._hash.get(key, EMPTY)
+
+        if old_existing == EMPTY:
+            self._hash[key] = {uid}
+        else:
+            old_existing.add(uid)
 
         return self
 
-    def search_by_key(self, key):
+    def search_by_key_eq(self, key):
         val = self._hash.get(key, EMPTY)
 
         if val != EMPTY:
-            yield val
+            for _ in val:
+                yield _
 
     def search_by_key_in(self, keys):
         for key in keys:
             val = self._hash.get(key, EMPTY)
 
             if val != EMPTY:
-                yield val
+                for _ in val:
+                    yield _
 
     def upsert(self, old, new, uid):
         if old != new:
-            self._hash.pop(old, None)
+            old_existing = self._hash.get(old, EMPTY)
 
-        self._hash[new] = uid
+            if old_existing != EMPTY and uid in old_existing:
+                if len(old_existing) == 1:
+                    self._hash.pop(old)
+                else:
+                    old_existing.remove(uid)
+
+        new_existing = self._hash.get(new, EMPTY)
+
+        if new_existing == EMPTY:
+            self._hash[new] = {uid}
+        else:
+            new_existing.add(uid)
 
         return self
 
 
-class UdbHashEmbeddedIndex(UdbHashIndex, UdbEmbeddedIndex):
-    type = 'hash_embedded'
+class UdbHashEmbeddedIndex(UdbHashIndex, UdbBaseLinearEmbeddedIndex):
+    embedded = 'hash_embedded'
+    type = embedded
 
-    def delete(self, key, uid=None):
-        for key in key:
-            self._hash.pop(key)
+    def delete(self, key_or_keys, uid=None):
+        for key in key_or_keys:
+            old_existing = self._hash.get(key, EMPTY)
+
+            if old_existing != EMPTY and uid in old_existing:
+                if len(old_existing) == 1:
+                    self._hash.pop(key)
+                else:
+                    old_existing.remove(uid)
 
         return self
 
-    def insert(self, key, uid):
-        for key in key:
-            self._hash[key] = uid
+    def insert(self, key_or_keys, uid):
+        for key in key_or_keys:
+            old_existing = self._hash.get(key, EMPTY)
+
+            if old_existing == EMPTY:
+                self._hash[key] = {uid}
+            else:
+                old_existing.append(uid)
 
         return self
 

@@ -1,8 +1,8 @@
 from ..common import ConstraintError
-from .udb_hash_index import UdbHashIndex
+from .udb_hash_base_index import UdbHashBaseIndex
 
 
-class UdbHashUniqIndex(UdbHashIndex):
+class UdbHashUniqBaseIndex(UdbHashBaseIndex):
     is_uniq = True
     type = 'hash_uniq'
 

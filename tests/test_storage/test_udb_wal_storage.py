@@ -5,6 +5,11 @@ from udb_py.udb_index import UdbIndex
 from udb_py.storage.udb_wal_storage import UdbWalStorage
 
 
+class UdbTestIndex(UdbIndex):
+    def get_meta(self):
+        return {}
+
+
 def copyfile(inp, out, name, new_name=None):
     with open(inp + '/' + name, 'rb') as r:
         with open(out + '/' + (new_name or name), 'wb') as w:
@@ -18,8 +23,8 @@ def copyfile(inp, out, name, new_name=None):
 
 def test_should_save_db_then_load_db():
     i = {
-        'a': UdbIndex(['a']),
-        'b': UdbIndex(['b']),
+        'a': UdbTestIndex(),
+        'b': UdbTestIndex(),
     }
 
     s = UdbWalStorage('ignore.test')
@@ -48,8 +53,8 @@ def test_should_save_db_then_load_db():
             3: {'a': 3, 'b': 333, '__rev__': 3},
         },
         'indexes': {
-            'a': [['a'], None],
-            'b': [['b'], None],
+            'a': [None, {}],
+            'b': [None, {}],
         },
         'revision': 4,
     }

@@ -1,9 +1,11 @@
 import pytest
 
-from udb_py.udb import Udb, UdbIndex
+from udb_py.udb import Udb
+from udb_py.index.udb_base_geo_index import UdbBaseGEOIndex
+from udb_py.index.udb_base_linear_index import UdbBaseLinearIndex
 
 
-class UdbIndexA(UdbIndex):
+class UdbIndexA(UdbBaseGEOIndex):
     q = None
 
     @classmethod
@@ -13,7 +15,7 @@ class UdbIndexA(UdbIndex):
         return True
 
 
-class UdbIndexB(UdbIndex):
+class UdbIndexB(UdbBaseLinearIndex):
     q = None
 
     @classmethod
@@ -23,13 +25,12 @@ class UdbIndexB(UdbIndex):
         return True
 
 
-@pytest.mark.udb
 def test_should_validate_query():
-    i = Udb({
-        'a': UdbIndexA(['a']),
+    udb = Udb({
+        'a': UdbIndexA('a'),
         'b': UdbIndexB(['b']),
     })
 
-    assert i.validate_query({'a': None}) is True
+    assert udb.validate_query({'a': None}) is True
     assert UdbIndexA.q == {'a': None}
     assert UdbIndexB.q == {'a': None}

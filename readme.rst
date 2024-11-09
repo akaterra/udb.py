@@ -4,9 +4,8 @@ Udb.py
 .. image:: https://travis-ci.org/akaterra/udb.py.svg?branch=master
   :target: https://travis-ci.org/akaterra/udb.py
 
-Udb is an in-memory database based on the `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_, the `Rtree <http://toblerity.org/rtree>`_ and on the native python's dict.
+Udb is an in-memory weak schema database based on the `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_, the `Rtree <https://rtree.readthedocs.io/en/latest>`_, the `Whoosh <https://github.com/mchaput/w>`_ and on the native python's dict.
 Udb provides indexes support and limited MongoDB-like queries.
-Udb does not support any type of transactions for now.
 
 Table of contents
 -----------------
@@ -17,7 +16,7 @@ Table of contents
 
 * `Quick start <#quick-start>`_
 
-* `Data schema for default values <#data-schema-for-default-values>`_
+* `Data schema <#data-schema>`_
 
   * `Functional fields <#functional-fields>`_
 
@@ -47,16 +46,20 @@ Table of contents
 
 * `Update operation <#update-operation>`_
 
+* `Aggregation <#aggregation>`_
+
+* `Instant view <#instant-view>`_
+
 * `Limitations <#limitations>`_
 
-* `Running tests <#running-tests-with-pytest>`_
-
 * `Benchmarks <#benchmarks>`_
+
+* `Running tests <#running-tests-with-pytest>`_
 
 Requirements
 ------------
 
-Python 2.7, Python 3.6
+Python 3.6
 
 Installation
 ------------
@@ -65,17 +68,29 @@ Installation
 
   pip install udb_py
 
-To enable BTree indexes support install `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_ package:
+To enable BTree indexes support install `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_ package (installing of "persistent" package may be needed):
 
 .. code:: bash
 
   pip install BTrees
 
-To enable RTree indexes support install `Rtree <http://toblerity.org/rtree>`_ package (requires `libspatialindex <https://libspatialindex.org>`_):
+To enable RTree indexes support install `Rtree <http://toblerity.org/rtree>`_ package (requires `libspatialindex <https://libspatialindex.org>`_, install it before):
 
 .. code:: bash
 
   pip install Rtree
+
+Installing **libspatialindex** on MacOS with Homebrew:
+
+.. code:: bash
+
+  brew install spatialindex
+
+To enable Full-Text indexes support install `Whoosh <https://github.com/mchaput/whoosh>`_ package:
+
+.. code:: bash
+
+  pip install Whoosh
 
 Quick start
 -----------
@@ -118,10 +133,10 @@ Select records:
 
   [{'a': 3, 'b': 3, 'c': 3, 'd': 4, 'e': 5}, {'a': 4, 'b': 4, 'c': 3, 'd': 4, 'e': 6}]
 
-Data schema for default values
-------------------------------
+Data schema
+-----------
 
-Data schema allows to fill the inserted record with default values.
+Data schema allows to fill the inserted or updated record with default values.
 The default value can be defined as a primitive value or callable:
 
 .. code:: python
@@ -180,32 +195,32 @@ Functional fields
 Indexes
 -------
 
-To speed up the search for records, the necessary fields can be indexed.
-The Udb also includes a simple query optimiser that can select the most appropriate index.
+To speed up the search the records can be indexed by necessary for searching fields.
+The Udb also includes a simple query optimiser that can apply the most appropriate index.
 
-BTree indexes:
+BTree index (supports the range and prefix scan operations):
 
-* **UdbBtreeMultivaluedIndex** - btree based multivalued index supporting multiple records with the same index key.
+* **UdbBtreeIndex** - btree based index supporting multiple records with the same index key.
 
-* **UdbBtreeMultivaluedEmbeddedIndex** - same as the **UdbBtreeMultivaluedIndex**, but supports embedded list of values.
+* **UdbBtreeEmbeddedIndex** - same as the **UdbBtreeIndex**, but supports embedded list of values.
 
-* **UdbBtreeUniqIndex** - btree based index operating with always single records, but the second record insertion with the same index key will raise IndexConstraintError.
+* **UdbBtreeUniqIndex** - btree based index operating with always single records, the second record inserted with the same index key will raise IndexConstraintError.
 
-* **UdbBtreeIndex** - btree based index operating with always single records, so that the second record insertion with the same index key will overwrite the old one. Can be used when the inserting record definitely generates a unique index key.
+Hash index (supports only const scan operation):
 
-Hash indexes:
+* **UdbHashIndex** - hash based index supporting multiple records with the same index key.
 
-* **UdbHashMultivaluedIndex** - hash based multivalued index supporting multiple records with the same index key.
+* **UdbHashEmbeddedIndex** - same as the **UdbHashIndex**, but supports embedded list of values.
 
-* **UdbHashMultivaluedEmbeddedIndex** - same as the **UdbHashMultivaluedIndex**, but supports embedded list of values.
+* **UdbHashUniqIndex** - hash based index operating with always single records, the second record inserted with the same index key will raise IndexConstraintError.
 
-* **UdbHashUniqIndex** - hash based index operating with always single records, but the second record insertion with the same index key will raise IndexConstraintError.
+Spatial index:
 
-* **UdbHashIndex** - hash based index operating with always single records, so that the second record insertion with the same index key will overwrite the old one. Can be used when the inserting record definitely generates a unique index key.
+* **UdbRtreeIndex** - spatial index that supports "intersection with rectangle" and "near to point" search.
 
-Spatial indexes:
+Full-Text index:
 
-* **UdbRtreeIndex** - spatial index that supports "intersection with rectangle" and "near to point" search
+* **UdbTextIndex** - full text index that supports searching by words.
 
 Index declaration
 ~~~~~~~~~~~~~~~~~
@@ -224,7 +239,8 @@ By this sequence of fields, the index key will be generated and will be associat
 
   record = {'a': 'A', 'b': 'B', 'c': 'C'}  # index key=ABC
 
-In this case of declaration in order that the record to be indexed it must contain all of the fields declared in the sequence of index fields.
+In order that the record to be indexed it is not obliged to contain all of the fields declared in the sequence of index fields.
+By default the "None" value is used for the missing field.
 
 .. code:: python
 
@@ -234,28 +250,16 @@ In this case of declaration in order that the record to be indexed it must conta
       'abc': UdbBtreeIndex(['a', 'b', 'c'])  # "a", "b" and "c" fields will be fetched from the indexed record
   })
 
-  record = {'a': 'A', 'b': 'B'}  # won't be indexed, raises FieldRequiredError
+  record = {'a': 'A', 'b': 'B'}  # index key=ANoneC
 
-Using dictionary in case of Python 3:
-
-.. code:: python
-
-  from udb_py import Udb, UdbBtreeIndex, required
-
-  db = Udb(indexes={
-      'abc': UdbBtreeIndex({'a': required, 'b': required, 'c': required})  # "a", "b" and "c" fields will be fetched from the indexed record
-  })
-
-  record = {'a': 'A', 'b': 'B'}  # won't be indexed, raises FieldRequiredError
-
-Using list of tuples in case of Python 2 (to keep key order):
+Required fields constraint:
 
 .. code:: python
 
-  from udb_py import Udb, UdbBtreeIndex, required
+  from udb_py import Udb, UdbBtreeIndex, REQUIRED
 
   db = Udb(indexes={
-      'abc': UdbBtreeIndex([('a', required), ('b', required), ('c', required)])  # "a", "b" and "c" fields will be fetched from the indexed record
+      'abc': UdbBtreeIndex({'a': REQUIRED, 'b': REQUIRED, 'c': REQUIRED})  # "a", "b" and "c" fields will be fetched from the indexed record
   })
 
   record = {'a': 'A', 'b': 'B'}  # won't be indexed, raises FieldRequiredError
@@ -281,6 +285,75 @@ The default value for missing field can be defined as a primitive value or calla
   })
 
   record = {'a': 'A', 'c': 'C'}  # index key=AbC
+
+Note that the default value is used as missing value for index key only.
+That means in case of the query is not fully covered by index, the part of the query moves to "seq" scan and then search may not return results.
+
+.. code:: python
+
+  from udb_py import Udb, UdbBtreeIndex
+
+  db = Udb(indexes={
+      'abc': UdbBtreeIndex({'a': 'a', 'b': 'b', 'c': 'c'})
+  })
+
+  db.insert({'a': 'A', 'b': 'B'})
+
+  results = list(db.select({'a': 'A', 'c': 'c'}))  # no results since query covering key consists of "a", "c" is searched by "seq" scan but nothing was defined in record as "c", only in index
+
+  results = list(db.select({'a': 'A', 'b': 'B', 'c': 'c'}))  # now record returned due to index key is fully covered
+
+To define the default record value use `Data schema <#data-schema>`_.
+
+.. code:: python
+
+  from udb_py import Udb, UdbBtreeIndex
+
+  db = Udb(indexes={
+      'abc': UdbBtreeIndex({'a': 'a', 'b': 'b', 'c': 'c'})
+  }, schema={'c': 'c'})
+
+  db.insert({'a': 'A', 'b': 'B'})
+
+  results = list(db.select({'a': 'A', 'c': 'c'}))  # record returned although index key is not fully covered
+
+  results = list(db.select({'a': 'A', 'b': 'B', 'c': 'c'}))  # record returned due to index key is fully covered
+
+Example of functional index over the size of list:
+
+.. code:: python
+
+  from udb_py import Udb, UdbBtreeIndex
+
+  db = Udb(indexes={
+      'abc': UdbBtreeIndex({
+        '$size': lambda key, values: len(values['arr']) if isinstance(values['arr'], list) else 0,
+      }),
+  })
+
+  db.insert({'arr': [1]})
+  db.insert({'arr': [1, 2]})
+  db.insert({'arr': [1]})
+
+  print(list(db.select({'$size': 2})))
+
+Use **EMPTY** value to exclude zero-length records from the index:
+
+.. code:: python
+
+  from udb_py import Udb, UdbBtreeIndex, EMPTY
+
+  db = Udb(indexes={
+      'abc': UdbBtreeIndex({
+        '$size': lambda key, values: len(values['arr'] if isinstance(values['arr'], list) else 0 or EMPTY),
+      }),
+  })
+
+  db.insert({'arr': [1]})
+  db.insert({'arr': [1, 2]})
+  db.insert({'arr': [1]})
+
+  print(list(db.select({'$size': 2})))
 
 Float precision
 ~~~~~~~~~~~~~~~
@@ -336,6 +409,12 @@ Supported query operations:
 
     udb.select({'a': {'$intersection': {'minX': 5, 'minY': 5, 'maxX': 1, 'maxY': 5}}})
 
+* **$like** - like value (sql compatible)
+
+  .. code:: python
+
+    udb.select({'a': {'$like': 'a%b_c'}})
+
 * **$lt** - less then value
 
   .. code:: python
@@ -354,7 +433,7 @@ Supported query operations:
 
     udb.select({'a': {'$ne': 5}})
 
-  * performs "seq" scan.
+  * BTree index - performs "range" scan of [-∞, value)∪(value, +∞]
 
 * **$near** - near to point with optional min and max distances
 
@@ -372,7 +451,15 @@ Supported query operations:
 
     udb.select({'a': {'$nin': [1, 2, 3]}})
 
-  * performs "seq" scan.
+  * BTree index - performs "range" scan of [-∞, value_1)∪(value_1, value_2)∪...∪(value_n, +∞]
+
+* **$text** - contains text words
+
+  .. code:: python
+
+    udb.select({'a': {'$text': 5}})
+
+  * needs Full-Text index
 
 * **primitive value** - equal to a value
 
@@ -401,7 +488,7 @@ To check its validity use **validate_query** method.
 Comparison order
 ~~~~~~~~~~~~~~~~
 
-Due to the fact that the Udb database is not strictly typed for stored values, there is the following order of ascending comparisons for values ​​of different types:
+Udb database is not strictly typed for stored values, therefore it uses the following order of ascending comparisons for values of different types:
 
 * None
 
@@ -412,7 +499,7 @@ Due to the fact that the Udb database is not strictly typed for stored values, t
 * string
 
 So, for example, the record containing *int* value always greater than the record containing *boolean* value for the same field.
-Also, it means, that the records having indexed field will be fetched in the provided order.
+The records having indexed field will be fetched in the order above.
 
 Getting plan
 ~~~~~~~~~~~~
@@ -434,21 +521,25 @@ Scan operations
 
 BTree index:
 
-* **const** - an index covers only one record by the index key
+* **const** - index has only one index key that refers exactly to the one record in case of single valued index or to the set of records covered by the same index key in case of multi-record index (are fetched in order of insertion)
 
-* **in** - an index covers multiple records by the list of the index keys, each of which covers exactly one record
+* **in** - index has multiple index keys, each one refers exactly to the one record in case of single valued index or to the set of records covered by the same index key in case of multi-record index (are fetched in order of insertion)
 
-* **range** - an index covers multiple records by the index keys set by the minimum and maximum values
+* **range** - index covers multiple records by the index keys set having minimum and maximum values
 
-* **prefix** - an index covers range of records by the partial index key
+* **prefix** - index covers range of records by the partial index key
 
-* **prefix_in** - an index covers multiple records by the list of the partial index keys, each of which covers range of records
+* **prefix_in** - index covers multiple records by the list of the partial index keys, each one covers range of records
 
 RTree index:
 
-* **intersection** - an index covers records intersected by the rectangle
+* **intersection** - index covers records intersected by the rectangle
 
-* **near** - an index covers records near to the point
+* **near** - index covers records near to the point
+
+Full-text index:
+
+* **text** - index covers records containing words
 
 No index:
 
@@ -460,6 +551,7 @@ Storages
 The storage allows keeping data persistent.
 
 **UdbJsonFileStorage** stores data in the JSON file.
+The file may be partially stored (broken) if no graceful app shutdown applied.
 
 .. code:: python
 
@@ -474,6 +566,7 @@ The storage allows keeping data persistent.
   db.save_db()
 
 **UdbWalStorage** stores data of delete, insert and update operations in the WAL (Write-Ahead-Logging) file chronologically.
+May partially store broken last insert/update/delete op if no graceful app shutdown applied. Use **allow_corrupted_wal=True** param to ignore such ops.
 
 .. code:: python
 
@@ -490,12 +583,16 @@ The storage allows keeping data persistent.
 Select operation
 ----------------
 
-Selected records are **mutable**, so avoid to update them directly.
-Otherwise use copy on select mode:
+Selected and inserted records are **mutable**, so avoid to update them directly.
+Otherwise use "copy on select" or "copy on insert" mode (shallow copy):
 
 .. code:: python
 
   udb.set_copy_on_select()
+
+.. code:: python
+
+  udb.set_copy_on_insert()
 
 To limit the result subset to particular number of records use **limit** parameter:
 
@@ -530,12 +627,121 @@ Update operation
 
   udb.update({'a': 2}, q={'a': 1}, offset=5)
 
-Running tests with pytest
--------------------------
+Aggregation
+-----------
 
-.. code:: bash
+Aggregation mechanics allows to build aggregation pipeline over any iterable, particular over the cursor.
+Aggregation accepts an iterable with the stages to be applied over it.
 
-  pytest . --ignore=virtualenv -v
+.. code:: python
+
+  from udb_py import Udb, aggregate
+
+  db = Udb()
+
+  db.insert({'a': [1, 2, 3]})
+  db.insert({'a': 2})
+  db.insert({'a': 3})
+
+  related_db = Udb()
+
+  related_db.insert({'x': 1})
+  related_db.insert({'x': 2})
+  related_db.insert({'x': 3})
+
+  results = list(aggregate(
+    db.select(),
+    ('$unwind', 'a'),  # stage 1
+    ('$o2o', ('a', 'x', related_db, 'rel1')),  # stage 2
+  ))
+
+  [{
+    'a': 1, '__rev__': 0, 'rel1': {'x': 1, '__rev__': 0}
+  }, {
+    'a': 2, '__rev__': 0, 'rel1': {'x': 2, '__rev__': 1}
+  }, {
+    'a': 3, '__rev__': 0, 'rel1': {'x': 3, '__rev__': 2}
+  }, {
+    'a': 2, '__rev__': 1, 'rel1': {'x': 2, '__rev__': 1}
+  }, {
+    'a': 3, '__rev__': 2, 'rel1': {'x': 3, '__rev__': 2}
+  }]
+
+Stages:
+
+* **$facet** - run multiple pipelines over previous result - `('$facet', {'result_key_1': [<pipeline 1>, <pipeline 2>, ...], 'result_key_2': [<pipeline 1>, <pipeline 2>, ...], ...})`
+
+* **$group** - group by keys with group operations - `('$group', ('key1', 'key2', ..., { '$operation': (arg1, arg2, ... ), ... })`
+
+  Operations:
+
+  * **$count** - counts records - `{ '$count': 'save_to_key' }`
+
+  * **$last** - gets last record value by key - `{ '$last': 'key' }`
+
+  * **$max** - gets max value by key - `{ '$max': ('key', 'save_to_key') }`
+
+  * **$min** - gets min value by key - `{ '$min': ('key', 'save_to_key') }`
+
+  * **$mul** - multiplies values by key - `{ '$mul': ('key', 'save_to_key') }`
+
+  * **$push** - pushes value by key into list - `{ '$push': ('key', 'save_to_key') }`, skips records with missing key
+
+  * **$sum** - sums values by key - `{ '$sum': ('key', 'save_to_key') }`
+
+* **$limit** - `('$limit', limit)`
+
+* **$match** - matches to query - `('$match', { ... })`
+
+* **$o2o** - one to one relation - `('$o2o', ('field_from', 'field_to', related_db, 'save_to_key'))`, result is None or record
+
+* **$o2m** - one to many relation - `('$o2m', ('field_from', 'field_to', related_db, 'save_to_key'))`, result is list of records
+
+* **$offset** - `('$offset', offset)`
+
+* **$project** - renames keys - `('$project', { 'key1_from': 'key1_to', 'key2_from': 'key2_to', ... })`, None as "key_to" unsets the key
+
+* **$rebase** - rebases dict by key onto record values - `('$rebase', 'key', skip_existing)`
+
+* **$unwind** - unwinds list by key into single records - `('$unwind', 'key')`, each list entry will be merged with the copy of record
+
+Instant view
+------------
+
+Instant view allows to get an instant slice of record by condition.
+
+.. code:: python
+
+  from udb_py import Udb, UdbView
+
+  db = Udb({
+      'a': UdbBtreeIndex(['a']),
+      'b': UdbBtreeIndex(['b']),
+      'cde': UdbBtreeIndex(['c', 'd', 'e']),
+  })
+
+  db.insert({'a': 1, 'b': 1, 'c': 3, 'd': 4, 'e': 5})
+  db.insert({'a': 2, 'b': 2, 'c': 3, 'd': 4, 'e': 5})
+  db.insert({'a': 3, 'b': 3, 'c': 3, 'd': 4, 'e': 5})
+  db.insert({'a': 4, 'b': 4, 'c': 3, 'd': 4, 'e': 6})
+  db.insert({'a': 5, 'b': 5, 'c': 3, 'd': 4, 'e': 7})
+
+  view = UdbView(db, {'b': {'$gte': 3}})
+
+  db.insert({'a': 6, 'b': 6, 'c': 3, 'd': 4, 'e': 8})  # updates view immediately
+
+  view.select({'a': 6})  # {'a': 5, 'b': 5, 'c': 3, 'd': 4, 'e': 7}
+
+By default view has the same indexes as the provided Udb instance.
+Use **indexes** parameter to drop all indexes or to set your own.
+
+.. code:: python
+
+  view = UdbView(db, {'b': {'$gte': 3}}, indexes=None)  # view has no indexes
+
+.. code:: python
+
+  view = UdbView(db, {'b': {'$gte': 3}}, indexes={'a': UdbBtreeIndex(['a'])})  # view has custom indexes
 
 Limitations
 -----------
@@ -594,3 +800,10 @@ Benchmarks
   SELECT (RTREE, 1ST INDEX COVERS 1 FIELD, LIMIT = 5)
 
   Total time: 11.716284990310669 sec., per sample: 0.00011716284990310669 sec., samples per second: 8535.128676256994, total samples: 100000
+
+Running tests with pytest
+-------------------------
+
+.. code:: bash
+
+  pytest . --ignore=virtualenv -v
