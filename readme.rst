@@ -4,7 +4,7 @@ Udb.py
 .. image:: https://travis-ci.org/akaterra/udb.py.svg?branch=master
   :target: https://travis-ci.org/akaterra/udb.py
 
-Udb is an in-memory weak schema database based on the `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_, the `Rtree <https://rtree.readthedocs.io/en/latest>`_, the `Whoosh <https://github.com/mchaput/w>`_ and on the native python's dict.
+Udb is an in-memory weak schema database based on the `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`__, the `Rtree <https://rtree.readthedocs.io/en/latest>`__, the `Whoosh <https://github.com/mchaput/whoosh>`__ and on the native python's dict.
 Udb provides indexes support and limited MongoDB-like queries.
 
 Table of contents
@@ -68,13 +68,13 @@ Installation
 
   pip install udb_py
 
-To enable BTree indexes support install `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`_ package (installing of "persistent" package may be needed):
+To enable BTree indexes support install `Zope Foundation BTrees <https://github.com/zopefoundation/BTrees>`__ package (installing of "persistent" package may be needed):
 
 .. code:: bash
 
   pip install BTrees
 
-To enable RTree indexes support install `Rtree <http://toblerity.org/rtree>`_ package (requires `libspatialindex <https://libspatialindex.org>`_, install it before):
+To enable RTree indexes support install `Rtree <http://toblerity.org/rtree>`__ package (requires `libspatialindex <https://libspatialindex.org>`_, install it before):
 
 .. code:: bash
 
@@ -86,7 +86,7 @@ Installing **libspatialindex** on MacOS with Homebrew:
 
   brew install spatialindex
 
-To enable Full-Text indexes support install `Whoosh <https://github.com/mchaput/whoosh>`_ package:
+To enable Full-Text indexes support install `Whoosh <https://github.com/mchaput/whoosh>`__ package:
 
 .. code:: bash
 
