@@ -301,7 +301,7 @@ That means in case of the query is not fully covered by index, the part of the q
 
   results = list(db.select({'a': 'A', 'c': 'c'}))  # no results since query covering key consists of "a", "c" is searched by "seq" scan but nothing was defined in record as "c", only in index
 
-  results = list(db.select({'a': 'A', 'b': 'B', 'c': 'c'}))  # now record returned due to index key is fully covered,
+  results = list(db.select({'a': 'A', 'b': 'B', 'c': 'c'}))  # now record returned due to index key is fully covered
 
 To define the default record value use `Data schema <#data-schema>`_.
 
