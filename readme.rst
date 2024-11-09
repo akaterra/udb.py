@@ -345,13 +345,13 @@ Use **EMPTY** value to exclude zero-length records from the index:
 
   db = Udb(indexes={
       'abc': UdbBtreeIndex({
-        '$size': lambda key, values: len(values['arr'] if isinstance(values['arr'], list) else 0 or EMPTY),
+        '$size': lambda key, values: len(values['arr']) if isinstance(values['arr'], list) and len(values['arr']) else EMPTY,
       }),
   })
 
-  db.insert({'arr': [1]})
+  db.insert({'arr': []})
   db.insert({'arr': [1, 2]})
-  db.insert({'arr': [1]})
+  db.insert({'arr': []})
 
   print(list(db.select({'$size': 2})))
 
