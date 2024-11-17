@@ -4,6 +4,7 @@ from .udb_base_text_index import UdbBaseTextIndex
 from .udb_btree_base_index import UdbBtreeBaseIndex, UdbBtreeEmbeddedBaseIndex
 from .udb_btree_index import UdbBtreeIndex, UdbBtreeEmbeddedIndex
 from .udb_btree_uniq_index import UdbBtreeUniqBaseIndex
+from .udb_cluster_index import UdbClusterIndex
 from .udb_hash_base_index import UdbHashBaseIndex, UdbHashEmbeddedBaseIndex
 from .udb_hash_index import UdbHashIndex, UdbHashEmbeddedIndex
 from .udb_hash_uniq_index import UdbHashUniqBaseIndex

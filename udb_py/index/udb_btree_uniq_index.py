@@ -20,7 +20,7 @@ class UdbBtreeUniqBaseIndex(UdbBtreeBaseIndex):
 
         return True
 
-    def upsert(self, old, new, uid):
+    def upsert(self, old, new, uid, q=None):
         if old != new:
             if new in self._btree:
                 raise ConstraintError('duplicate value: {} on {}'.format(new, self.name))
@@ -31,7 +31,7 @@ class UdbBtreeUniqBaseIndex(UdbBtreeBaseIndex):
 
         return self
 
-    def upsert_is_allowed(self, old, new):
+    def upsert_is_allowed(self, old, new, q=None):
         if old != new and new in self._btree:
             raise ConstraintError('duplicate value: {} on {}'.format(new, self.name))
 

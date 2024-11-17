@@ -51,7 +51,7 @@ class UdbTextIndex(UdbBaseTextIndex):
     def clear(self):
         return self._whoosh_index.doc_count
 
-    def delete(self, key_dict, uid=None):
+    def delete(self, key_dict, uid=None, q=None):
         if key_dict:
             if self._whoosh_writer_opened_by != WRITER_OPENED_BY_DELETE:
                 if self._whoosh_writer:
@@ -87,7 +87,7 @@ class UdbTextIndex(UdbBaseTextIndex):
             for rec in searcher.search(self._whoosh_parser.parse(' '.join(q.values())), limit=1):
                 yield int(rec['udb__uid__'])
 
-    def upsert(self, old_dict, new_dict, uid):
+    def upsert(self, old_dict, new_dict, uid, q=None):
         if new_dict:
             if self._whoosh_writer_opened_by != WRITER_OPENED_BY_UPSERT:
                 if self._whoosh_writer:

@@ -1,0 +1,112 @@
+from typing import Callable, List, Type, Union
+from .udb_btree_index import UdbBtreeIndex
+from ..common import EMPTY
+from ..udb_index import UdbIndex
+
+
+class UdbClusterIndex(UdbIndex):
+    type = 'cluster'
+
+    def __init__(
+            self,
+            schema: Union[dict, List[str]],
+            index: UdbBtreeIndex = None,
+            inner_index_cls: Type[UdbBtreeIndex] = None,
+            inner_schema: Union[dict, List[str]] = None,
+            inner_mapper: Callable[[dict, dict], UdbIndex] = None,  # lambda key -> index instance
+            name: str = None,
+    ):
+        UdbIndex.__init__(self, name)
+
+        if inner_mapper is not None and inner_index_cls is not None:
+            raise '"inner_mapper" is not allowed to be used together with "inner_index_cls"'
+
+        if inner_mapper is not None and inner_schema is not None:
+            raise '"inner_mapper" is not allowed to be used together with "inner_schema"'
+
+        self._clusters = {}
+        self._clusters_key_to_uid = {}
+        self._cluster_uid = 0
+        self._inner_index_cls = inner_index_cls
+        self._inner_schema = inner_schema
+        self._inner_mapper = inner_mapper
+        self._index = index if index else UdbBtreeIndex(schema)
+
+    def get_cover_key(self, record, second=None):
+        return self._index.get_cover_key(record, second)
+
+    def get_cover_key_or_raise(self, record, second=None):
+        return self._index.get_cover_key_or_raise(record, second)
+
+    def get_meta(self):
+        return None
+
+    def get_scan_op(self, q, limit=None, offset=None, collection=None):
+        (
+            c_s_op_type,
+            c_op_key_sequence_length,
+            c_op_key_sequence_length_to_remove,
+            c_op_priority,
+            c_op_fn,
+            c_op_fn_q_arranger,
+        ) = self._index.get_scan_op(q, None, None, collection)
+
+    def __len__(self):
+        return len(self._index)
+
+    def clear(self):
+        self._clusters.clear()
+        self._cluster_uid = 0
+        self._index.clear()
+
+        return self
+
+    def delete(self, key_or_keys, uid=None, q=None):
+        return self
+
+    def insert(self, key_or_keys, uid):
+        return self
+
+    def insert_by_schema(self, values, uid):
+        if self._index.schema_default_values:
+            second = {}
+
+            for key, val in self._index.schema_default_values.items():
+                if key not in values:
+                    if callable(val):
+                        second[key] = val(key, values)
+                    else:
+                        second[key] = val
+        else:
+            second = None
+
+        cluster_key = self._index.get_cover_key(values, second)
+        cluster_uid = self._clusters_key_to_uid.get(cluster_key, None)
+        cluster = self._clusters.get(cluster_uid, None) if cluster_uid is not None else None
+
+        if cluster is None:
+            if self._inner_mapper:
+                cluster = self._clusters[cluster_key] = self._inner_mapper(values, second)
+            elif self._inner_index_cls:
+                cluster = self._clusters[cluster_key] = self._inner_index_cls(schema=self._inner_schema)
+            else:
+                cluster = self._clusters[cluster_key] = set()
+
+            self._index.insert(cluster_key, self._cluster_uid)
+            self._clusters_key_to_uid[cluster_key] = self._cluster_uid
+            self._cluster_uid += 1
+
+        if type(cluster) == set:
+            cluster.add(uid)
+        else:
+            cluster.insert_by_schema(values, uid)
+
+        return True
+
+    def upsert(self, old, new, uid, q=None):
+        if old != new:
+            self._hash.pop(old, None)
+
+        self._hash[new] = uid
+
+        return self

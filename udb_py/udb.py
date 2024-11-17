@@ -181,7 +181,7 @@ class Udb(UdbCore):
                         on_delete(key)
 
                 for index in self._indexes.values():
-                    index.delete(index.get_cover_key(record), key)
+                    index.delete(index.get_cover_key(record), key, q)
 
                 self._collection.pop(key)
 
@@ -236,7 +236,7 @@ class Udb(UdbCore):
                     on_update(key, before, values)
 
             for index in self._indexes.values():
-                index.upsert(index.get_cover_key(before), index.get_cover_key(before, values), key)
+                index.upsert(index.get_cover_key(before), index.get_cover_key(before, values), key, q)
 
             self._collection[key].update(values)
             update_count += 1

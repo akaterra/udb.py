@@ -623,13 +623,14 @@ class UdbBaseLinearEmbeddedIndex(UdbBaseLinearIndex):
     is_embedded = True
 
     @classmethod
-    def seq(cls, seq, q, collection):
+    def seq(cls, seq, q, collection, schema=None):
         """
         Sequential scan
 
         :param seq: Sequence of record ids (rid)
         :param q: Query
         :param collection: Collection of records Dict[Str (rid), Dict[Str, Any]]
+        :param schema:
 
         :return:
         """

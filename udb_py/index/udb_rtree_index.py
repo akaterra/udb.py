@@ -22,7 +22,7 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
 
         return self
 
-    def delete(self, key, uid=None):
+    def delete(self, key, uid=None, q=None):
         self._rtree.delete(uid, (key[0], key[1], key[0], key[1]))
 
         return self
@@ -75,7 +75,7 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
             for val in self._rtree.nearest((p_x, p_y), limit):
                 yield val
 
-    def upsert(self, old, new, uid):
+    def upsert(self, old, new, uid, q=None):
         if old != new:
             self._rtree.delete(uid, (old[0], old[1], old[0], old[1]))
 

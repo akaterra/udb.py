@@ -21,7 +21,7 @@ class UdbIndex(object):
     schema = {}
     schema_default_values = None
     schema_keys = []
-    schema_last_index = - 1
+    schema_last_index = -1
     type = None
     type_format_mappers = TYPE_FORMAT_MAPPERS
 
@@ -57,6 +57,9 @@ class UdbIndex(object):
     def get_meta(self):
         raise NotImplementedError
 
+    def get_scan_op(self, q, limit=None, offset=None, collection=None):
+        raise NotImplementedError
+
     def set_float_precision(self, precision=18):
         self.type_format_mappers = configure_float_precision(precision)
 
@@ -75,7 +78,7 @@ class UdbIndex(object):
     def clear(self):
         raise NotImplementedError
 
-    def delete(self, key, uid):
+    def delete(self, key, uid, q=None):
         raise NotImplementedError
 
     def insert(self, key, uid):
@@ -101,8 +104,8 @@ class UdbIndex(object):
     def insert_is_allowed(self, key):
         return True
 
-    def upsert(self, old, new, uid):
+    def upsert(self, old, new, uid, q=None):
         raise NotImplementedError
 
-    def upsert_is_allowed(self, old, new):
+    def upsert_is_allowed(self, old, new, q=None):
         return True

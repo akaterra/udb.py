@@ -344,7 +344,7 @@ class UdbBaseGEOIndex(UdbIndex):
     def clear(self):
         raise NotImplementedError
 
-    def delete(self, key, uid=None):
+    def delete(self, key, uid=None, q=None):
         raise NotImplementedError
 
     def insert(self, key, uid):
@@ -356,5 +356,5 @@ class UdbBaseGEOIndex(UdbIndex):
     def search_by_near(self, p_x, p_y, min_distance=None, max_distance=None, limit=None, collection=None):
         raise NotImplementedError
 
-    def upsert(self, old, new, uid):
+    def upsert(self, old, new, uid, q=None):
         raise NotImplementedError

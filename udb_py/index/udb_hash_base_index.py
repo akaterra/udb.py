@@ -18,7 +18,7 @@ class UdbHashBaseIndex(UdbBaseLinearIndex):
 
         return self
 
-    def delete(self, key_or_keys, uid=None):
+    def delete(self, key_or_keys, uid=None, q=None):
         self._hash.pop(key_or_keys)
 
         return self
@@ -41,7 +41,7 @@ class UdbHashBaseIndex(UdbBaseLinearIndex):
             if val != EMPTY:
                 yield val
 
-    def upsert(self, old, new, uid):
+    def upsert(self, old, new, uid, q=None):
         if old != new:
             self._hash.pop(old, None)
 
@@ -53,7 +53,7 @@ class UdbHashBaseIndex(UdbBaseLinearIndex):
 class UdbHashEmbeddedBaseIndex(UdbHashBaseIndex, UdbBaseLinearEmbeddedIndex):
     type = 'hash_base_embedded'
 
-    def delete(self, key_or_keys, uid=None):
+    def delete(self, key_or_keys, uid=None, q=None):
         for key in key_or_keys:
             self._hash.pop(key)
 
@@ -65,7 +65,7 @@ class UdbHashEmbeddedBaseIndex(UdbHashBaseIndex, UdbBaseLinearEmbeddedIndex):
 
         return self
 
-    def upsert(self, old, new, uid):
+    def upsert(self, old, new, uid, q=None):
         self.delete(old)
         self.insert(new, uid)
 

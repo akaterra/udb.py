@@ -459,7 +459,7 @@ Supported query operations:
 
     udb.select({'a': {'$text': 5}})
 
-  * needs Full-Text index
+  * requires Full-Text index
 
 * **primitive value** - equal to a value
 

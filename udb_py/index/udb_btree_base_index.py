@@ -23,7 +23,7 @@ class UdbBtreeBaseIndex(UdbBaseLinearIndex):
 
         return self
 
-    def delete(self, key_or_keys, uid=None):
+    def delete(self, key_or_keys, uid=None, q=None):
         self._btree.pop(key_or_keys, EMPTY)
 
         return self
@@ -91,7 +91,7 @@ class UdbBtreeBaseIndex(UdbBaseLinearIndex):
         for val in self._btree.values(gte, lte, gte_excluded, lte_excluded):
             yield val
 
-    def upsert(self, old, new, uid):
+    def upsert(self, old, new, uid, q=None):
         if old != new:
             self._btree.pop(old)
 
@@ -103,7 +103,7 @@ class UdbBtreeBaseIndex(UdbBaseLinearIndex):
 class UdbBtreeEmbeddedBaseIndex(UdbBtreeBaseIndex, UdbBaseLinearEmbeddedIndex):
     type = 'btree_base_embedded'
 
-    def delete(self, key_or_keys, uid=None):
+    def delete(self, key_or_keys, uid=None, q=None):
         for key in key_or_keys:
             self._btree.pop(key, EMPTY)
 
@@ -115,7 +115,7 @@ class UdbBtreeEmbeddedBaseIndex(UdbBtreeBaseIndex, UdbBaseLinearEmbeddedIndex):
 
         return self
 
-    def upsert(self, old, new, uid):
+    def upsert(self, old, new, uid, q=None):
         self.delete(old)
         self.insert(new, uid)
 
