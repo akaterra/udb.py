@@ -57,7 +57,7 @@ class UdbIndex(object):
     def get_meta(self):
         raise NotImplementedError
 
-    def get_scan_op(self, q, limit=None, offset=None, collection=None):
+    def get_scan_op(self, q, limit=None, offset=None, collection=None, indexes_with_custom_ops=None):
         raise NotImplementedError
 
     def set_float_precision(self, precision=18):

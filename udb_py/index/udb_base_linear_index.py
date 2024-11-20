@@ -334,7 +334,7 @@ class UdbBaseLinearIndex(UdbIndex):
             'sparse': self.is_sparse,
         }
 
-    def get_scan_op(self, q, limit=None, offset=None, collection=None):
+    def get_scan_op(self, q, limit=None, offset=None, collection=None, indexes_with_custom_ops=None):
         """
         Gets scan op for the coverage key.
 

@@ -132,6 +132,7 @@ class UdbCore(object):
                     limit,
                     offset,
                     self._collection,
+                    self._indexes_with_custom_ops
                 )
 
                 if s_op_key_sequence_length < c_op_key_sequence_length \

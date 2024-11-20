@@ -4,13 +4,15 @@ from ..common import EMPTY
 from ..udb_index import UdbIndex
 
 
+SCAN_OP_CLUSTER = 'cluster'
+
+
 class UdbClusterIndex(UdbIndex):
     type = 'cluster'
 
     def __init__(
             self,
-            schema: Union[dict, List[str]],
-            index: UdbBtreeIndex = None,
+            index_or_btree_index_schema: Union[UdbBtreeIndex, dict] = None,
             inner_index_cls: Type[UdbBtreeIndex] = None,
             inner_schema: Union[dict, List[str]] = None,
             inner_mapper: Callable[[dict, dict], UdbIndex] = None,  # lambda key -> index instance
@@ -24,13 +26,18 @@ class UdbClusterIndex(UdbIndex):
         if inner_mapper is not None and inner_schema is not None:
             raise '"inner_mapper" is not allowed to be used together with "inner_schema"'
 
+        if inner_index_cls and not inner_schema:
+            raise '"inner_mapper" requires "inner_schema"'
+
         self._clusters = {}
         self._clusters_key_to_uid = {}
         self._cluster_uid = 0
         self._inner_index_cls = inner_index_cls
         self._inner_schema = inner_schema
         self._inner_mapper = inner_mapper
-        self._index = index if index else UdbBtreeIndex(schema)
+        self._index = UdbBtreeIndex(index_or_btree_index_schema)\
+            if type(index_or_btree_index_schema) == dict\
+            else index_or_btree_index_schema
 
     def get_cover_key(self, record, second=None):
         return self._index.get_cover_key(record, second)
@@ -41,15 +48,69 @@ class UdbClusterIndex(UdbIndex):
     def get_meta(self):
         return None
 
-    def get_scan_op(self, q, limit=None, offset=None, collection=None):
+    def get_scan_op(self, q, limit=None, offset=None, collection=None, indexes_with_custom_ops=None):
         (
-            c_s_op_type,
-            c_op_key_sequence_length,
-            c_op_key_sequence_length_to_remove,
-            c_op_priority,
-            c_op_fn,
-            c_op_fn_q_arranger,
-        ) = self._index.get_scan_op(q, None, None, collection)
+            i_s_op_type,
+            i_op_key_sequence_length,
+            i_op_key_sequence_length_to_remove,
+            i_op_priority,
+            i_op_fn,
+            i_op_fn_q_arranger,
+        ) = self._index.get_scan_op(q, None, None, collection, indexes_with_custom_ops)
+        q_copy = dict(q)
+
+        def fn(k):
+            for cluster_id in i_op_fn(k):
+                cluster = self._clusters[cluster_id]
+
+                if type(cluster) == set:
+                    pass
+                else:
+                    (
+                        c_s_op_type,
+                        c_op_key_sequence_length,
+                        c_op_key_sequence_length_to_remove,
+                        c_op_priority,
+                        c_op_fn,
+                        c_op_fn_q_arranger,
+                    ) = cluster.get_scan_op(q_copy, None, None, collection, indexes_with_custom_ops)
+
+                    if c_op_key_sequence_length_to_remove:
+                        key = ''
+                        type_format_mappers = cluster.type_format_mappers
+
+                        for i in range(0, c_op_key_sequence_length_to_remove):
+                            if i == c_op_key_sequence_length_to_remove - 1 and c_op_fn_q_arranger:
+                                pass
+                            else:
+                                c_key_val = q_copy.pop(cluster.schema_keys[i])
+                                key = key + type_format_mappers[type(c_key_val)](c_key_val)
+
+                        if c_op_fn_q_arranger:
+                            c_op_fn_q_arranger(q_copy[cluster.schema_keys[c_op_key_sequence_length - 1]])
+
+                            if not q_copy[cluster.schema_keys[c_op_key_sequence_length - 1]]:
+                                q_copy.pop(cluster.schema_keys[c_op_key_sequence_length - 1])
+
+                        seq = c_op_fn(key)
+                    else:
+                        seq = collection.values()
+
+                if q_copy and indexes_with_custom_ops:
+                    for index in indexes_with_custom_ops:
+                        seq = index.seq(seq, q_copy, collection)
+
+                for rid in seq:
+                    yield rid
+
+        return (
+            SCAN_OP_CLUSTER,
+            i_op_key_sequence_length,  # cover key length
+            i_op_key_sequence_length_to_remove,
+            i_op_priority,  # priority
+            fn,
+            i_op_fn_q_arranger,
+        )
 
     def __len__(self):
         return len(self._index)
@@ -81,16 +142,20 @@ class UdbClusterIndex(UdbIndex):
             second = None
 
         cluster_key = self._index.get_cover_key(values, second)
+
+        if not cluster_key:
+            return False
+
         cluster_uid = self._clusters_key_to_uid.get(cluster_key, None)
         cluster = self._clusters.get(cluster_uid, None) if cluster_uid is not None else None
 
         if cluster is None:
             if self._inner_mapper:
-                cluster = self._clusters[cluster_key] = self._inner_mapper(values, second)
+                cluster = self._clusters[self._cluster_uid] = self._inner_mapper(values, second)
             elif self._inner_index_cls:
-                cluster = self._clusters[cluster_key] = self._inner_index_cls(schema=self._inner_schema)
+                cluster = self._clusters[self._cluster_uid] = self._inner_index_cls(schema=self._inner_schema)
             else:
-                cluster = self._clusters[cluster_key] = set()
+                cluster = self._clusters[self._cluster_uid] = set()
 
             self._index.insert(cluster_key, self._cluster_uid)
             self._clusters_key_to_uid[cluster_key] = self._cluster_uid
@@ -104,9 +169,4 @@ class UdbClusterIndex(UdbIndex):
         return True
 
     def upsert(self, old, new, uid, q=None):
-        if old != new:
-            self._hash.pop(old, None)
-
-        self._hash[new] = uid
-
         return self

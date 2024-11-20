@@ -278,7 +278,7 @@ class UdbBaseGEOIndex(UdbIndex):
     def get_meta(self):
         return {'key': self._key, 'default_value': self._key_default_value, 'name': self.name}
 
-    def get_scan_op(self, q, limit=None, offset=None, collection=None):
+    def get_scan_op(self, q, limit=None, offset=None, collection=None, indexes_with_custom_ops=None):
         """
         Gets scan op for the coverage key.
 
