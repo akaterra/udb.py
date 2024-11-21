@@ -77,6 +77,9 @@ class UdbIndex(object):
 
     def clear(self):
         raise NotImplementedError
+    
+    def rids(self):
+        raise NotImplementedError
 
     def delete(self, key, uid, q=None):
         raise NotImplementedError
@@ -97,7 +100,7 @@ class UdbIndex(object):
         else:
             second = None
 
-        self.insert(self.get_cover_key(values, second), uid)
+        self.insert(self.get_cover_key(values, second)[0], uid)
 
         return True
 

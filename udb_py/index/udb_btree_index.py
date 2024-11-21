@@ -24,6 +24,11 @@ class UdbBtreeIndex(UdbBaseLinearIndex):
 
         return self
 
+    def rids(self):
+        for rids in self._btree.values():
+            for rid in rids:
+                yield rid
+
     def delete(self, key_or_keys, uid, q=None):
         old_existing = self._btree.get(key_or_keys, EMPTY)
 

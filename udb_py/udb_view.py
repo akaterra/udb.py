@@ -52,7 +52,7 @@ class UdbView(UdbCore):
 
         if record:
             for index in self._indexes.values():
-                index.delete(index.get_cover_key(record), rid)
+                index.delete(index.get_cover_key(record)[0], rid)
 
             del self._collection[rid]
 
@@ -63,7 +63,7 @@ class UdbView(UdbCore):
 
         if self._indexes_to_check_for_ins_upd_allowance:
             for index in self._indexes_with_custom_ops:
-                index.insert_is_allowed(index.get_cover_key(values))
+                index.insert_is_allowed(index.get_cover_key(values)[0])
 
         for index in self._indexes.values():
             index.insert_by_schema(values, rid)
@@ -77,9 +77,9 @@ class UdbView(UdbCore):
 
         if self._indexes_to_check_for_ins_upd_allowance:
             for index in self._indexes_with_custom_ops:
-                index.upsert_is_allowed(index.get_cover_key(before), index.get_cover_key(before, values))
+                index.upsert_is_allowed(index.get_cover_key(before)[0], index.get_cover_key(before, values)[0])
 
         for index in self._indexes.values():
-            index.upsert(index.get_cover_key(before), index.get_cover_key(before, values), rid)
+            index.upsert(index.get_cover_key(before)[0], index.get_cover_key(before, values)[0], rid)
 
         self._collection[rid].update(values)

@@ -18,7 +18,7 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
         return 0
 
     def clear(self):
-        # @todo
+        # TODO
 
         return self
 

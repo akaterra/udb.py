@@ -43,6 +43,7 @@ class UdbBaseTextIndex(UdbIndex):
 
     def get_cover_key(self, record, second=None):
         cover_key = {}
+        ind = -1
 
         for ind, key in enumerate(self.schema_keys):
             get = self.schema[key]
@@ -58,14 +59,15 @@ class UdbBaseTextIndex(UdbIndex):
                 val = record.get(key, get)
 
             if val == EMPTY:
-                return None
+                return None, ind + 1
             else:
                 cover_key[key] = val
 
-        return cover_key
+        return cover_key, ind + 1
 
     def get_cover_key_or_raise(self, record, second=None):
         cover_key = {}
+        ind = -1
 
         for ind, key in enumerate(self.schema_keys):
             get = self.schema[key]
@@ -81,11 +83,11 @@ class UdbBaseTextIndex(UdbIndex):
                 val = record.get(key, get)
 
             if val == EMPTY:
-                return None
+                return None, ind + 1
             else:
                 cover_key[key] = val
 
-        return cover_key
+        return cover_key, ind + 1
 
     def get_scan_op(self, q, limit=None, offset=None, collection=None, indexes_with_custom_ops=None):
         """

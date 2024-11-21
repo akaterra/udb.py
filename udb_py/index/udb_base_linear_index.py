@@ -274,6 +274,7 @@ class UdbBaseLinearIndex(UdbIndex):
 
     def get_cover_key(self, record, second=None):
         cover_key = ''
+        ind = -1
 
         for ind, key in enumerate(self.schema_keys):
             get = self.schema[key]
@@ -290,16 +291,17 @@ class UdbBaseLinearIndex(UdbIndex):
 
             if val == EMPTY:
                 if ind == 0:
-                    return None
+                    return None, ind + 1
                 else:
                     cover_key += self.type_format_mappers[InfL](None)
             else:
                 cover_key += self.type_format_mappers[type(val)](val)
 
-        return cover_key
+        return cover_key, ind + 1
 
     def get_cover_key_or_raise(self, record, second=None):
         cover_key = ''
+        ind = -1
 
         for ind, key in enumerate(self.schema_keys):
             get = self.schema[key]
@@ -316,13 +318,13 @@ class UdbBaseLinearIndex(UdbIndex):
 
             if val == EMPTY:
                 if ind == 0:
-                    return None
+                    return None, ind + 1
                 else:
                     raise FieldRequiredError('field required: {} on {}'.format(key, self.name))
             else:
                 cover_key += self.type_format_mappers[type(val)](val)
 
-        return cover_key
+        return cover_key, ind
 
     def get_meta(self):
         return {

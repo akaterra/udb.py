@@ -253,9 +253,9 @@ class UdbBaseGEOIndex(UdbIndex):
             val = record.get(self._key, get)
 
         if val != EMPTY:
-            return val
+            return val, 1
 
-        return None
+        return None, 0
 
     def get_cover_key_or_raise(self, record, second=None):
         get = self._key_default_value
@@ -271,7 +271,7 @@ class UdbBaseGEOIndex(UdbIndex):
             val = record.get(self._key, get)
 
         if val != EMPTY:
-            return val
+            return val, 1
 
         raise FieldRequiredError('field required: {} on {}'.format(self._key, self.name))
 

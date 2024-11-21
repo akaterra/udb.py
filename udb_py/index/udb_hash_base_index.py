@@ -18,6 +18,9 @@ class UdbHashBaseIndex(UdbBaseLinearIndex):
 
         return self
 
+    def rids(self):
+        self._hash.values()
+
     def delete(self, key_or_keys, uid=None, q=None):
         self._hash.pop(key_or_keys)
 

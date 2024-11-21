@@ -23,6 +23,9 @@ class UdbBtreeBaseIndex(UdbBaseLinearIndex):
 
         return self
 
+    def rids(self):
+        self._btree.values()
+
     def delete(self, key_or_keys, uid=None, q=None):
         self._btree.pop(key_or_keys, EMPTY)
 

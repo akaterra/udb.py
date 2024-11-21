@@ -181,7 +181,7 @@ class Udb(UdbCore):
                         on_delete(key)
 
                 for index in self._indexes.values():
-                    index.delete(index.get_cover_key(record), key, q)
+                    index.delete(index.get_cover_key(record)[0], key, q)
 
                 self._collection.pop(key)
 
@@ -198,7 +198,7 @@ class Udb(UdbCore):
 
         if self._indexes_to_check_for_ins_upd_allowance:
             for index in self._indexes_to_check_for_ins_upd_allowance:
-                index.insert_is_allowed(index.get_cover_key(values))
+                index.insert_is_allowed(index.get_cover_key(values)[0])
 
         values['__rev__'] = self._revision
         self._collection[self._revision] = values
@@ -229,14 +229,14 @@ class Udb(UdbCore):
 
             if self._indexes_to_check_for_ins_upd_allowance:
                 for index in self._indexes_to_check_for_ins_upd_allowance:
-                    index.upsert_is_allowed(index.get_cover_key(before), index.get_cover_key(before, values))
+                    index.upsert_is_allowed(index.get_cover_key(before)[0], index.get_cover_key(before, values)[0])
 
             if self._on_update:
                 for on_update in self._on_update:
                     on_update(key, before, values)
 
             for index in self._indexes.values():
-                index.upsert(index.get_cover_key(before), index.get_cover_key(before, values), key, q)
+                index.upsert(index.get_cover_key(before)[0], index.get_cover_key(before, values)[0], key, q)
 
             self._collection[key].update(values)
             update_count += 1
