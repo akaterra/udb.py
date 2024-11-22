@@ -6,6 +6,9 @@ class UdbHashUniqBaseIndex(UdbHashBaseIndex):
     is_uniq = True
     type = 'hash_uniq'
 
+    def clone(self):
+        return UdbHashUniqBaseIndex(self.schema, self.name)
+
     def insert(self, key, uid):
         if key in self._hash:
             raise ConstraintError('duplicate value: {} on {}'.format(key, self.name))

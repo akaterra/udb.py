@@ -24,6 +24,9 @@ class UdbBtreeIndex(UdbBaseLinearIndex):
 
         return self
 
+    def clone(self):
+        return UdbBtreeIndex(self.schema, self.name)
+
     def rids(self):
         for rids in self._btree.values():
             for rid in rids:
@@ -142,6 +145,9 @@ class UdbBtreeIndex(UdbBaseLinearIndex):
 
 class UdbBtreeEmbeddedIndex(UdbBtreeIndex, UdbBaseLinearEmbeddedIndex):
     type = 'btree_embedded'
+
+    def clone(self):
+        return UdbBtreeEmbeddedIndex(self.schema, self.name)
 
     def delete(self, key_or_keys, uid=None, q=None):
         for key in key_or_keys:

@@ -51,6 +51,9 @@ class UdbTextIndex(UdbBaseTextIndex):
     def clear(self):
         return self._whoosh_index.doc_count
 
+    def clone(self):
+        return UdbTextIndex(self.schema, self.name)
+
     def delete(self, key_dict, uid=None, q=None):
         if key_dict:
             if self._whoosh_writer_opened_by != WRITER_OPENED_BY_DELETE:

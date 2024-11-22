@@ -78,6 +78,9 @@ class UdbIndex(object):
 
     def clear(self):
         raise NotImplementedError
+
+    def clone(self):
+        raise NotImplementedError
     
     def rids(self):
         raise NotImplementedError

@@ -341,41 +341,73 @@ class UdbBaseGEOIndex(UdbIndex):
             condition = q.get(key, EMPTY)
 
             if type(condition) == dict:
-                c_intersection = condition.get('$intersection')
+                c_intersection = condition.get('$intersection', EMPTY)
 
-                if c_intersection:
-                    return (
-                        SCAN_OP_INTERSECTION,
-                        1,
-                        1,
-                        3,
-                        lambda _: self.search_by_intersection(
-                            c_intersection['minX'],
-                            c_intersection['minY'],
-                            c_intersection['maxX'],
-                            c_intersection['maxY'],
-                        ),
-                        _q_arr_intersection
-                    )
+                if c_intersection != EMPTY:
+                    if type(c_intersection) == list:
+                        return (
+                            SCAN_OP_INTERSECTION,
+                            1,
+                            1,
+                            3,
+                            lambda _: self.search_by_intersection(
+                                c_intersection[0],
+                                c_intersection[1],
+                                c_intersection[2] if len(c_intersection) > 2 else c_intersection[0],
+                                c_intersection[3] if len(c_intersection) > 3 else c_intersection[1],
+                            ),
+                            _q_arr_intersection
+                        )
+                    else:
+                        return (
+                            SCAN_OP_INTERSECTION,
+                            1,
+                            1,
+                            3,
+                            lambda _: self.search_by_intersection(
+                                c_intersection['minX'],
+                                c_intersection['minY'],
+                                c_intersection.get('maxX', c_intersection['minX']),
+                                c_intersection.get('maxY', c_intersection['minY']),
+                            ),
+                            _q_arr_intersection
+                        )
 
-                c_near = condition.get('$near')
+                c_near = condition.get('$near', EMPTY)
 
-                if c_near:
-                    return (
-                        SCAN_OP_NEAR,
-                        1,
-                        1,
-                        3,
-                        lambda _: self.search_by_near(
-                            c_near['x'],
-                            c_near['y'],
-                            c_near.get('minDistance'),
-                            c_near.get('maxDistance'),
-                            limit,
-                            collection,
-                        ),
-                        _q_arr_near
-                    )
+                if c_near != EMPTY:
+                    if type(c_near) == list:
+                        return (
+                            SCAN_OP_NEAR,
+                            1,
+                            1,
+                            3,
+                            lambda _: self.search_by_near(
+                                c_near[0],
+                                c_near[1],
+                                c_near[2] if len(c_near) > 2 else None,
+                                c_near[2] if len(c_near) > 3 else None,
+                                limit,
+                                collection,
+                            ),
+                            _q_arr_near
+                        )
+                    else:
+                        return (
+                            SCAN_OP_NEAR,
+                            1,
+                            1,
+                            3,
+                            lambda _: self.search_by_near(
+                                c_near['x'],
+                                c_near['y'],
+                                c_near.get('minDistance', None),
+                                c_near.get('maxDistance', None),
+                                limit,
+                                collection,
+                            ),
+                            _q_arr_near
+                        )
 
         return SCAN_OP_SEQ, 0, 0, 0, None, None
 

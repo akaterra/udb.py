@@ -22,6 +22,9 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
 
         return self
 
+    def clone(self):
+        return UdbRtreeIndex(self._key, self._key_default_value, self.name)
+
     def delete(self, key, uid=None, q=None):
         self._rtree.delete(uid, (key[0], key[1], key[0], key[1]))
 

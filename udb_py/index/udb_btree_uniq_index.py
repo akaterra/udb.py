@@ -6,6 +6,9 @@ class UdbBtreeUniqBaseIndex(UdbBtreeBaseIndex):
     is_uniq = True
     type = 'btree_uniq'
 
+    def clone(self):
+        return UdbBtreeUniqBaseIndex(self.schema, self.name)
+
     def insert(self, key, uid):
         if key in self._btree:
             raise ConstraintError('duplicate value: {} on {}'.format(key, self.name))

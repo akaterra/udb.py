@@ -12,42 +12,37 @@ class UdbClusterIndex(UdbIndex):
 
     def __init__(
             self,
-            index_or_btree_index_schema: Union[UdbBtreeIndex, dict] = None,
-            inner_index_cls: Type[UdbBtreeIndex] = None,
-            inner_schema: Union[dict, List[str]] = None,
-            inner_mapper: Callable[[dict, dict], UdbIndex] = None,  # lambda key -> index instance
+            index_or_btree_index_schema: Union[UdbBtreeIndex, dict, List[str]] = None,
+            inner_index_or_btree_index_schema_or_mapper: Union[
+                UdbIndex,
+                dict,
+                List[str],
+                Callable[[dict, dict], UdbIndex]
+            ] = None,
             name: str = None,
     ):
         UdbIndex.__init__(self, name)
 
-        if inner_mapper is not None and inner_index_cls is not None:
-            raise '"inner_mapper" is not allowed to be used together with "inner_index_cls"'
+        self._inner_index_fictive = None
+        self._inner_mapper = None
 
-        if inner_mapper is not None and inner_schema is not None:
-            raise '"inner_mapper" is not allowed to be used together with "inner_schema"'
-
-        if inner_index_cls and not inner_schema:
-            raise '"inner_mapper" requires "inner_schema"'
-
-        if inner_schema and not inner_index_cls:
-            inner_index_cls = UdbBtreeIndex
+        if isinstance(inner_index_or_btree_index_schema_or_mapper, UdbIndex):
+            self._inner_index_fictive = inner_index_or_btree_index_schema_or_mapper
+        elif type(inner_index_or_btree_index_schema_or_mapper) == dict:
+            self._inner_index_fictive = UdbBtreeIndex(inner_index_or_btree_index_schema_or_mapper)
+        elif type(inner_index_or_btree_index_schema_or_mapper) == list:
+            self._inner_index_fictive = UdbBtreeIndex(inner_index_or_btree_index_schema_or_mapper)
+        elif callable(inner_index_or_btree_index_schema_or_mapper):
+            self._inner_mapper = inner_index_or_btree_index_schema_or_mapper
 
         self._clusters = {}
         self._clusters_key_to_uid = {}
         self._cluster_uid = 0
-        self._inner_index_cls = inner_index_cls
-        self._inner_schema = inner_schema
-        self._inner_mapper = inner_mapper
         self._index = UdbBtreeIndex(index_or_btree_index_schema)\
             if index_or_btree_index_schema\
             else index_or_btree_index_schema
         self.schema_keys = self._index.schema_keys
         self.schema_last_index = self._index.schema_last_index
-
-        if inner_index_cls:
-            self._inner_index_fictive = inner_index_cls(self._inner_schema)
-        else:
-            self._inner_index_fictive = None
 
     def get_cover_key(self, record, second=None):
         return self._index.get_cover_key(record, second)
@@ -165,10 +160,10 @@ class UdbClusterIndex(UdbIndex):
         cluster = self._clusters.get(cluster_uid, None) if cluster_uid is not None else None
 
         if cluster is None:
-            if self._inner_mapper:
+            if self._inner_mapper is not None:
                 cluster = self._clusters[self._cluster_uid] = self._inner_mapper(values, second)
-            elif self._inner_index_cls:
-                cluster = self._clusters[self._cluster_uid] = self._inner_index_cls(schema=self._inner_schema)
+            elif self._inner_index_fictive is not None:
+                cluster = self._clusters[self._cluster_uid] = self._inner_index_fictive.clone()
             else:
                 cluster = self._clusters[self._cluster_uid] = set()
 
