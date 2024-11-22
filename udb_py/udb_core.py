@@ -50,7 +50,7 @@ class UdbCore(object):
             self._indexes_to_check_for_ins_upd_allowance = [index for index in indexes.values() if index.is_uniq]
 
             for key, ind in indexes.items():
-                if type(ind) not in self._indexes_with_custom_ops:
+                if type(ind) not in self._indexes_with_custom_ops and ind.is_custom_ops:
                     self._indexes_with_custom_ops.add(type(ind))
 
                 ind.name = key

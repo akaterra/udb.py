@@ -7,12 +7,8 @@ SCAN_OP_CLUSTER = 'cluster'
 
 
 class UdbClusterIndex(UdbIndex):
+    is_custom_ops = False
     type = 'cluster'
-
-    @classmethod
-    def seq(cls, seq, q, collection, schema=None):
-        for rid in seq:
-            yield rid
 
     def __init__(
             self,
@@ -78,6 +74,7 @@ class UdbClusterIndex(UdbIndex):
 
         def fn(k):
             for cluster_id in i_op_fn(k):
+                q_copy = dict(q)
                 cluster = self._clusters[cluster_id]
 
                 if type(cluster) == set:
@@ -90,7 +87,7 @@ class UdbClusterIndex(UdbIndex):
                         c_op_priority,
                         c_op_fn,
                         c_op_fn_q_arranger,
-                    ) = cluster.get_scan_op(q, None, None, collection, indexes_with_custom_ops)
+                    ) = cluster.get_scan_op(q_copy, None, None, collection, indexes_with_custom_ops)
                     key = ''
 
                     if c_op_key_sequence_length_to_remove:
@@ -100,23 +97,23 @@ class UdbClusterIndex(UdbIndex):
                             if i == c_op_key_sequence_length_to_remove - 1 and c_op_fn_q_arranger:
                                 pass
                             else:
-                                c_key_val = q.pop(cluster.schema_keys[i])
+                                c_key_val = q_copy.pop(cluster.schema_keys[i])
                                 key = key + type_format_mappers[type(c_key_val)](c_key_val)
 
                         if c_op_fn_q_arranger:
                             c_op_fn_q_arranger(q_copy[cluster.schema_keys[c_op_key_sequence_length - 1]])
 
-                            if not q[cluster.schema_keys[c_op_key_sequence_length - 1]]:
-                                q.pop(cluster.schema_keys[c_op_key_sequence_length - 1])
+                            if not q_copy[cluster.schema_keys[c_op_key_sequence_length - 1]]:
+                                q_copy.pop(cluster.schema_keys[c_op_key_sequence_length - 1])
 
                     if c_op_fn:
                         seq = c_op_fn(key)
                     else:
                         seq = cluster.rids()
 
-                if q and indexes_with_custom_ops:
+                if q_copy and indexes_with_custom_ops:
                     for index in indexes_with_custom_ops:
-                        seq = index.seq(seq, q, collection)
+                        seq = index.seq(seq, q_copy, collection)
 
                 for rid in seq:
                     yield rid

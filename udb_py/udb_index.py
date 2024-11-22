@@ -15,6 +15,7 @@ SCAN_OP_SUB = 'sub'
 
 
 class UdbIndex(object):
+    is_custom_ops = True
     is_sorted_asc = False
     is_uniq = False
     name = 'index'

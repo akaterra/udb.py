@@ -409,6 +409,14 @@ Supported query operations:
 
     udb.select({'a': {'$intersection': {'minX': 5, 'minY': 5, 'maxX': 1, 'maxY': 5}}})
 
+  .. code:: python
+
+    udb.select({'a': {'$intersection': [5, 5, 1, 5}})  # minX, minY, maxX, maxY
+
+  .. code:: python
+
+    udb.select({'a': {'$intersection': [5, 5}})  # x, y
+
 * **$like** - like value (sql compatible)
 
   .. code:: python
@@ -440,6 +448,14 @@ Supported query operations:
   .. code:: python
 
     udb.select({'a': {'$near': {'x': 5, 'y': 5, 'minDistance': 1, 'maxDistance': 5}}})
+
+  .. code:: python
+
+    udb.select({'a': {'$near': [5 ,5]}})  # x, y
+
+  .. code:: python
+
+    udb.select({'a': {'$near': [5 ,5 ,1, 5]}})  # x, y, minDistance, maxDistance
 
   * allocates sort buffer is case of "seq" scan
 
@@ -701,7 +717,7 @@ Stages:
 
 * **$project** - renames keys - `('$project', { 'key1_from': 'key1_to', 'key2_from': 'key2_to', ... })`, None as "key_to" unsets the key
 
-* **$rebase** - rebases dict by key onto record values - `('$rebase', 'key', skip_existing)`
+* **$rebase** - re-bases dict by key onto record values - `('$rebase', 'key', skip_existing)`
 
 * **$unwind** - unwinds list by key into single records - `('$unwind', 'key')`, each list entry will be merged with the copy of record
 

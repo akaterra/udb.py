@@ -26,12 +26,28 @@ def test_should_validate_query_intersection_op():
             }}})
 
         with pytest.raises(InvalidScanOperationValueError):
+            UdbBaseGEOIndex.validate_query({'a': {'$intersection': [
+                invalid_value,
+                0,
+                0,
+                0,
+            ]}})
+
+        with pytest.raises(InvalidScanOperationValueError):
             UdbBaseGEOIndex.validate_query({'a': {'$intersection': {
                 'xMin': 0,
                 'xMax': invalid_value,
                 'yMin': 0,
                 'yMax': 0,
             }}})
+
+        with pytest.raises(InvalidScanOperationValueError):
+            UdbBaseGEOIndex.validate_query({'a': {'$intersection': [
+                0,
+                invalid_value,
+                0,
+                0,
+            ]}})
 
         with pytest.raises(InvalidScanOperationValueError):
             UdbBaseGEOIndex.validate_query({'a': {'$intersection': {
@@ -42,12 +58,28 @@ def test_should_validate_query_intersection_op():
             }}})
 
         with pytest.raises(InvalidScanOperationValueError):
+            UdbBaseGEOIndex.validate_query({'a': {'$intersection': [
+                0,
+                0,
+                invalid_value,
+                0,
+            ]}})
+
+        with pytest.raises(InvalidScanOperationValueError):
             UdbBaseGEOIndex.validate_query({'a': {'$intersection': {
                 'xMin': 0,
                 'xMax': 0,
                 'yMin': 0,
                 'yMax': invalid_value,
             }}})
+
+        with pytest.raises(InvalidScanOperationValueError):
+            UdbBaseGEOIndex.validate_query({'a': {'$intersection': [
+                0,
+                0,
+                0,
+                invalid_value,
+            ]}})
 
     with pytest.raises(InvalidScanOperationValueError):
         UdbBaseGEOIndex.validate_query({'a': {'$intersection': {'xMin': 0}}})
@@ -60,6 +92,12 @@ def test_should_validate_query_intersection_op():
 
     with pytest.raises(InvalidScanOperationValueError):
         UdbBaseGEOIndex.validate_query({'a': {'$intersection': {'xMax': 0}}})
+
+    with pytest.raises(InvalidScanOperationValueError):
+        UdbBaseGEOIndex.validate_query({'a': {'$intersection': []}})
+
+    with pytest.raises(InvalidScanOperationValueError):
+        UdbBaseGEOIndex.validate_query({'a': {'$intersection': [0]}})
 
 
 def test_should_validate_query_near_op():
@@ -79,10 +117,22 @@ def test_should_validate_query_near_op():
             UdbBaseGEOIndex.validate_query({'a': {'$near': {'x': 0, 'y': 0, 'minDistance': invalid_value}}})
 
         with pytest.raises(InvalidScanOperationValueError):
+            UdbBaseGEOIndex.validate_query({'a': {'$near': [0, 0, invalid_value, 0]}})
+
+        with pytest.raises(InvalidScanOperationValueError):
             UdbBaseGEOIndex.validate_query({'a': {'$near': {'x': 0, 'y': 0, 'maxDistance': invalid_value}}})
+
+        with pytest.raises(InvalidScanOperationValueError):
+            UdbBaseGEOIndex.validate_query({'a': {'$near': [0, 0, 0, invalid_value]}})
 
     with pytest.raises(InvalidScanOperationValueError):
         UdbBaseGEOIndex.validate_query({'a': {'$near': {'x': 0}}})
 
     with pytest.raises(InvalidScanOperationValueError):
+        UdbBaseGEOIndex.validate_query({'a': {'$near': []}})
+
+    with pytest.raises(InvalidScanOperationValueError):
         UdbBaseGEOIndex.validate_query({'a': {'$near': {'y': 0}}})
+
+    with pytest.raises(InvalidScanOperationValueError):
+        UdbBaseGEOIndex.validate_query({'a': {'$near': [0]}})

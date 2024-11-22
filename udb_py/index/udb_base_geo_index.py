@@ -12,6 +12,7 @@ def _q_arr_near(q):
 
 SCAN_OP_INTERSECTION = 'intersection'
 SCAN_OP_NEAR = 'near'
+ALLOWED_VAL_TYPES = [float, int]
 
 
 class UdbBaseGEOIndexCheckConditionContext(object):
@@ -117,10 +118,16 @@ class UdbBaseGEOIndex(UdbIndex):
 
                     c_intersection_q = context.intersection[key] = UdbBaseGEOIndexCheckConditionContextIntersection()
 
-                    c_intersection_q.x_min = c_intersection['xMin']
-                    c_intersection_q.x_max = c_intersection['xMax']
-                    c_intersection_q.y_min = c_intersection['yMin']
-                    c_intersection_q.y_max = c_intersection['yMax']
+                    if type(c_intersection) == list:
+                        c_intersection_q.x_min = c_intersection[0]
+                        c_intersection_q.x_max = c_intersection[1]
+                        c_intersection_q.y_min = c_intersection[2] if len(c_intersection) > 2 else c_intersection[0]
+                        c_intersection_q.y_max = c_intersection[3] if len(c_intersection) > 3 else c_intersection[1]
+                    else:
+                        c_intersection_q.x_min = c_intersection['xMin']
+                        c_intersection_q.x_max = c_intersection['xMax']
+                        c_intersection_q.y_min = c_intersection['yMin']
+                        c_intersection_q.y_max = c_intersection['yMax']
 
                 c_near = condition.get('$near')
 
@@ -133,10 +140,16 @@ class UdbBaseGEOIndex(UdbIndex):
 
                     c_near_q = context.near_last = context.near[key] = UdbBaseGEOIndexCheckConditionContextNear()
 
-                    c_near_q.x = c_near['x']
-                    c_near_q.y = c_near['y']
-                    c_near_q.min_distance = c_near['minDistance'] ** 2 if 'minDistance' in c_near else None
-                    c_near_q.max_distance = c_near['maxDistance'] ** 2 if 'maxDistance' in c_near else None
+                    if type(c_near) == list:
+                        c_near_q.x = c_near[0]
+                        c_near_q.y = c_near[1]
+                        c_near_q.min_distance = c_near[2] ** 2 if len(c_near) > 2 else None
+                        c_near_q.max_distance = c_near[3] ** 2 if len(c_near) > 3 else None
+                    else:
+                        c_near_q.x = c_near['x']
+                        c_near_q.y = c_near['y']
+                        c_near_q.min_distance = c_near['minDistance'] ** 2 if 'minDistance' in c_near else None
+                        c_near_q.max_distance = c_near['maxDistance'] ** 2 if 'maxDistance' in c_near else None
 
                 if c_near:
                     context.near_last_key = key
@@ -190,41 +203,69 @@ class UdbBaseGEOIndex(UdbIndex):
     def validate_query(cls, q):
         for key, condition in q.items():
             if type(condition) == dict:
-                for op_key, op_condition in condition.items():
+                for op_key, op_cnd in condition.items():
                     if op_key == '$intersection':
-                        if type(op_condition) != dict:
+                        if type(op_cnd) == list and len(op_cnd) >= 2:
+                            if type(op_cnd[0]) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.xMin'.format(key, op_key))
+
+                            if type(op_cnd[1]) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.yMin'.format(key, op_key))
+
+                            if len(op_cnd) > 2 and type(op_cnd[2]) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.xMax'.format(key, op_key))
+
+                            if len(op_cnd) > 3 and type(op_cnd[3]) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.yMax'.format(key, op_key))
+                        elif type(op_cnd) == dict:
+                            if type(op_cnd.get('xMin')) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.xMin'.format(key, op_key))
+
+                            if type(op_cnd.get('yMin')) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.yMin'.format(key, op_key))
+
+                            if op_cnd.get('xMax', EMPTY) != EMPTY and type(op_cnd.get('xMax')) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.xMax'.format(key, op_key))
+
+                            if op_cnd.get('yMax', EMPTY) != EMPTY and type(op_cnd.get('yMax')) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.yMax'.format(key, op_key))
+                        else:
                             raise InvalidScanOperationValueError('{}.{}'.format(key, op_key))
-
-                        if type(op_condition.get('xMin')) != float and type(op_condition.get('xMin')) != int:
-                            raise InvalidScanOperationValueError('{}.{}.xMin'.format(key, op_key))
-
-                        if type(op_condition.get('yMin')) != float and type(op_condition.get('yMin')) != int:
-                            raise InvalidScanOperationValueError('{}.{}.yMin'.format(key, op_key))
-
-                        if type(op_condition.get('xMax')) != float and type(op_condition.get('xMax')) != int:
-                            raise InvalidScanOperationValueError('{}.{}.xMax'.format(key, op_key))
-
-                        if type(op_condition.get('yMax')) != float and type(op_condition.get('yMax')) != int:
-                            raise InvalidScanOperationValueError('{}.{}.yMax'.format(key, op_key))
                     elif op_key == '$near':
-                        if type(op_condition) != dict:
+                        if type(op_cnd) == list and len(op_cnd) >= 2:
+                            if type(op_cnd[0]) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.x'.format(key, op_key))
+
+                            if type(op_cnd[1]) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.y'.format(key, op_key))
+
+                            min_distance = op_cnd[2] if len(op_cnd) > 2 else EMPTY
+
+                            if min_distance != EMPTY and type(min_distance) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.minDistance'.format(key, op_key))
+
+                            max_distance = op_cnd[3] if len(op_cnd) > 3 else EMPTY
+
+                            if max_distance != EMPTY and type(max_distance) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.maxDistance'.format(key, op_key))
+                        elif type(op_cnd) == dict:
+                            if type(op_cnd.get('x')) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.x'.format(key, op_key))
+
+                            if type(op_cnd.get('y')) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.y'.format(key, op_key))
+
+                            min_distance = op_cnd.get('minDistance', EMPTY)
+
+                            if min_distance != EMPTY and type(min_distance) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.minDistance'.format(key, op_key))
+
+                            max_distance = op_cnd.get('maxDistance', EMPTY)
+
+                            if max_distance != EMPTY and type(max_distance) not in ALLOWED_VAL_TYPES:
+                                raise InvalidScanOperationValueError('{}.{}.maxDistance'.format(key, op_key))
+                        else:
                             raise InvalidScanOperationValueError('{}.{}'.format(key, op_key))
-
-                        if type(op_condition.get('x')) != float and type(op_condition.get('x')) != int:
-                            raise InvalidScanOperationValueError('{}.{}.x'.format(key, op_key))
-
-                        if type(op_condition.get('y')) != float and type(op_condition.get('y')) != int:
-                            raise InvalidScanOperationValueError('{}.{}.y'.format(key, op_key))
-
-                        max_distance = op_condition.get('maxDistance', EMPTY)
-
-                        if max_distance != EMPTY and type(max_distance) != float and type(max_distance) != int:
-                            raise InvalidScanOperationValueError('{}.{}.maxDistance'.format(key, op_key))
-
-                        min_distance = op_condition.get('minDistance', EMPTY)
-
-                        if min_distance != EMPTY and type(min_distance) != float and type(min_distance) != int:
-                            raise InvalidScanOperationValueError('{}.{}.minDistance'.format(key, op_key))
 
         return True
 
