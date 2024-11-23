@@ -7,7 +7,7 @@ class UdbBtreeUniqBaseIndex(UdbBtreeBaseIndex):
     type = 'btree_uniq'
 
     def clone(self):
-        return UdbBtreeUniqBaseIndex(self.schema, self.name)
+        return UdbBtreeUniqBaseIndex(self.schema, self.name).safe(self._safe)
 
     def insert(self, key, uid):
         if key in self._btree:

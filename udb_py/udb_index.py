@@ -26,6 +26,8 @@ class UdbIndex(object):
     type = None
     type_format_mappers = TYPE_FORMAT_MAPPERS
 
+    _safe = False
+
     @classmethod
     def check_condition(cls, values, q, context=None, extend=None):
         raise NotImplementedError
@@ -54,6 +56,9 @@ class UdbIndex(object):
 
     def get_cover_key_or_raise(self, record, second=None):
         raise NotImplementedError
+
+    def get_indexes_with_custom_ops(self):
+        return [self]
 
     def get_meta(self):
         raise NotImplementedError
@@ -85,6 +90,11 @@ class UdbIndex(object):
     def rids(self):
         raise NotImplementedError
 
+    def safe(self, safe=True):
+        self._safe = safe
+
+        return self
+
     def delete(self, key, uid, q=None):
         raise NotImplementedError
 
@@ -104,7 +114,10 @@ class UdbIndex(object):
         else:
             second = None
 
-        self.insert(self.get_cover_key(values, second)[0], uid)
+        key, key_len = self.get_cover_key(values, second)
+
+        if key_len:
+            self.insert(key, uid)
 
         return True
 

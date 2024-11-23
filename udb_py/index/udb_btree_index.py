@@ -1,3 +1,4 @@
+from typing import List, Union
 from ..common import CHAR255, EMPTY, TYPE_INFL, TYPE_INFR
 from .udb_base_linear_index import UdbBaseLinearIndex, UdbBaseLinearEmbeddedIndex
 
@@ -9,7 +10,7 @@ class UdbBtreeIndex(UdbBaseLinearIndex):
     is_sorted_asc = True
     type = 'btree'
 
-    def __init__(self, schema, name=None):
+    def __init__(self, schema: Union[dict, List[str]], name: str = None):
         from BTrees.OOBTree import OOBTree
 
         UdbBaseLinearIndex.__init__(self, schema, name)
@@ -25,7 +26,7 @@ class UdbBtreeIndex(UdbBaseLinearIndex):
         return self
 
     def clone(self):
-        return UdbBtreeIndex(self.schema, self.name)
+        return UdbBtreeIndex(self.schema, self.name).safe(self._safe)
 
     def rids(self):
         for rids in self._btree.values():
@@ -147,7 +148,7 @@ class UdbBtreeEmbeddedIndex(UdbBtreeIndex, UdbBaseLinearEmbeddedIndex):
     type = 'btree_embedded'
 
     def clone(self):
-        return UdbBtreeEmbeddedIndex(self.schema, self.name)
+        return UdbBtreeEmbeddedIndex(self.schema, self.name).safe(self._safe)
 
     def delete(self, key_or_keys, uid=None, q=None):
         for key in key_or_keys:

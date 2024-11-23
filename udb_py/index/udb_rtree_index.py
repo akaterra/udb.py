@@ -1,3 +1,4 @@
+import math
 from ..common import EMPTY
 from .udb_base_geo_index import UdbBaseGEOIndex
 
@@ -13,9 +14,16 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
         UdbBaseGEOIndex.__init__(self, key, default_value, name)
 
         self._rtree = index.Index()
+        self._x_min = None
+        self._x_max = None
+        self._y_min = None
+        self._y_max = None
 
     def __len__(self):
         return 0
+
+    def bounds(self):
+        return self._x_min, self._y_min, self._x_max, self._y_max
 
     def clear(self):
         # TODO
@@ -23,7 +31,11 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
         return self
 
     def clone(self):
-        return UdbRtreeIndex(self._key, self._key_default_value, self.name)
+        return UdbRtreeIndex(self._key, self._key_default_value, self.name).safe(self._safe)
+
+    def rids(self):
+        for rid in self._rtree.intersection((-math.inf, -math.inf, +math.inf, +math.inf)):
+            yield rid
 
     def delete(self, key, uid=None, q=None):
         self._rtree.delete(uid, (key[0], key[1], key[0], key[1]))
@@ -32,6 +44,22 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
 
     def insert(self, key, uid):
         self._rtree.insert(uid, (key[0], key[1], key[0], key[1]))
+
+        if self._x_min is None:
+            self._x_min = key[0]
+            self._x_max = key[0]
+            self._y_min = key[1]
+            self._y_max = key[1]
+        else:
+            if self._x_min > key[0]:
+                self._x_min = key[0]
+            elif self._x_max < key[0]:
+                self._x_max = key[0]
+
+            if self._y_min > key[1]:
+                self._y_min = key[1]
+            elif self._y_max < key[1]:
+                self._y_max = key[1]
 
         return self
 
@@ -83,5 +111,21 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
             self._rtree.delete(uid, (old[0], old[1], old[0], old[1]))
 
         self._rtree.insert(uid, (new[0], new[1], new[0], new[1]))
+
+        if self._x_min is None:
+            self._x_min = new[0]
+            self._x_max = new[0]
+            self._y_min = new[1]
+            self._y_max = new[1]
+        else:
+            if self._x_min > new[0]:
+                self._x_min = new[0]
+            elif self._x_max < new[0]:
+                self._x_max = new[0]
+
+            if self._y_min > new[1]:
+                self._y_min = new[1]
+            elif self._y_max < new[1]:
+                self._y_max = new[1]
 
         return self

@@ -7,7 +7,7 @@ class UdbHashUniqBaseIndex(UdbHashBaseIndex):
     type = 'hash_uniq'
 
     def clone(self):
-        return UdbHashUniqBaseIndex(self.schema, self.name)
+        return UdbHashUniqBaseIndex(self.schema, self.name).safe(self._safe)
 
     def insert(self, key, uid):
         if key in self._hash:

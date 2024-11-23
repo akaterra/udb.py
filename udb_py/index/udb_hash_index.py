@@ -20,7 +20,7 @@ class UdbHashIndex(UdbBaseLinearIndex):
         return self
 
     def clone(self):
-        return UdbHashIndex(self.schema, self.name)
+        return UdbHashIndex(self.schema, self.name).safe(self._safe)
 
     def delete(self, key, uid, q=None):
         old_existing = self._hash.get(key, EMPTY)
@@ -83,7 +83,7 @@ class UdbHashEmbeddedIndex(UdbHashIndex, UdbBaseLinearEmbeddedIndex):
     type = embedded
 
     def clone(self):
-        return UdbHashEmbeddedIndex(self.schema, self.name)
+        return UdbHashEmbeddedIndex(self.schema, self.name).safe(self._safe)
 
     def delete(self, key_or_keys, uid=None, q=None):
         for key in key_or_keys:

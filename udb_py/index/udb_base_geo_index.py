@@ -174,7 +174,7 @@ class UdbBaseGEOIndex(UdbIndex):
 
         context = cls.create_condition_context(q)
 
-        if context.near_last:
+        if context.near_last is not None:
             def seq_q():
                 for rid in seq:
                     if cls.check_condition(collection[rid], q, context):
@@ -293,7 +293,7 @@ class UdbBaseGEOIndex(UdbIndex):
         else:
             val = record.get(self._key, get)
 
-        if val != EMPTY:
+        if self._is_valid_geometry(val):
             return val, 1
 
         return None, 0
@@ -356,7 +356,7 @@ class UdbBaseGEOIndex(UdbIndex):
                                 c_intersection[2] if len(c_intersection) > 2 else c_intersection[0],
                                 c_intersection[3] if len(c_intersection) > 3 else c_intersection[1],
                             ),
-                            _q_arr_intersection
+                            _q_arr_intersection,
                         )
                     else:
                         return (
@@ -370,7 +370,7 @@ class UdbBaseGEOIndex(UdbIndex):
                                 c_intersection.get('maxX', c_intersection['minX']),
                                 c_intersection.get('maxY', c_intersection['minY']),
                             ),
-                            _q_arr_intersection
+                            _q_arr_intersection,
                         )
 
                 c_near = condition.get('$near', EMPTY)
@@ -390,7 +390,7 @@ class UdbBaseGEOIndex(UdbIndex):
                                 limit,
                                 collection,
                             ),
-                            _q_arr_near
+                            _q_arr_near,
                         )
                     else:
                         return (
@@ -406,7 +406,7 @@ class UdbBaseGEOIndex(UdbIndex):
                                 limit,
                                 collection,
                             ),
-                            _q_arr_near
+                            _q_arr_near,
                         )
 
         return SCAN_OP_SEQ, 0, 0, 0, None, None
@@ -431,3 +431,9 @@ class UdbBaseGEOIndex(UdbIndex):
 
     def upsert(self, old, new, uid, q=None):
         raise NotImplementedError
+
+    def _is_valid_geometry(self, arr):
+        return type(arr) == list and\
+            len(arr) > 1 and\
+            type(arr[0]) in ALLOWED_VAL_TYPES and\
+            type(arr[1]) in ALLOWED_VAL_TYPES

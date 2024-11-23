@@ -1,4 +1,6 @@
+from copy import deepcopy
 from typing import Callable, List, Type, Union
+from .udb_base_linear_index import SCAN_OP_SEQ
 from .udb_btree_index import UdbBtreeIndex
 from ..udb_index import UdbIndex
 
@@ -50,6 +52,12 @@ class UdbClusterIndex(UdbIndex):
     def get_cover_key_or_raise(self, record, second=None):
         return self._index.get_cover_key_or_raise(record, second)
 
+    def get_indexes_with_custom_ops(self):
+        if isinstance(self._inner_index_fictive, UdbIndex):
+            return [self._index, self._inner_index_fictive]
+
+        return [self._index]
+
     def get_meta(self):
         return None
 
@@ -65,11 +73,15 @@ class UdbClusterIndex(UdbIndex):
 
         if self._inner_index_fictive is not None:
             _, key_len = self._inner_index_fictive.get_cover_key(q)
-            i_op_key_sequence_length += key_len
+
+            if key_len:
+                i_op_key_sequence_length += key_len
+            elif not any(self._inner_index_fictive.has_key(key) for key in q.keys()):
+                return SCAN_OP_SEQ, 0, 0, 0, None, None
 
         def fn(k):
             for cluster_id in i_op_fn(k):
-                q_copy = dict(q)
+                q_copy = deepcopy(q)
                 cluster = self._clusters[cluster_id]
 
                 if type(cluster) == set:
