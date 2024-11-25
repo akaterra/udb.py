@@ -127,7 +127,7 @@ class UdbBaseTextIndex(UdbIndex):
         return (
             SCAN_OP_TEXT,
             len(schema_keys_matched),
-            len(schema_keys_matched),
+            len(schema_keys_matched) - 1,
             3,
             lambda _: self.search_by_text(schema_keys_matched),
             _q_arr_text,

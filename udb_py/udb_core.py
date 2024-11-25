@@ -6,6 +6,7 @@ from .index import (
     UdbBaseTextIndex,
 )
 from .udb_index import (
+    UdbIndex,
     SCAN_OP_CONST,
     SCAN_OP_SEQ,
     SCAN_OP_SORT,
@@ -98,7 +99,7 @@ class UdbCore(object):
 
         :return:
         """
-        s_index = None
+        s_index: UdbIndex = None
         s_op_type = None
         s_op_key_sequence_length = 0
         s_op_key_sequence_length_to_remove = 0
@@ -160,21 +161,7 @@ class UdbCore(object):
 
                     limit = sort = None
 
-            key = ''
-            type_format_mappers = s_index.type_format_mappers
-
-            for i in range(0, s_op_key_sequence_length_to_remove):
-                if i == s_op_key_sequence_length_to_remove - 1 and s_op_fn_q_arranger:
-                    pass
-                else:
-                    c_key_val = q.pop(s_index.schema_keys[i])
-                    key = key + type_format_mappers[type(c_key_val)](c_key_val)
-
-            if s_op_fn_q_arranger:
-                s_op_fn_q_arranger(q[s_index.schema_keys[s_op_key_sequence_length - 1]])
-
-                if not q[s_index.schema_keys[s_op_key_sequence_length - 1]]:
-                    q.pop(s_index.schema_keys[s_op_key_sequence_length - 1])
+            key = s_index.get_scan_op_cover_key(q, s_op_key_sequence_length_to_remove, s_op_fn_q_arranger)
 
             if get_plan:
                 plan.append((s_index, s_op_type, s_op_key_sequence_length, s_op_priority))

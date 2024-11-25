@@ -61,7 +61,7 @@ def test_should_get_const_scan_op_in_case_of_like_with_no_pattern_symbols():
 
     assert op == SCAN_OP_CONST
     assert prefix_key_len == 1
-    assert prefix_key_len_to_remove == 1
+    assert prefix_key_len_to_remove == 0
     assert priority == 2
     assert callable(fn)
     assert list(fn('\x04222')) == ['search_by_key', '\x04222\x041234567']
@@ -75,7 +75,7 @@ def test_should_get_in_scan_op():
 
     assert op == SCAN_OP_IN
     assert prefix_key_len == 2
-    assert prefix_key_len_to_remove == 2
+    assert prefix_key_len_to_remove == 1
     assert priority == 2
     assert callable(fn)
 
@@ -170,7 +170,7 @@ def test_should_get_range_scan_op():
 
     assert op == SCAN_OP_RANGE
     assert prefix_key_len == 2
-    assert prefix_key_len_to_remove == 2
+    assert prefix_key_len_to_remove == 1
     assert priority == 1
     assert callable(fn)
     assert list(fn('\x04222')) == ['search_by_key_range', '\x04222\x04000', '\x04222\x04111', False, False]
@@ -184,7 +184,7 @@ def test_should_get_range_excluding_min_scan_op():
 
     assert op == SCAN_OP_RANGE
     assert prefix_key_len == 2
-    assert prefix_key_len_to_remove == 2
+    assert prefix_key_len_to_remove == 1
     assert priority == 1
     assert callable(fn)
     assert list(fn('\x04222')) == ['search_by_key_range', '\x04222\x04000', '\x04222\x04111', True, False]
@@ -198,7 +198,7 @@ def test_should_get_range_excluding_max_scan_op():
 
     assert op == SCAN_OP_RANGE
     assert prefix_key_len == 2
-    assert prefix_key_len_to_remove == 2
+    assert prefix_key_len_to_remove == 1
     assert priority == 1
     assert callable(fn)
     assert list(fn('\x04222')) == ['search_by_key_range', '\x04222\x04000', '\x04222\x04111', False, True]

@@ -20,7 +20,7 @@ def test_should_get_intersection_scan_op():
 
     assert op == SCAN_OP_INTERSECTION
     assert prefix_key_len == 1
-    assert prefix_key_len_to_remove == 1
+    assert prefix_key_len_to_remove == 0
     assert priority == 3
     assert callable(fn)
     assert list(fn('\x03222')) == ['search_by_intersection', 0, 2, 1, 3]
@@ -34,7 +34,7 @@ def test_should_get_near_scan_op():
 
     assert op == SCAN_OP_NEAR
     assert prefix_key_len == 1
-    assert prefix_key_len_to_remove == 1
+    assert prefix_key_len_to_remove == 0
     assert priority == 3
     assert callable(fn)
     assert list(fn('\x03222')) == ['search_by_near', 0, 1, None, None, None, None]
@@ -48,7 +48,7 @@ def test_should_get_near_scan_op_with_min_distance():
 
     assert op == SCAN_OP_NEAR
     assert prefix_key_len == 1
-    assert prefix_key_len_to_remove == 1
+    assert prefix_key_len_to_remove == 0
     assert priority == 3
     assert callable(fn)
     assert list(fn('\x03222')) == ['search_by_near', 0, 1, 2, None, None, None]
@@ -62,7 +62,7 @@ def test_should_get_near_scan_op_with_max_distance():
 
     assert op == SCAN_OP_NEAR
     assert prefix_key_len == 1
-    assert prefix_key_len_to_remove == 1
+    assert prefix_key_len_to_remove == 0
     assert priority == 3
     assert callable(fn)
     assert list(fn('\x03222')) == ['search_by_near', 0, 1, None, 2, None, None]
@@ -76,7 +76,7 @@ def test_should_get_near_scan_op_with_limit():
 
     assert op == SCAN_OP_NEAR
     assert prefix_key_len == 1
-    assert prefix_key_len_to_remove == 1
+    assert prefix_key_len_to_remove == 0
     assert priority == 3
     assert callable(fn)
     assert list(fn('\x03222')) == ['search_by_near', 0, 1, None, None, 1, None]

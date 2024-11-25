@@ -82,7 +82,7 @@ class UdbClusterIndex(UdbIndex):
         def fn(k):
             for cluster_id in i_op_fn(k):
                 q_copy = deepcopy(q)
-                cluster = self._clusters[cluster_id]
+                cluster: Union[UdbIndex, set] = self._clusters[cluster_id]
 
                 if type(cluster) == set:
                     seq = cluster
@@ -95,23 +95,7 @@ class UdbClusterIndex(UdbIndex):
                         c_op_fn,
                         c_op_fn_q_arranger,
                     ) = cluster.get_scan_op(q_copy, None, None, collection, indexes_with_custom_ops)
-                    key = ''
-
-                    if c_op_key_sequence_length_to_remove:
-                        type_format_mappers = cluster.type_format_mappers
-
-                        for i in range(0, c_op_key_sequence_length_to_remove):
-                            if i == c_op_key_sequence_length_to_remove - 1 and c_op_fn_q_arranger:
-                                pass
-                            else:
-                                c_key_val = q_copy.pop(cluster.schema_keys[i])
-                                key = key + type_format_mappers[type(c_key_val)](c_key_val)
-
-                        if c_op_fn_q_arranger:
-                            c_op_fn_q_arranger(q_copy[cluster.schema_keys[c_op_key_sequence_length - 1]])
-
-                            if not q_copy[cluster.schema_keys[c_op_key_sequence_length - 1]]:
-                                q_copy.pop(cluster.schema_keys[c_op_key_sequence_length - 1])
+                    key = cluster.get_scan_op_cover_key(q_copy, c_op_key_sequence_length_to_remove, c_op_fn_q_arranger)
 
                     if c_op_fn:
                         seq = c_op_fn(key)

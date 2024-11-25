@@ -16,6 +16,7 @@ SCAN_OP_SUB = 'sub'
 
 class UdbIndex(object):
     is_custom_ops = True
+    is_multivalued = False
     is_sorted_asc = False
     is_uniq = False
     name = 'index'
@@ -65,6 +66,29 @@ class UdbIndex(object):
 
     def get_scan_op(self, q, limit=None, offset=None, collection=None, indexes_with_custom_ops=None):
         raise NotImplementedError
+
+    def get_scan_op_cover_key(
+            self,
+            q,
+            key_sequence_length_to_remove,
+            fn_q_arranger,
+    ):
+        key = ''
+        i = -1
+
+        for i in range(0, key_sequence_length_to_remove):
+            key_val = q.pop(self.schema_keys[i])
+            key += self.type_format_mappers[type(key_val)](key_val)
+
+        if fn_q_arranger:
+            key_next = self.schema_keys[i + 1]
+            fn_q_arranger(q[key_next])
+
+            # query key becomes empty after arranger like {} after {'$gt': ...}
+            if not q[key_next]:
+                q.pop(key_next)
+
+        return key
 
     def set_float_precision(self, precision=18):
         self.type_format_mappers = configure_float_precision(precision)

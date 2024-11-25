@@ -441,7 +441,7 @@ class UdbBaseLinearIndex(UdbIndex):
                         return (
                             SCAN_OP_IN,
                             ind + 1,  # cover key length
-                            ind + 1,
+                            ind,
                             2,  # priority
                             lambda k: self.search_by_key_in(
                                 map(lambda x: k + type_format_mappers[type(x)](x), c_in)
@@ -508,7 +508,7 @@ class UdbBaseLinearIndex(UdbIndex):
                         return (
                             SCAN_OP_RANGE,
                             ind + 1,  # cover key length
-                            ind + 1,
+                            ind,
                             1,  # priority
                             lambda k: self.search_by_key_range(
                                 (k + c_gte) if c_gte != EMPTY else k + chr(0),
@@ -542,7 +542,7 @@ class UdbBaseLinearIndex(UdbIndex):
                                 return (
                                     SCAN_OP_CONST,
                                     ind + 1,  # cover key length
-                                    ind + 1,
+                                    ind,
                                     2,  # priority
                                     lambda k: self.search_by_key_eq(k + key_part),
                                     _q_arr_like,

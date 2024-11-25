@@ -348,7 +348,7 @@ class UdbBaseGEOIndex(UdbIndex):
                         return (
                             SCAN_OP_INTERSECTION,
                             1,
-                            1,
+                            0,
                             3,
                             lambda _: self.search_by_intersection(
                                 c_intersection[0],
@@ -362,7 +362,7 @@ class UdbBaseGEOIndex(UdbIndex):
                         return (
                             SCAN_OP_INTERSECTION,
                             1,
-                            1,
+                            0,
                             3,
                             lambda _: self.search_by_intersection(
                                 c_intersection['minX'],
@@ -380,7 +380,7 @@ class UdbBaseGEOIndex(UdbIndex):
                         return (
                             SCAN_OP_NEAR,
                             1,
-                            1,
+                            0,
                             3,
                             lambda _: self.search_by_near(
                                 c_near[0],
@@ -396,7 +396,7 @@ class UdbBaseGEOIndex(UdbIndex):
                         return (
                             SCAN_OP_NEAR,
                             1,
-                            1,
+                            0,
                             3,
                             lambda _: self.search_by_near(
                                 c_near['x'],
