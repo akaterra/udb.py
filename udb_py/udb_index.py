@@ -19,7 +19,6 @@ class UdbIndex(object):
     is_multivalued = False
     is_sorted_asc = False
     is_uniq = False
-    name = 'index'
     schema = {}
     schema_default_values = None
     schema_keys = []
@@ -27,6 +26,7 @@ class UdbIndex(object):
     type = None
     type_format_mappers = TYPE_FORMAT_MAPPERS
 
+    _name = 'index'
     _safe = False
 
     @classmethod
@@ -49,8 +49,12 @@ class UdbIndex(object):
     def validate_query(cls, q):
         raise NotImplementedError
 
+    @property
+    def name(self):
+        return self._name or type(self).__name__
+
     def __init__(self, name=None):
-        self.name = name or type(self).__name__
+        self._name = name
 
     def get_cover_key(self, record, second=None):
         raise NotImplementedError
@@ -92,6 +96,12 @@ class UdbIndex(object):
 
     def set_float_precision(self, precision=18):
         self.type_format_mappers = configure_float_precision(precision)
+
+        return self
+
+    def set_name_if_default(self, name):
+        if not self._name:
+            self._name = name
 
         return self
     

@@ -73,11 +73,12 @@ class UdbClusterIndex(UdbIndex):
 
         if self._inner_index_fictive is not None:
             _, key_len = self._inner_index_fictive.get_cover_key(q)
+            i_op_key_sequence_length += key_len / 2
 
-            if key_len:
-                i_op_key_sequence_length += key_len
-            elif not any(self._inner_index_fictive.has_key(key) for key in q.keys()):
-                return SCAN_OP_SEQ, 0, 0, 0, None, None
+            # if key_len:
+            #     i_op_key_sequence_length += key_len
+            # elif not any(self._inner_index_fictive.has_key(key) for key in q.keys()):
+            #     return SCAN_OP_SEQ, 0, 0, 0, None, None
 
         def fn(k):
             for cluster_id in i_op_fn(k):
@@ -108,6 +109,9 @@ class UdbClusterIndex(UdbIndex):
 
                 for rid in seq:
                     yield rid
+
+        if not i_op_key_sequence_length:
+            return SCAN_OP_SEQ, 0, 0, 0, None, None
 
         return (
             SCAN_OP_CLUSTER,
