@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Callable, List, Type, Union
+from typing import Callable, Dict, List, Tuple, Type, Union
 from .udb_base_linear_index import SCAN_OP_SEQ
 from .udb_btree_index import UdbBtreeIndex
 from ..udb_index import UdbIndex
@@ -9,12 +9,13 @@ SCAN_OP_CLUSTER = 'cluster'
 
 
 class UdbClusterIndex(UdbIndex):
+    inner_index_cls = UdbBtreeIndex
     is_custom_ops = False
     type = 'cluster'
 
     def __init__(
             self,
-            index_or_btree_index_schema: Union[UdbBtreeIndex, dict, List[str]] = None,
+            index_or_btree_index_schema: Union[UdbIndex, dict, List[str]] = None,
             inner_index_or_btree_index_schema_or_mapper: Union[
                 UdbIndex,
                 dict,
@@ -27,24 +28,28 @@ class UdbClusterIndex(UdbIndex):
 
         self._inner_index_fictive = None
         self._inner_mapper = None
+        self._inner_rids = set()
 
         if isinstance(inner_index_or_btree_index_schema_or_mapper, UdbIndex):
             self._inner_index_fictive = inner_index_or_btree_index_schema_or_mapper
         elif type(inner_index_or_btree_index_schema_or_mapper) == dict:
-            self._inner_index_fictive = UdbBtreeIndex(inner_index_or_btree_index_schema_or_mapper)
+            self._inner_index_fictive = self.inner_index_cls(inner_index_or_btree_index_schema_or_mapper)
         elif type(inner_index_or_btree_index_schema_or_mapper) == list:
-            self._inner_index_fictive = UdbBtreeIndex(inner_index_or_btree_index_schema_or_mapper)
+            self._inner_index_fictive = self.inner_index_cls(inner_index_or_btree_index_schema_or_mapper)
         elif callable(inner_index_or_btree_index_schema_or_mapper):
             self._inner_mapper = inner_index_or_btree_index_schema_or_mapper
 
-        self._clusters = {}
+        self._clusters: Dict[int, Union[set, Tuple[set, Union[set, UdbIndex]]]] = {}
         self._clusters_key_to_uid = {}
         self._cluster_uid = 0
-        self._index = UdbBtreeIndex(index_or_btree_index_schema)\
-            if index_or_btree_index_schema\
-            else index_or_btree_index_schema
+        self._index = index_or_btree_index_schema\
+            if isinstance(index_or_btree_index_schema, UdbIndex)\
+            else self.inner_index_cls(index_or_btree_index_schema)
         self.schema_keys = self._index.schema_keys
         self.schema_last_index = self._index.schema_last_index
+
+        if self._inner_index_fictive is not None:
+            self.schema_last_index += self._inner_index_fictive.schema_last_index + 1
 
     def get_cover_key(self, record, second=None):
         return self._index.get_cover_key(record, second)
@@ -71,47 +76,39 @@ class UdbClusterIndex(UdbIndex):
             i_op_fn_q_arranger,
         ) = self._index.get_scan_op(q, None, None, collection, indexes_with_custom_ops)
 
-        if self._inner_index_fictive is not None:
-            _, key_len = self._inner_index_fictive.get_cover_key(q)
-            i_op_key_sequence_length += key_len / 2
+        if not i_op_key_sequence_length:
+            return SCAN_OP_SEQ, 0, 0, 0, None, None
 
-            # if key_len:
-            #     i_op_key_sequence_length += key_len
-            # elif not any(self._inner_index_fictive.has_key(key) for key in q.keys()):
-            #     return SCAN_OP_SEQ, 0, 0, 0, None, None
+        if self._inner_index_fictive is not None:
+            t_op = self._inner_index_fictive.get_scan_op(q)
+            t_op_key_sequence_length = t_op[1]  # sequence length
+            i_op_key_sequence_length += t_op_key_sequence_length / 2
 
         def fn(k):
             for cluster_id in i_op_fn(k):
-                q_copy = deepcopy(q)
-                cluster: Union[UdbIndex, set] = self._clusters[cluster_id]
+                q_cp = deepcopy(q)
+                cluster: Union[set, Tuple[set, Union[set, UdbIndex]]] = self._clusters[cluster_id]
 
                 if type(cluster) == set:
                     seq = cluster
                 else:
                     (
-                        c_s_op_type,
-                        c_op_key_sequence_length,
+                        _,
+                        _,
                         c_op_key_sequence_length_to_remove,
-                        c_op_priority,
+                        _,
                         c_op_fn,
                         c_op_fn_q_arranger,
-                    ) = cluster.get_scan_op(q_copy, None, None, collection, indexes_with_custom_ops)
-                    key = cluster.get_scan_op_cover_key(q_copy, c_op_key_sequence_length_to_remove, c_op_fn_q_arranger)
+                    ) = cluster[1].get_scan_op(q_cp, None, None, collection, indexes_with_custom_ops)
+                    key = cluster[1].get_scan_op_cover_key(q_cp, c_op_key_sequence_length_to_remove, c_op_fn_q_arranger)
 
                     if c_op_fn:
                         seq = c_op_fn(key)
                     else:
-                        seq = cluster.rids()
-
-                if q_copy and indexes_with_custom_ops:
-                    for index in indexes_with_custom_ops:
-                        seq = index.seq(seq, q_copy, collection)
+                        seq = cluster[0]
 
                 for rid in seq:
                     yield rid
-
-        if not i_op_key_sequence_length:
-            return SCAN_OP_SEQ, 0, 0, 0, None, None
 
         return (
             SCAN_OP_CLUSTER,
@@ -161,9 +158,9 @@ class UdbClusterIndex(UdbIndex):
 
         if cluster is None:
             if self._inner_mapper is not None:
-                cluster = self._clusters[self._cluster_uid] = self._inner_mapper(values, second)
+                cluster = self._clusters[self._cluster_uid] = set(), self._inner_mapper(values, second)
             elif self._inner_index_fictive is not None:
-                cluster = self._clusters[self._cluster_uid] = self._inner_index_fictive.clone()
+                cluster = self._clusters[self._cluster_uid] = set(), self._inner_index_fictive.clone()
             else:
                 cluster = self._clusters[self._cluster_uid] = set()
 
@@ -174,7 +171,8 @@ class UdbClusterIndex(UdbIndex):
         if type(cluster) == set:
             cluster.add(uid)
         else:
-            cluster.insert_by_schema(values, uid)
+            cluster[0].add(uid)
+            cluster[1].insert_by_schema(values, uid)
 
         return True
 

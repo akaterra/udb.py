@@ -104,7 +104,7 @@ class UdbIndex(object):
             self._name = name
 
         return self
-    
+
     def has_key(self, key):
         return key in self.schema
 
@@ -153,7 +153,9 @@ class UdbIndex(object):
         if key_len:
             self.insert(key, uid)
 
-        return True
+            return True
+
+        return False
 
     def insert_is_allowed(self, key):
         return True

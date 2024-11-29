@@ -7,6 +7,7 @@ from .index import (
     UdbBtreeIndex,
     UdbBtreeEmbeddedIndex,
     UdbBtreeUniqBaseIndex,
+    UdbClusterIndex,
     UdbHashBaseIndex,
     UdbHashEmbeddedBaseIndex,
     UdbHashIndex,
