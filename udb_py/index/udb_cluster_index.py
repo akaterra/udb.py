@@ -55,7 +55,7 @@ class UdbClusterIndex(UdbIndex):
         length = 0
 
         for cluster in self._clusters.values():
-            length += len(cluster)
+            length += len(cluster) if type(cluster) == set else len(cluster[1])
 
         return length
 
@@ -127,9 +127,6 @@ class UdbClusterIndex(UdbIndex):
             i_op_fn_q_arranger,
         )
 
-    def __len__(self):
-        return len(self._index)
-
     def clear(self):
         self._clusters.clear()
         self._cluster_uid = 0
@@ -185,4 +182,35 @@ class UdbClusterIndex(UdbIndex):
         return True
 
     def upsert(self, old, new, uid, q=None):
+        if not q:
+            old_cluster_key = self._clusters_key_to_uid.get(old, None)
+            old_cluster = self._clusters.get(old_cluster_key, None) if old_cluster_key is not None else None
+
+            if old_cluster is not None:
+                if type(old_cluster) == set:
+                    old_cluster.remove(uid)
+                else:
+                    old_cluster[0].remove(uid)
+
+            new_cluster_key = self._clusters_key_to_uid.get(new, None)
+            new_cluster = self._clusters.get(new_cluster_key, None) if new_cluster_key is not None else None
+
+            if new_cluster is None:
+                if self._inner_mapper is not None:
+                    new_cluster = self._clusters[self._cluster_uid] = set(), self._inner_mapper({})
+                elif self._inner_index_fictive is not None:
+                    new_cluster = self._clusters[self._cluster_uid] = set(), self._inner_index_fictive.clone()
+                else:
+                    new_cluster = self._clusters[self._cluster_uid] = set()
+
+                self._index.insert(new_cluster_key, self._cluster_uid)
+                self._clusters_key_to_uid[new_cluster_key] = self._cluster_uid
+                self._cluster_uid += 1
+
+            if new_cluster is not None:
+                if type(new_cluster) == set:
+                    new_cluster.add(uid)
+                else:
+                    new_cluster[0].add(uid)
+
         return self
