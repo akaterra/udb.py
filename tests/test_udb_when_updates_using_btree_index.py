@@ -23,11 +23,11 @@ def test_should_update_all():
 
     assert update_count == 3
     assert list(udb.select()) == [{
-        'a': 1, 'b': 1, '__rev__': 4
+        'a': 1, 'b': 1, '__rev__': 4,
     }, {
-        'a': 1, 'b': 2, '__rev__': 4
+        'a': 1, 'b': 2, '__rev__': 4,
     }, {
-        'a': 1, 'b': 3, '__rev__': 4
+        'a': 1, 'b': 3, '__rev__': 4,
     }]
     assert len(udb.indexes['a']) == 1
     assert len(udb.indexes['ab']) == 3
@@ -53,11 +53,11 @@ def test_should_update_by_query():
 
     assert update_count == 1
     assert list(udb.select()) == [{
-        'a': 1, 'b': 1, '__rev__': 0
+        'a': 1, 'b': 1, '__rev__': 0,
     }, {
-        'a': 1, 'b': 2, '__rev__': 4
+        'a': 1, 'b': 2, '__rev__': 4,
     }, {
-        'a': 3, 'b': 3, '__rev__': 2
+        'a': 3, 'b': 3, '__rev__': 2,
     }]
     assert len(udb.indexes['a']) == 2
     assert len(udb.indexes['ab']) == 3

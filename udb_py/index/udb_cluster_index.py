@@ -51,6 +51,14 @@ class UdbClusterIndex(UdbIndex):
         if self._inner_index_fictive is not None:
             self.schema_last_index += self._inner_index_fictive.schema_last_index + 1
 
+    def __len__(self):
+        length = 0
+
+        for cluster in self._clusters.values():
+            length += len(cluster)
+
+        return length
+
     def get_cover_key(self, record, second=None):
         return self._index.get_cover_key(record, second)
 

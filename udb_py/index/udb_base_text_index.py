@@ -20,7 +20,33 @@ class UdbBaseTextIndex(UdbIndex):
 
     @classmethod
     def check_condition(cls, values, q, context=None, extend=None):
-        raise IndexRequiredError('field required: {} on {}'.format(key, self.name))
+        is_passed = False
+
+        for key, cnd in q.items():
+            if type(cnd) == dict and '$text' in cnd:
+                if key not in values or type(values[key]) != str:
+                    return False
+
+                words = values[key].strip()
+
+                if not words:
+                    return False
+
+                words_cnd = cnd['$text'].strip()
+
+                if not words_cnd:
+                    return False
+
+                words = words.split()
+                words_cnd = words_cnd.split()
+
+                for word in words:
+                    if word not in words_cnd:
+                        return False
+
+                is_passed = True
+
+        return is_passed
 
     @classmethod
     def seq(cls, seq, q, collection, schema=None):
