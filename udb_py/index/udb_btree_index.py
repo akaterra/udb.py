@@ -28,29 +28,29 @@ class UdbBtreeIndex(UdbBaseLinearIndex):
     def clone(self):
         return UdbBtreeIndex(self.schema, self.name).safe(self._safe)
 
-    def rids(self):
-        for rids in self._btree.values():
+    def keys_and_rids(self):
+        for key, rids in self._btree.items():
             for rid in rids:
-                yield rid
+                yield key, rid
 
-    def delete(self, key_or_keys, uid, q=None):
+    def delete(self, key_or_keys, rid, q=None):
         old_existing = self._btree.get(key_or_keys, EMPTY)
 
-        if old_existing != EMPTY and uid in old_existing:
+        if old_existing != EMPTY and rid in old_existing:
             if len(old_existing) == 1:
                 self._btree.pop(key_or_keys)
             else:
-                old_existing.remove(uid)
+                old_existing.remove(rid)
 
         return self
 
-    def insert(self, key_or_keys, uid):
+    def insert(self, key_or_keys, rid):
         old_existing = self._btree.get(key_or_keys, EMPTY)
 
         if old_existing == EMPTY:
-            self._btree.insert(key_or_keys, {uid})
+            self._btree.insert(key_or_keys, {rid})
         else:
-            old_existing.add(uid)
+            old_existing.add(rid)
 
         return self
 
@@ -124,22 +124,22 @@ class UdbBtreeIndex(UdbBaseLinearIndex):
             for _ in val:
                 yield _
 
-    def upsert(self, old, new, uid, q=None):
+    def upsert(self, old, new, rid, q=None):
         if old != new:
             old_existing = self._btree.get(old, EMPTY)
 
-            if old_existing != EMPTY and uid in old_existing:
+            if old_existing != EMPTY and rid in old_existing:
                 if len(old_existing) == 1:
                     self._btree.pop(old)
                 else:
-                    old_existing.remove(uid)
+                    old_existing.remove(rid)
 
         new_existing = self._btree.get(new, EMPTY)
 
         if new_existing == EMPTY:
-            self._btree.insert(new, {uid})
+            self._btree.insert(new, {rid})
         else:
-            new_existing.add(uid)
+            new_existing.add(rid)
 
         return self
 
@@ -150,31 +150,31 @@ class UdbBtreeEmbeddedIndex(UdbBtreeIndex, UdbBaseLinearEmbeddedIndex):
     def clone(self):
         return UdbBtreeEmbeddedIndex(self.schema, self.name).safe(self._safe)
 
-    def delete(self, key_or_keys, uid=None, q=None):
+    def delete(self, key_or_keys, rid=None, q=None):
         for key in key_or_keys:
             old_existing = self._btree.get(key, EMPTY)
 
-            if old_existing != EMPTY and uid in old_existing:
+            if old_existing != EMPTY and rid in old_existing:
                 if len(old_existing) == 1:
                     self._btree.pop(key)
                 else:
-                    old_existing.remove(uid)
+                    old_existing.remove(rid)
 
         return self
 
-    def insert(self, key_or_keys, uid):
+    def insert(self, key_or_keys, rid):
         for key in key_or_keys:
             old_existing = self._btree.get(key, EMPTY)
 
             if old_existing == EMPTY:
-                self._btree.insert(key, {uid})
+                self._btree.insert(key, {rid})
             else:
-                old_existing.append(uid)
+                old_existing.append(rid)
 
         return self
 
-    def upsert(self, old, new, uid, q=None):
+    def upsert(self, old, new, rid, q=None):
         self.delete(old)
-        self.insert(new, uid)
+        self.insert(new, rid)
 
         return self

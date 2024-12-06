@@ -22,24 +22,24 @@ class UdbHashIndex(UdbBaseLinearIndex):
     def clone(self):
         return UdbHashIndex(self.schema, self.name).safe(self._safe)
 
-    def delete(self, key, uid, q=None):
+    def delete(self, key, rid, q=None):
         old_existing = self._hash.get(key, EMPTY)
 
-        if old_existing != EMPTY and uid in old_existing:
+        if old_existing != EMPTY and rid in old_existing:
             if len(old_existing) == 1:
                 self._hash.pop(key)
             else:
-                old_existing.remove(uid)
+                old_existing.remove(rid)
 
         return self
 
-    def insert(self, key, uid):
+    def insert(self, key, rid):
         old_existing = self._hash.get(key, EMPTY)
 
         if old_existing == EMPTY:
-            self._hash[key] = {uid}
+            self._hash[key] = {rid}
         else:
-            old_existing.add(uid)
+            old_existing.add(rid)
 
         return self
 
@@ -58,22 +58,22 @@ class UdbHashIndex(UdbBaseLinearIndex):
                 for _ in val:
                     yield _
 
-    def upsert(self, old, new, uid, q=None):
+    def upsert(self, old, new, rid, q=None):
         if old != new:
             old_existing = self._hash.get(old, EMPTY)
 
-            if old_existing != EMPTY and uid in old_existing:
+            if old_existing != EMPTY and rid in old_existing:
                 if len(old_existing) == 1:
                     self._hash.pop(old)
                 else:
-                    old_existing.remove(uid)
+                    old_existing.remove(rid)
 
         new_existing = self._hash.get(new, EMPTY)
 
         if new_existing == EMPTY:
-            self._hash[new] = {uid}
+            self._hash[new] = {rid}
         else:
-            new_existing.add(uid)
+            new_existing.add(rid)
 
         return self
 
@@ -85,31 +85,31 @@ class UdbHashEmbeddedIndex(UdbHashIndex, UdbBaseLinearEmbeddedIndex):
     def clone(self):
         return UdbHashEmbeddedIndex(self.schema, self.name).safe(self._safe)
 
-    def delete(self, key_or_keys, uid=None, q=None):
+    def delete(self, key_or_keys, rid=None, q=None):
         for key in key_or_keys:
             old_existing = self._hash.get(key, EMPTY)
 
-            if old_existing != EMPTY and uid in old_existing:
+            if old_existing != EMPTY and rid in old_existing:
                 if len(old_existing) == 1:
                     self._hash.pop(key)
                 else:
-                    old_existing.remove(uid)
+                    old_existing.remove(rid)
 
         return self
 
-    def insert(self, key_or_keys, uid):
+    def insert(self, key_or_keys, rid):
         for key in key_or_keys:
             old_existing = self._hash.get(key, EMPTY)
 
             if old_existing == EMPTY:
-                self._hash[key] = {uid}
+                self._hash[key] = {rid}
             else:
-                old_existing.append(uid)
+                old_existing.append(rid)
 
         return self
 
-    def upsert(self, old, new, uid, q=None):
+    def upsert(self, old, new, rid, q=None):
         self.delete(old)
-        self.insert(new, uid)
+        self.insert(new, rid)
 
         return self

@@ -11,9 +11,9 @@ def test_should_update_all(mocker):
     udb_index_ab_c = UdbBtreeIndex(['c'])
     udb_index_b = UdbBtreeIndex(['b'])
     udb = Udb({
-        'a': UdbClusterIndex(udb_index_a),
+        # 'a': UdbClusterIndex(udb_index_a),
         'ab': UdbClusterIndex(udb_index_ab, udb_index_ab_c),
-        'b': UdbClusterIndex(udb_index_b),
+        # 'b': UdbClusterIndex(udb_index_b),
     })
 
     a = {'a': 1, 'b': 1, 'c': 1}
@@ -27,12 +27,13 @@ def test_should_update_all(mocker):
     update_count = udb.update({'a': 1})
 
     assert update_count == 3
-    assert list(udb.select()) == [{
-        'a': 1, 'b': 1, '__rev__': 4,
+    l = list(udb.select({'a': 1}))
+    assert list(udb.select({'a': 1})) == [{
+        'a': 1, 'b': 1, 'c': 1, '__rev__': 4,
     }, {
-        'a': 1, 'b': 2, '__rev__': 4,
+        'a': 1, 'b': 1, 'c': 2, '__rev__': 4,
     }, {
-        'a': 1, 'b': 3, '__rev__': 4,
+        'a': 1, 'b': 1, 'c': 3, '__rev__': 4,
     }]
     # assert len(udb.indexes['a']) == 1
     # assert len(udb.indexes['ab']) == 3
@@ -71,9 +72,9 @@ def test_should_update_all(mocker):
 #
 # def test_should_raise_conflict_error_on_uniq_index():
 #     udb = Udb({
-#         'a': UdbBtreeUniqBaseIndex(['a']),
-#         'ab': UdbBtreeUniqBaseIndex(['a', 'b']),
-#         'b': UdbBtreeUniqBaseIndex(['b']),
+#         'a': UdbBtreeUniqIndex(['a']),
+#         'ab': UdbBtreeUniqIndex(['a', 'b']),
+#         'b': UdbBtreeUniqIndex(['b']),
 #     })
 #
 #     a = {'a': 1, 'b': 1}

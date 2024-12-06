@@ -37,7 +37,7 @@ class UdbTextIndex(UdbBaseTextIndex):
         self.schema_keys = list(schema.keys())
         self.schema_last_index = len(schema) - 1
 
-        self._whoosh_schema = Schema(udb__uid__=ID(unique=True, stored=True), **{key: TEXT(phrase=False) for key in self.schema_keys})
+        self._whoosh_schema = Schema(udb__rid__=ID(unique=True, stored=True), **{key: TEXT(phrase=False) for key in self.schema_keys})
         self._whoosh_storage = RamStorage()
         self._whoosh_index = self._whoosh_storage.create_index(self._whoosh_schema)
         self._whoosh_parser = QueryParser('a', schema=self._whoosh_index.schema)
@@ -54,7 +54,7 @@ class UdbTextIndex(UdbBaseTextIndex):
     def clone(self):
         return UdbTextIndex(self.schema, self.name).safe(self._safe)
 
-    def delete(self, key_dict, uid=None, q=None):
+    def delete(self, key_dict, rid=None, q=None):
         if key_dict:
             if self._whoosh_writer_opened_by != WRITER_OPENED_BY_DELETE:
                 if self._whoosh_writer:
@@ -63,11 +63,11 @@ class UdbTextIndex(UdbBaseTextIndex):
                 self._whoosh_writer = self._whoosh_index.writer()
                 self._whoosh_writer_opened_by = WRITER_OPENED_BY_DELETE
 
-            self._whoosh_writer.delete_by_term('udb__uid__', str(uid))
+            self._whoosh_writer.delete_by_term('udb__rid__', str(rid))
 
         return self
 
-    def insert(self, key_dict, uid):
+    def insert(self, key_dict, rid):
         if key_dict:
             if self._whoosh_writer_opened_by != WRITER_OPENED_BY_INSERT:
                 if self._whoosh_writer:
@@ -76,7 +76,7 @@ class UdbTextIndex(UdbBaseTextIndex):
                 self._whoosh_writer = self._whoosh_index.writer()
                 self._whoosh_writer_opened_by = WRITER_OPENED_BY_INSERT
 
-            self._whoosh_writer.add_document(udb__uid__=str(uid), **key_dict)
+            self._whoosh_writer.add_document(udb__rid__=str(rid), **key_dict)
 
         return self
 
@@ -88,9 +88,9 @@ class UdbTextIndex(UdbBaseTextIndex):
 
         with self._whoosh_index.searcher() as searcher:
             for rec in searcher.search(self._whoosh_parser.parse(' '.join(q.values())), limit=1):
-                yield int(rec['udb__uid__'])
+                yield int(rec['udb__rid__'])
 
-    def upsert(self, old_dict, new_dict, uid, q=None):
+    def upsert(self, old_dict, new_dict, rid, q=None):
         if new_dict:
             if self._whoosh_writer_opened_by != WRITER_OPENED_BY_UPSERT:
                 if self._whoosh_writer:
@@ -99,6 +99,6 @@ class UdbTextIndex(UdbBaseTextIndex):
                 self._whoosh_writer = self._whoosh_index.writer()
                 self._whoosh_writer_opened_by = WRITER_OPENED_BY_UPSERT
 
-            self._whoosh_writer.update_document(udb__uid__=str(uid), **new_dict)
+            self._whoosh_writer.update_document(udb__rid__=str(rid), **new_dict)
 
         return self

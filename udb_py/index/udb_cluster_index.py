@@ -40,8 +40,8 @@ class UdbClusterIndex(UdbIndex):
             self._inner_mapper = inner_index_or_btree_index_schema_or_mapper
 
         self._clusters: Dict[int, Union[set, Tuple[set, Union[set, UdbIndex]]]] = {}
-        self._clusters_key_to_uid = {}
-        self._cluster_uid = 0
+        self._clusters_key_to_rid = {}
+        self._cluster_rid = 0
         self._index = index_or_btree_index_schema\
             if isinstance(index_or_btree_index_schema, UdbIndex)\
             else self.inner_index_cls(index_or_btree_index_schema)
@@ -129,18 +129,18 @@ class UdbClusterIndex(UdbIndex):
 
     def clear(self):
         self._clusters.clear()
-        self._cluster_uid = 0
+        self._cluster_rid = 0
         self._index.clear()
 
         return self
 
-    def delete(self, key_or_keys, uid=None, q=None):
+    def delete(self, key_or_keys, rid=None, q=None):
         return self
 
-    def insert(self, key_or_keys, uid):
+    def insert(self, key_or_keys, rid):
         return self
 
-    def insert_by_schema(self, values, uid):
+    def insert_by_schema(self, values, rid):
         if self._index.schema_default_values:
             second = {}
 
@@ -158,59 +158,88 @@ class UdbClusterIndex(UdbIndex):
         if not cluster_key:
             return False
 
-        cluster_uid = self._clusters_key_to_uid.get(cluster_key, None)
-        cluster = self._clusters.get(cluster_uid, None) if cluster_uid is not None else None
+        cluster_rid = self._clusters_key_to_rid.get(cluster_key, None)
+        cluster = self._clusters.get(cluster_rid, None) if cluster_rid is not None else None
 
         if cluster is None:
             if self._inner_mapper is not None:
-                cluster = self._clusters[self._cluster_uid] = set(), self._inner_mapper(values, second)
+                cluster = self._clusters[self._cluster_rid] = set(), self._inner_mapper(values, second)
             elif self._inner_index_fictive is not None:
-                cluster = self._clusters[self._cluster_uid] = set(), self._inner_index_fictive.clone()
+                cluster = self._clusters[self._cluster_rid] = set(), self._inner_index_fictive.clone()
             else:
-                cluster = self._clusters[self._cluster_uid] = set()
+                cluster = self._clusters[self._cluster_rid] = set()
 
-            self._index.insert(cluster_key, self._cluster_uid)
-            self._clusters_key_to_uid[cluster_key] = self._cluster_uid
-            self._cluster_uid += 1
+            self._index.insert(cluster_key, self._cluster_rid)
+            self._clusters_key_to_rid[cluster_key] = self._cluster_rid
+            self._cluster_rid += 1
 
         if type(cluster) == set:
-            cluster.add(uid)
+            cluster.add(rid)
         else:
-            cluster[0].add(uid)
-            cluster[1].insert_by_schema(values, uid)
+            cluster[0].add(rid)
+            cluster[1].insert_by_schema(values, rid)
 
         return True
 
-    def upsert(self, old, new, uid, q=None):
+    def upsert(self, old, new, rid, q=None):
+        if old == new:
+            return True
+
+        old_cluster = self._clusters.get(self._clusters_key_to_rid.get(old, None), None)
+
         if not q:
-            old_cluster_key = self._clusters_key_to_uid.get(old, None)
-            old_cluster = self._clusters.get(old_cluster_key, None) if old_cluster_key is not None else None
-
             if old_cluster is not None:
-                if type(old_cluster) == set:
-                    old_cluster.remove(uid)
+                old_cluster_set = old_cluster if type(old_cluster) == set else old_cluster[0]
+                old_cluster_ind = None if type(old_cluster) == set else old_cluster[1]
+
+                new_cluster = self._clusters.get(self._clusters_key_to_rid.get(new, None), None)
+
+                if new_cluster is not None:
+                    new_cluster_set = new_cluster if type(new_cluster) == set else new_cluster[0]
+                    new_cluster_ind = None if type(new_cluster) == set else new_cluster[1]
+
+                    new_cluster_set.update(old_cluster_set)
+
+                    if new_cluster_ind is not None:
+                        for old_key, old_rid in old_cluster_set if old_cluster_ind is None else old_cluster_ind.keys_and_rids():
+                            new_cluster_ind.insert(old_key, old_rid)
                 else:
-                    old_cluster[0].remove(uid)
+                    self._clusters_key_to_rid[new] = self._clusters_key_to_rid[old]
 
-            new_cluster_key = self._clusters_key_to_uid.get(new, None)
-            new_cluster = self._clusters.get(new_cluster_key, None) if new_cluster_key is not None else None
+                del self._clusters[self._clusters_key_to_rid[old]]
+                del self._clusters_key_to_rid[old]
+                self._index.upsert(old, new, self._clusters_key_to_rid[new])
+            else:
+                return False
 
-            if new_cluster is None:
-                if self._inner_mapper is not None:
-                    new_cluster = self._clusters[self._cluster_uid] = set(), self._inner_mapper({})
-                elif self._inner_index_fictive is not None:
-                    new_cluster = self._clusters[self._cluster_uid] = set(), self._inner_index_fictive.clone()
-                else:
-                    new_cluster = self._clusters[self._cluster_uid] = set()
-
-                self._index.insert(new_cluster_key, self._cluster_uid)
-                self._clusters_key_to_uid[new_cluster_key] = self._cluster_uid
-                self._cluster_uid += 1
-
-            if new_cluster is not None:
-                if type(new_cluster) == set:
-                    new_cluster.add(uid)
-                else:
-                    new_cluster[0].add(uid)
+            # old_cluster_key = self._clusters_key_to_rid.get(old, None)
+            # old_cluster = self._clusters.get(old_cluster_key, None) if old_cluster_key is not None else None
+            #
+            # if old_cluster is not None:
+            #     if type(old_cluster) == set:
+            #         old_cluster.remove(rid)
+            #     else:
+            #         old_cluster[0].remove(rid)
+            #
+            # new_cluster_key = self._clusters_key_to_rid.get(new, None)
+            # new_cluster = self._clusters.get(new_cluster_key, None) if new_cluster_key is not None else None
+            #
+            # if new_cluster is None:
+            #     if self._inner_mapper is not None:
+            #         new_cluster = self._clusters[self._cluster_rid] = set(), self._inner_mapper({})
+            #     elif self._inner_index_fictive is not None:
+            #         new_cluster = self._clusters[self._cluster_rid] = set(), self._inner_index_fictive.clone()
+            #     else:
+            #         new_cluster = self._clusters[self._cluster_rid] = set()
+            #
+            #     self._index.insert(new_cluster_key, self._cluster_rid)
+            #     self._clusters_key_to_rid[new_cluster_key] = self._cluster_rid
+            #     self._cluster_rid += 1
+            #
+            # if new_cluster is not None:
+            #     if type(new_cluster) == set:
+            #         new_cluster.add(rid)
+            #     else:
+            #         new_cluster[0].add(rid)
 
         return self

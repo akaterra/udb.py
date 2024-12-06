@@ -2,18 +2,18 @@ from ..common import ConstraintError
 from .udb_btree_base_index import UdbBtreeBaseIndex
 
 
-class UdbBtreeUniqBaseIndex(UdbBtreeBaseIndex):
+class UdbBtreeUniqIndex(UdbBtreeBaseIndex):
     is_uniq = True
     type = 'btree_uniq'
 
     def clone(self):
-        return UdbBtreeUniqBaseIndex(self.schema, self.name).safe(self._safe)
+        return UdbBtreeUniqIndex(self.schema, self.name).safe(self._safe)
 
-    def insert(self, key, uid):
+    def insert(self, key, rid):
         if key in self._btree:
             raise ConstraintError('duplicate value: {} on {}'.format(key, self.name))
 
-        self._btree.insert(key, uid)
+        self._btree.insert(key, rid)
 
         return self
 
@@ -23,14 +23,14 @@ class UdbBtreeUniqBaseIndex(UdbBtreeBaseIndex):
 
         return True
 
-    def upsert(self, old, new, uid, q=None):
+    def upsert(self, old, new, rid, q=None):
         if old != new:
             if new in self._btree:
                 raise ConstraintError('duplicate value: {} on {}'.format(new, self.name))
 
             self._btree.pop(old)
 
-        self._btree.insert(new, uid)
+        self._btree.insert(new, rid)
 
         return self
 

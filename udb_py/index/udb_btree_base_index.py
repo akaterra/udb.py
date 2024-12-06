@@ -23,16 +23,16 @@ class UdbBtreeBaseIndex(UdbBaseLinearIndex):
 
         return self
 
-    def rids(self):
+    def keys_and_rids(self):
         self._btree.values()
 
-    def delete(self, key_or_keys, uid=None, q=None):
+    def delete(self, key_or_keys, rid=None, q=None):
         self._btree.pop(key_or_keys, EMPTY)
 
         return self
 
-    def insert(self, key_or_keys, uid):
-        self._btree.insert(key_or_keys, uid)
+    def insert(self, key_or_keys, rid):
+        self._btree.insert(key_or_keys, rid)
 
         return self
 
@@ -94,11 +94,11 @@ class UdbBtreeBaseIndex(UdbBaseLinearIndex):
         for val in self._btree.values(gte, lte, gte_excluded, lte_excluded):
             yield val
 
-    def upsert(self, old, new, uid, q=None):
+    def upsert(self, old, new, rid, q=None):
         if old != new:
             self._btree.pop(old)
 
-        self._btree.insert(new, uid)
+        self._btree.insert(new, rid)
 
         return self
 
@@ -106,20 +106,20 @@ class UdbBtreeBaseIndex(UdbBaseLinearIndex):
 class UdbBtreeEmbeddedBaseIndex(UdbBtreeBaseIndex, UdbBaseLinearEmbeddedIndex):
     type = 'btree_base_embedded'
 
-    def delete(self, key_or_keys, uid=None, q=None):
+    def delete(self, key_or_keys, rid=None, q=None):
         for key in key_or_keys:
             self._btree.pop(key, EMPTY)
 
         return self
 
-    def insert(self, key_or_keys, uid):
+    def insert(self, key_or_keys, rid):
         for key in key_or_keys:
-            self._btree.insert(key, uid)
+            self._btree.insert(key, rid)
 
         return self
 
-    def upsert(self, old, new, uid, q=None):
+    def upsert(self, old, new, rid, q=None):
         self.delete(old)
-        self.insert(new, uid)
+        self.insert(new, rid)
 
         return self

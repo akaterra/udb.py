@@ -1,14 +1,14 @@
 import pytest
 
 from udb_py.common import *
-from udb_py.udb import Udb, UdbBtreeBaseIndex, UdbBtreeUniqBaseIndex
+from udb_py.udb import Udb, UdbBtreeIndex, UdbBtreeUniqIndex
 
 
 def test_should_update_all():
     udb = Udb({
-        'a': UdbBtreeBaseIndex(['a']),
-        'ab': UdbBtreeBaseIndex(['a', 'b']),
-        'b': UdbBtreeBaseIndex(['b']),
+        'a': UdbBtreeIndex(['a']),
+        'ab': UdbBtreeIndex(['a', 'b']),
+        'b': UdbBtreeIndex(['b']),
     })
 
     a = {'a': 1, 'b': 1}
@@ -22,7 +22,8 @@ def test_should_update_all():
     update_count = udb.update({'a': 1})
 
     assert update_count == 3
-    assert list(udb.select()) == [{
+    l = list(udb.select({'a': 1}))
+    assert list(udb.select({'a': 1})) == [{
         'a': 1, 'b': 1, '__rev__': 4,
     }, {
         'a': 1, 'b': 2, '__rev__': 4,
@@ -36,9 +37,9 @@ def test_should_update_all():
 
 def test_should_update_by_query():
     udb = Udb({
-        'a': UdbBtreeBaseIndex(['a']),
-        'ab': UdbBtreeBaseIndex(['a', 'b']),
-        'b': UdbBtreeBaseIndex(['b']),
+        'a': UdbBtreeIndex(['a']),
+        'ab': UdbBtreeIndex(['a', 'b']),
+        'b': UdbBtreeIndex(['b']),
     })
 
     a = {'a': 1, 'b': 1}
@@ -66,9 +67,9 @@ def test_should_update_by_query():
 
 def test_should_raise_conflict_error_on_uniq_index():
     udb = Udb({
-        'a': UdbBtreeUniqBaseIndex(['a']),
-        'ab': UdbBtreeUniqBaseIndex(['a', 'b']),
-        'b': UdbBtreeUniqBaseIndex(['b']),
+        'a': UdbBtreeUniqIndex(['a']),
+        'ab': UdbBtreeUniqIndex(['a', 'b']),
+        'b': UdbBtreeUniqIndex(['b']),
     })
 
     a = {'a': 1, 'b': 1}

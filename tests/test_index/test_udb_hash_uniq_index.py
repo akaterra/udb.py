@@ -1,10 +1,10 @@
 import pytest
 
 from udb_py.common import *
-from udb_py.index.udb_hash_uniq_index import UdbHashUniqBaseIndex, ConstraintError
+from udb_py.index.udb_hash_uniq_index import UdbHashUniqIndex, ConstraintError
 
 
-class UdbHashUniqIndexTest(UdbHashUniqBaseIndex):
+class UdbHashUniqIndexTest(UdbHashUniqIndex):
     @property
     def index(self):
         return self._hash

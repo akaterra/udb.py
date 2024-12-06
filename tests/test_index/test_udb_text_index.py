@@ -30,7 +30,7 @@ def test_should_not_delete_not_requested():
 
     i.insert({'a': '123'}, 123).insert({'a': '123'}, 124).delete({'a': '123'}, 123)
 
-    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': str(124)}]
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__rid__': str(124)}]
 
 
 def test_should_insert():
@@ -38,7 +38,7 @@ def test_should_insert():
 
     i.insert({'a': '123'}, 123)
 
-    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': str(123)}]
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__rid__': str(123)}]
 
 
 def test_should_insert_by_schema():
@@ -46,7 +46,7 @@ def test_should_insert_by_schema():
 
     i.insert_by_schema({'a': '123'}, 123)
 
-    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': str(123)}]
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__rid__': str(123)}]
 
 
 def test_should_insert_by_schema_with_default_value():
@@ -54,7 +54,7 @@ def test_should_insert_by_schema_with_default_value():
 
     i.insert_by_schema({'c': 1}, 123)
 
-    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': str(123)}]
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__rid__': str(123)}]
 
 
 def test_should_insert_by_schema_with_default_value_as_callable():
@@ -62,7 +62,7 @@ def test_should_insert_by_schema_with_default_value_as_callable():
 
     i.insert_by_schema({'c': 1}, 123)
 
-    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': str(123)}]
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__rid__': str(123)}]
 
 
 def test_should_upsert():
@@ -70,7 +70,7 @@ def test_should_upsert():
 
     i.insert({'a': '123'}, 123).insert({'a': '123'}, 124).upsert({'a': '123'}, {'a': '321'}, 123).upsert({'a': '123'}, {'a': '321'}, 124)
 
-    assert list(i.index.searcher().search(i.parser.parse('321'))) == [{'udb__uid__': str(123)}, {'udb__uid__': str(124)}]
+    assert list(i.index.searcher().search(i.parser.parse('321'))) == [{'udb__rid__': str(123)}, {'udb__rid__': str(124)}]
 
 
 def test_should_upsert_deleting_old():
@@ -86,4 +86,4 @@ def test_should_upsert_not_deleting_not_requested():
 
     i.insert({'a': '123'}, 123).insert({'a': '123'}, 124).upsert({'a': '123'}, {'a': '321'}, 123)
 
-    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__uid__': str(124)}]
+    assert list(i.index.searcher().search(i.parser.parse('123'))) == [{'udb__rid__': str(124)}]

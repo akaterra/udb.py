@@ -1,7 +1,7 @@
 import pytest
 
 from udb_py.common import auto_id, current_timestamp, ConstraintError
-from udb_py.udb import Udb, UdbBtreeBaseIndex, UdbBtreeUniqBaseIndex
+from udb_py.udb import Udb, UdbBtreeBaseIndex, UdbBtreeUniqIndex
 
 
 def test_should_insert_with_default_value():

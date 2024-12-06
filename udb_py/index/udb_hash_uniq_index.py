@@ -2,18 +2,18 @@ from ..common import ConstraintError
 from .udb_hash_base_index import UdbHashBaseIndex
 
 
-class UdbHashUniqBaseIndex(UdbHashBaseIndex):
+class UdbHashUniqIndex(UdbHashBaseIndex):
     is_uniq = True
     type = 'hash_uniq'
 
     def clone(self):
-        return UdbHashUniqBaseIndex(self.schema, self.name).safe(self._safe)
+        return UdbHashUniqIndex(self.schema, self.name).safe(self._safe)
 
-    def insert(self, key, uid):
+    def insert(self, key, rid):
         if key in self._hash:
             raise ConstraintError('duplicate value: {} on {}'.format(key, self.name))
 
-        self._hash[key] = uid
+        self._hash[key] = rid
 
         return self
 
@@ -23,14 +23,14 @@ class UdbHashUniqBaseIndex(UdbHashBaseIndex):
 
         return True
 
-    def upsert(self, old, new, uid, q=None):
+    def upsert(self, old, new, rid, q=None):
         if old != new:
             if new in self._hash:
                 raise ConstraintError('duplicate value: {} on {}'.format(new, self.name))
 
             self._hash.pop(old)
 
-        self._hash[new] = uid
+        self._hash[new] = rid
 
         return self
 

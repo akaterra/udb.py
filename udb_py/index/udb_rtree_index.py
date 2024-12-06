@@ -33,17 +33,17 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
     def clone(self):
         return UdbRtreeIndex(self._key, self._key_default_value, self.name).safe(self._safe)
 
-    def rids(self):
+    def keys_and_rids(self):
         for rid in self._rtree.intersection((-math.inf, -math.inf, +math.inf, +math.inf)):
-            yield rid
+            yield None, rid
 
-    def delete(self, key, uid=None, q=None):
-        self._rtree.delete(uid, (key[0], key[1], key[0], key[1]))
+    def delete(self, key, rid=None, q=None):
+        self._rtree.delete(rid, (key[0], key[1], key[0], key[1]))
 
         return self
 
-    def insert(self, key, uid):
-        self._rtree.insert(uid, (key[0], key[1], key[0], key[1]))
+    def insert(self, key, rid):
+        self._rtree.insert(rid, (key[0], key[1], key[0], key[1]))
 
         if self._x_min is None:
             self._x_min = key[0]
@@ -106,11 +106,11 @@ class UdbRtreeIndex(UdbBaseGEOIndex):
             for val in self._rtree.nearest((p_x, p_y), limit):
                 yield val
 
-    def upsert(self, old, new, uid, q=None):
+    def upsert(self, old, new, rid, q=None):
         if old != new:
-            self._rtree.delete(uid, (old[0], old[1], old[0], old[1]))
+            self._rtree.delete(rid, (old[0], old[1], old[0], old[1]))
 
-        self._rtree.insert(uid, (new[0], new[1], new[0], new[1]))
+        self._rtree.insert(rid, (new[0], new[1], new[0], new[1]))
 
         if self._x_min is None:
             self._x_min = new[0]

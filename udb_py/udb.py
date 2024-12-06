@@ -6,13 +6,13 @@ from .index import (
     UdbBtreeEmbeddedBaseIndex,
     UdbBtreeIndex,
     UdbBtreeEmbeddedIndex,
-    UdbBtreeUniqBaseIndex,
+    UdbBtreeUniqIndex,
     UdbClusterIndex,
     UdbHashBaseIndex,
     UdbHashEmbeddedBaseIndex,
     UdbHashIndex,
     UdbHashEmbeddedIndex,
-    UdbHashUniqBaseIndex,
+    UdbHashUniqIndex,
     UdbRtreeIndex,
     UdbTextIndex,
 )
@@ -25,12 +25,12 @@ _INDEXES = (
     UdbBtreeEmbeddedBaseIndex,
     UdbBtreeIndex,
     UdbBtreeEmbeddedIndex,
-    UdbBtreeUniqBaseIndex,
+    UdbBtreeUniqIndex,
     UdbHashBaseIndex,
     UdbHashEmbeddedBaseIndex,
     UdbHashIndex,
     UdbHashEmbeddedIndex,
-    UdbHashUniqBaseIndex,
+    UdbHashUniqIndex,
     UdbRtreeIndex,
     UdbTextIndex,
 )
@@ -219,13 +219,13 @@ class Udb(UdbCore):
         update_count = 0
         self._revision += 1
 
-        for key in self.get_q_cursor(
+        for rid in self.get_q_cursor(
                 q and cpy_dict(q, {'__rev__': {'$lte': self._revision - 1}}),
                 limit,
                 offset,
                 get_keys_only=True
         ):
-            before = self._collection.get(key)
+            before = self._collection.get(rid)
             values['__rev__'] = self._revision
 
             if self._indexes_to_check_for_ins_upd_allowance:
@@ -234,12 +234,12 @@ class Udb(UdbCore):
 
             if self._on_update:
                 for on_update in self._on_update:
-                    on_update(key, before, values)
+                    on_update(rid, before, values)
 
             for index in self._indexes.values():
-                index.upsert(index.get_cover_key(before)[0], index.get_cover_key(before, values)[0], key, q)
+                index.upsert(index.get_cover_key(before)[0], index.get_cover_key(before, values)[0], rid, q)
 
-            self._collection[key].update(values)
+            self._collection[rid].update(values)
             update_count += 1
 
         return update_count

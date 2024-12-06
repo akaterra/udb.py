@@ -121,7 +121,7 @@ class UdbIndex(object):
     def clone(self):
         raise NotImplementedError
     
-    def rids(self):
+    def keys_and_rids(self):
         raise NotImplementedError
 
     def safe(self, safe=True):
