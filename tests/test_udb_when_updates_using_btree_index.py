@@ -22,7 +22,6 @@ def test_should_update_all():
     update_count = udb.update({'a': 1})
 
     assert update_count == 3
-    l = list(udb.select({'a': 1}))
     assert list(udb.select({'a': 1})) == [{
         'a': 1, 'b': 1, '__rev__': 4,
     }, {

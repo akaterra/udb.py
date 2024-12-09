@@ -4,7 +4,7 @@ from udb_py.common import *
 from udb_py.udb import Udb, UdbBtreeIndex, UdbClusterIndex
 
 
-def test_should_select_using_index_and_inner_index(mocker):
+def test_should_select_using_outer_index_and_inner_index(mocker):
     search_by_key_eq_spy = mocker.spy(UdbBtreeIndex, 'search_by_key_eq')
     udb_index_a = UdbBtreeIndex(['a'])
     udb_index_ab = UdbBtreeIndex(['a', 'b'])
@@ -30,7 +30,7 @@ def test_should_select_using_index_and_inner_index(mocker):
     assert search_by_key_eq_spy.call_count == 2
 
 
-def test_should_select_using_index_and_not_inner(mocker):
+def test_should_select_using_outer_index_and_not_inner(mocker):
     search_by_key_eq_spy = mocker.spy(UdbBtreeIndex, 'search_by_key_eq')
     udb_index_a = UdbBtreeIndex(['a'])
     udb_index_ab = UdbBtreeIndex(['a', 'b'])
@@ -56,7 +56,7 @@ def test_should_select_using_index_and_not_inner(mocker):
     assert search_by_key_eq_spy.call_count == 1
 
 
-def test_should_select_not_using_index(mocker):
+def test_should_select_not_using_outer_index(mocker):
     search_by_key_eq_spy = mocker.spy(UdbBtreeIndex, 'search_by_key_eq')
     udb_index_a = UdbBtreeIndex(['A'])
     udb_index_ab = UdbBtreeIndex(['A', 'b'])

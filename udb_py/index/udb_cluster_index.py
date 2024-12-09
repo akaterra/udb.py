@@ -206,6 +206,8 @@ class UdbClusterIndex(UdbIndex):
                 else:
                     self._clusters_key_to_rid[new] = self._clusters_key_to_rid[old]
 
+                self._index.delete(old, self._clusters_key_to_rid[old])
+                self._index.insert(new, self._clusters_key_to_rid[new])
                 del self._clusters[self._clusters_key_to_rid[old]]
                 del self._clusters_key_to_rid[old]
                 self._index.upsert(old, new, self._clusters_key_to_rid[new])
