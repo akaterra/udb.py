@@ -201,7 +201,9 @@ class UdbClusterIndex(UdbIndex):
                     new_cluster_set.update(old_cluster_set)
 
                     if new_cluster_ind is not None:
-                        for old_key, old_rid in old_cluster_set if old_cluster_ind is None else old_cluster_ind.keys_and_rids():
+                        keys_rids = old_cluster_set if old_cluster_ind is None else old_cluster_ind.keys_and_rids()
+
+                        for old_key, old_rid in keys_rids:
                             new_cluster_ind.insert(old_key, old_rid)
                 else:
                     self._clusters_key_to_rid[new] = self._clusters_key_to_rid[old]
