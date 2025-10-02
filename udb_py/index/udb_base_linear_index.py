@@ -48,7 +48,6 @@ _LIKE_REGEX_CACHE = {}
 _LIKE_OP_ESCAPED_PERCENT = re.escape('%') == '\\%'
 _PRIMITIVE_VALS = (None, bool, float, int, str)
 
-
 SCAN_OP_EQ = 'eq'
 SCAN_OP_NE = 'ne'
 SCAN_OP_IN = 'in'
@@ -102,9 +101,9 @@ def _like_op(a, b):
         _LIKE_REGEX_CACHE[b] = re.compile(
             '^'
             + escaped_b
-                .replace('_', '.')
-                .replace('^', '\\^')
-                .replace('$', '\\$')
+            .replace('_', '.')
+            .replace('^', '\\^')
+            .replace('$', '\\$')
             + '$'
         )
 
@@ -521,7 +520,7 @@ class UdbBaseLinearIndex(UdbIndex):
 
                         if c_like_pos_p > -1:
                             c_like_index = c_like_pos_p
-                        
+
                         if -1 < c_like_pos__ < c_like_pos_p:
                             c_like_index = c_like_pos__
 
